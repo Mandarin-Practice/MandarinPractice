@@ -79,10 +79,16 @@ export default function Practice() {
     }
   }, [vocabularyWords, isLoadingVocabulary, navigate]);
 
-  // Generate first sentence when component mounts
+  // Generate first sentence when component mounts and update totalWords count
   useEffect(() => {
     if (!isLoadingVocabulary && vocabularyWords && Array.isArray(vocabularyWords) && vocabularyWords.length > 0) {
       generateSentenceMutation.mutate();
+      
+      // Update the total words count when vocabulary is loaded
+      setStats(prev => ({
+        ...prev,
+        totalWords: vocabularyWords.length
+      }));
     }
   }, [isLoadingVocabulary, vocabularyWords]);
 
@@ -148,15 +154,24 @@ export default function Practice() {
     // Update stats
     setStats(prev => {
       const completed = prev.completed + 1;
-      const accuracy = `${Math.round((prev.masteredWords + (similarity > 0.9 ? 1 : 0)) / prev.totalWords * 100)}%`;
-      const avgTime = `${Math.round((parseFloat(prev.avgTime) * (completed - 1) + timeTaken) / completed * 10) / 10}s`;
       const newMasteredWords = prev.masteredWords + (similarity > 0.9 ? 1 : 0);
+      
+      // Prevent division by zero
+      const totalWords = prev.totalWords || 1;
+      const accuracy = `${Math.round((newMasteredWords / totalWords) * 100)}%`;
+      
+      // Handle first completion
+      const prevAvgTime = parseFloat(prev.avgTime) || 0;
+      const avgTime = `${Math.round((prevAvgTime * (completed - 1) + timeTaken) / completed * 10) / 10}s`;
+      
+      // Calculate mastery percentage safely
+      const masteryPercent = Math.min(100, Math.round((newMasteredWords / totalWords) * 100));
       
       return {
         completed,
         accuracy,
         avgTime,
-        masteryPercent: (newMasteredWords / prev.totalWords) * 100,
+        masteryPercent,
         masteredWords: newMasteredWords,
         totalWords: prev.totalWords
       };
