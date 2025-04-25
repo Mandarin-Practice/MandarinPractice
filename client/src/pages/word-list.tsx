@@ -58,6 +58,7 @@ const SAMPLE_WORD_LISTS: WordList[] = [
 
 export default function WordList() {
   const [wordInput, setWordInput] = useState("");
+  const [groupByHomophones, setGroupByHomophones] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -207,6 +208,31 @@ export default function WordList() {
     const newActive = currentActive === "true" ? "false" : "true";
     toggleActiveStatusMutation.mutate({ id, active: newActive });
   };
+  
+  // Function to normalize pinyin by removing tone marks
+  const normalizePinyin = (pinyin: string): string => {
+    // Remove tone marks to get base pinyin
+    return pinyin.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  };
+  
+  // Group words by homophone (same pinyin without tones)
+  const getHomophoneGroups = (words: any[]) => {
+    if (!Array.isArray(words) || words.length === 0) return [];
+    
+    const groups: { [key: string]: any[] } = {};
+    
+    // First pass: group by normalized pinyin
+    words.forEach(word => {
+      const normalizedPinyin = normalizePinyin(word.pinyin);
+      if (!groups[normalizedPinyin]) {
+        groups[normalizedPinyin] = [];
+      }
+      groups[normalizedPinyin].push(word);
+    });
+    
+    // Only keep groups with multiple words
+    return Object.values(groups).filter(group => group.length > 1);
+  };
 
   return (
     <div className="word-list-section">
@@ -237,23 +263,91 @@ export default function WordList() {
           </div>
           
           <div>
-            <h3 className="text-lg font-medium mb-3">Current Word List</h3>
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-lg font-medium">Current Word List</h3>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Group homophones</span>
+                <div
+                  className={`w-10 h-5 flex items-center rounded-full p-1 cursor-pointer ${
+                    groupByHomophones ? "bg-primary" : "bg-gray-300 dark:bg-gray-600"
+                  }`}
+                  onClick={() => setGroupByHomophones(!groupByHomophones)}
+                >
+                  <div
+                    className={`bg-white dark:bg-gray-200 h-4 w-4 rounded-full shadow-md transform transition-transform ${
+                      groupByHomophones ? "translate-x-5" : ""
+                    }`}
+                  ></div>
+                </div>
+              </div>
+            </div>
             
             {isLoading ? (
               <div className="flex flex-wrap gap-2 mb-4">
                 <p>Loading vocabulary...</p>
               </div>
             ) : vocabulary && Array.isArray(vocabulary) && vocabulary.length > 0 ? (
-              <div className="flex flex-wrap gap-2 mb-4">
-                {vocabulary.map((word) => (
-                  <WordChip
-                    key={word.id}
-                    word={word}
-                    onRemove={() => handleRemoveWord(word.id)}
-                    onToggleActive={() => handleToggleActive(word.id, word.active)}
-                  />
-                ))}
-              </div>
+              groupByHomophones ? (
+                // Homophone grouping mode
+                <div className="space-y-4 mb-4">
+                  {getHomophoneGroups(vocabulary).map((group, index) => (
+                    <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                      <h4 className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-300">
+                        {normalizePinyin(group[0].pinyin)} - Homophones with different tones
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {group.map((word) => (
+                          <WordChip
+                            key={word.id}
+                            word={word}
+                            onRemove={() => handleRemoveWord(word.id)}
+                            onToggleActive={() => handleToggleActive(word.id, word.active)}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {/* Display words that don't have homophones */}
+                  {vocabulary.filter(word => {
+                    const normalizedPinyin = normalizePinyin(word.pinyin);
+                    const group = vocabulary.filter(w => normalizePinyin(w.pinyin) === normalizedPinyin);
+                    return group.length === 1;
+                  }).length > 0 && (
+                    <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                      <h4 className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-300">
+                        Words without homophones
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {vocabulary.filter(word => {
+                          const normalizedPinyin = normalizePinyin(word.pinyin);
+                          const group = vocabulary.filter(w => normalizePinyin(w.pinyin) === normalizedPinyin);
+                          return group.length === 1;
+                        }).map((word) => (
+                          <WordChip
+                            key={word.id}
+                            word={word}
+                            onRemove={() => handleRemoveWord(word.id)}
+                            onToggleActive={() => handleToggleActive(word.id, word.active)}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                // Normal list mode
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {vocabulary.map((word) => (
+                    <WordChip
+                      key={word.id}
+                      word={word}
+                      onRemove={() => handleRemoveWord(word.id)}
+                      onToggleActive={() => handleToggleActive(word.id, word.active)}
+                    />
+                  ))}
+                </div>
+              )
             ) : (
               <div className="text-gray-500 dark:text-gray-400 italic mb-4">
                 No words in your vocabulary list yet.
@@ -266,7 +360,7 @@ export default function WordList() {
           <Button
             variant="outline"
             onClick={handleClearWords}
-            disabled={isLoading || !vocabulary || vocabulary.length === 0}
+            disabled={isLoading || !vocabulary || !Array.isArray(vocabulary) || vocabulary.length === 0}
           >
             Clear List
           </Button>
