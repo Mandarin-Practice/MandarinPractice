@@ -42,15 +42,27 @@ export default function SentenceCard({
     if (!feedbackStatus) return null;
     
     const feedbackStyles = {
-      correct: "text-success",
-      partial: "text-warning",
-      incorrect: "text-error"
+      correct: "text-green-600 dark:text-green-400",
+      partial: "text-amber-600 dark:text-amber-400",
+      incorrect: "text-red-600 dark:text-red-400"
     };
     
     const feedbackIcons = {
-      correct: "fa-check-circle",
-      partial: "fa-exclamation-circle",
-      incorrect: "fa-times-circle"
+      correct: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="inline-block h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+      partial: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="inline-block h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+      ),
+      incorrect: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="inline-block h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      )
     };
     
     const feedbackMessages = {
@@ -60,8 +72,8 @@ export default function SentenceCard({
     };
     
     return (
-      <div className={feedbackStyles[feedbackStatus]}>
-        <i className={`fas ${feedbackIcons[feedbackStatus]} mr-1`}></i> {feedbackMessages[feedbackStatus]}
+      <div className={`${feedbackStyles[feedbackStatus]} font-medium flex items-center`}>
+        {feedbackIcons[feedbackStatus]} {feedbackMessages[feedbackStatus]}
       </div>
     );
   };
@@ -100,7 +112,21 @@ export default function SentenceCard({
               {showChinese && sentence?.chinese && (
                 <div className="mb-6">
                   <p className="text-2xl font-['Noto_Sans_SC',sans-serif] leading-relaxed">
-                    {sentence.chinese}
+                    {feedbackStatus ? (
+                      // When feedback is shown, color the characters based on correctness
+                      <span className={
+                        feedbackStatus === "correct" 
+                          ? "text-green-600 dark:text-green-400" 
+                          : feedbackStatus === "incorrect" 
+                            ? "text-red-600 dark:text-red-400" 
+                            : ""
+                      }>
+                        {sentence.chinese}
+                      </span>
+                    ) : (
+                      // Normal display when no feedback
+                      sentence.chinese
+                    )}
                   </p>
                 </div>
               )}
@@ -131,7 +157,9 @@ export default function SentenceCard({
                     disabled={isLoading || !sentence}
                   />
                   <div className="absolute right-3 top-3 text-gray-400">
-                    <i className="fas fa-keyboard"></i>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
                   </div>
                 </div>
                 
@@ -139,6 +167,33 @@ export default function SentenceCard({
                 <div className="mt-2 min-h-[24px]">
                   {renderFeedback()}
                 </div>
+
+                {/* When feedback exists, show the correct answer with visual highlighting */}
+                {feedbackStatus && sentence?.english && (
+                  <div className="mt-4 p-3 border rounded-md bg-gray-50 dark:bg-gray-800">
+                    <p className="text-sm font-medium mb-1">Correct translation:</p>
+                    <p className={
+                      feedbackStatus === "correct" 
+                        ? "text-green-600 dark:text-green-400 font-medium" 
+                        : feedbackStatus === "incorrect" 
+                          ? "text-red-600 dark:text-red-400 font-medium" 
+                          : "text-amber-600 dark:text-amber-400 font-medium"
+                    }>
+                      {sentence.english}
+                    </p>
+
+                    <p className="text-sm font-medium mt-3 mb-1">Your translation:</p>
+                    <p className={
+                      feedbackStatus === "correct" 
+                        ? "text-green-600 dark:text-green-400 font-medium" 
+                        : feedbackStatus === "incorrect" 
+                          ? "text-red-600 dark:text-red-400 font-medium" 
+                          : "text-amber-600 dark:text-amber-400 font-medium"
+                    }>
+                      {userTranslation}
+                    </p>
+                  </div>
+                )}
               </div>
             </>
           )}
