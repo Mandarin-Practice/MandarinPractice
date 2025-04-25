@@ -1,4 +1,5 @@
-import { X, CheckCircle, XCircle } from "lucide-react";
+import { X, CheckCircle, XCircle, Info } from "lucide-react";
+import { Link } from "wouter";
 
 interface WordChipProps {
   word: {
@@ -24,10 +25,18 @@ export default function WordChip({ word, onRemove, onToggleActive }: WordChipPro
       <span className="font-['Noto_Sans_SC',sans-serif] mr-1">{word.chinese}</span>
       <span className="text-xs text-gray-500 dark:text-gray-400">({word.pinyin})</span>
       
+      <Link 
+        to={`/word/${word.id}`} 
+        className="ml-2 text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 cursor-pointer"
+        title="View word details"
+      >
+        <Info className="h-3 w-3" />
+      </Link>
+      
       {onToggleActive && (
         <button
           onClick={onToggleActive}
-          className={`ml-2 ${
+          className={`ml-1.5 ${
             isActive 
               ? "text-green-500 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300" 
               : "text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-400"
@@ -41,7 +50,7 @@ export default function WordChip({ word, onRemove, onToggleActive }: WordChipPro
       
       <button
         onClick={onRemove}
-        className="ml-1 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+        className="ml-1.5 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
         aria-label="Remove word"
       >
         <X className="h-3 w-3" />

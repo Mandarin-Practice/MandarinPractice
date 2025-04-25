@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useLocation } from 'wouter';
+import { useLocation, useRoute } from 'wouter';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -21,8 +21,9 @@ export default function WordDetail() {
     english: string;
   } | null>(null);
 
-  // Get the word ID from the URL
-  const wordId = window.location.pathname.split('/word/')[1];
+  // Get the word ID from the URL using the useRoute hook
+  const [match, params] = useRoute('/word/:id');
+  const wordId = params?.id;
   
   // Fetch the word details
   const { data: word, isLoading } = useQuery({
