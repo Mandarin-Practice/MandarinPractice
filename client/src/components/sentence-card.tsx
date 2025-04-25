@@ -21,6 +21,7 @@ interface SentenceCardProps {
   onUpdateTranslation: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onPlayAudio: () => void;
   onNextSentence: () => void;
+  onKeyPress?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 }
 
 export default function SentenceCard({
@@ -33,7 +34,8 @@ export default function SentenceCard({
   isPlaying,
   onUpdateTranslation,
   onPlayAudio,
-  onNextSentence
+  onNextSentence,
+  onKeyPress
 }: SentenceCardProps) {
   
   const renderFeedback = () => {
@@ -123,7 +125,8 @@ export default function SentenceCard({
                     type="text"
                     value={userTranslation}
                     onChange={onUpdateTranslation}
-                    placeholder="Type your answer here..."
+                    onKeyDown={onKeyPress}
+                    placeholder="Type your answer here... (Press Enter to check or next)"
                     className="w-full px-4 py-6 text-base"
                     disabled={isLoading || !sentence}
                   />

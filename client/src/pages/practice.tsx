@@ -74,14 +74,14 @@ export default function Practice() {
 
   // Check if vocabulary is empty and redirect if needed
   useEffect(() => {
-    if (!isLoadingVocabulary && (!vocabularyWords || vocabularyWords.length === 0)) {
+    if (!isLoadingVocabulary && (!vocabularyWords || !Array.isArray(vocabularyWords) || vocabularyWords.length === 0)) {
       navigate("/word-list");
     }
   }, [vocabularyWords, isLoadingVocabulary, navigate]);
 
   // Generate first sentence when component mounts
   useEffect(() => {
-    if (!isLoadingVocabulary && vocabularyWords && vocabularyWords.length > 0) {
+    if (!isLoadingVocabulary && vocabularyWords && Array.isArray(vocabularyWords) && vocabularyWords.length > 0) {
       generateSentenceMutation.mutate();
     }
   }, [isLoadingVocabulary, vocabularyWords]);
@@ -93,10 +93,24 @@ export default function Practice() {
     }
   };
 
-  // Update translation and check answer
+  // Update translation without checking answer immediately
   const updateTranslation = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUserTranslation(e.target.value);
-    checkAnswer(e.target.value);
+    // Don't check answer while typing
+    setFeedbackStatus(null);
+  };
+
+  // Handle key press in the input field (for Enter key)
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      if (feedbackStatus === "correct") {
+        // If already correct, move to next sentence
+        nextSentence();
+      } else {
+        // Otherwise check the answer
+        checkAnswer(userTranslation);
+      }
+    }
   };
 
   // Check answer similarity with correct translation
@@ -158,7 +172,7 @@ export default function Practice() {
     return <div className="text-center py-10">Loading vocabulary...</div>;
   }
 
-  if (!vocabularyWords || vocabularyWords.length === 0) {
+  if (!vocabularyWords || !Array.isArray(vocabularyWords) || vocabularyWords.length === 0) {
     return (
       <div className="text-center py-12 px-6 bg-white dark:bg-gray-800 rounded-lg shadow-md mb-6">
         <div className="text-5xl mb-4 text-gray-400 dark:text-gray-500">
@@ -187,6 +201,7 @@ export default function Practice() {
           onUpdateTranslation={updateTranslation}
           onPlayAudio={playAudio}
           onNextSentence={nextSentence}
+          onKeyPress={handleKeyPress}
           isLoading={generateSentenceMutation.isPending}
           isPlaying={isPlaying}
         />
