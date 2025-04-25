@@ -131,33 +131,50 @@ export function compareWordByWord(
   correctWordElements: { word: string; matched: boolean }[],
   userWordElements: { word: string; matched: boolean }[] 
 } {
-  const correctWords = normalizeString(correctSentence).split(' ');
-  const userWords = normalizeString(userSentence).split(' ');
+  // Split sentences by words, preserving original capitalization for display
+  const originalCorrectWords = correctSentence.split(/\s+/).filter(word => word.trim() !== '');
+  const originalUserWords = userSentence.split(/\s+/).filter(word => word.trim() !== '');
   
-  // Initialize arrays to store match status for each word
-  const correctWordElements: { word: string; matched: boolean }[] = correctWords.map(word => ({ 
+  // Normalize words for comparison (lowercase, remove punctuation)
+  const normCorrectWords = originalCorrectWords.map(word => 
+    word.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "")
+  );
+  const normUserWords = originalUserWords.map(word => 
+    word.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "")
+  );
+  
+  // Initialize arrays to store match status for each word with original capitalization
+  const correctWordElements: { word: string; matched: boolean }[] = originalCorrectWords.map(word => ({ 
     word, 
     matched: false 
   }));
   
-  const userWordElements: { word: string; matched: boolean }[] = userWords.map(word => ({ 
+  const userWordElements: { word: string; matched: boolean }[] = originalUserWords.map(word => ({ 
     word, 
     matched: false 
   }));
 
-  // First pass: Find exact matches
-  for (let i = 0; i < userWords.length; i++) {
-    const userWord = userWords[i].toLowerCase();
+  // Try exact matches at same position first
+  for (let i = 0; i < normUserWords.length && i < normCorrectWords.length; i++) {
+    if (normUserWords[i] === normCorrectWords[i]) {
+      userWordElements[i].matched = true;
+      correctWordElements[i].matched = true;
+    }
+  }
+
+  // First pass: Find remaining exact matches anywhere
+  for (let i = 0; i < normUserWords.length; i++) {
+    // Skip already matched words
+    if (userWordElements[i].matched) continue;
     
-    // Skip very short words or already matched words
-    if (userWord.length < 2 || userWordElements[i].matched) continue;
+    const userWord = normUserWords[i];
+    if (userWord.length === 0) continue;
     
-    // Try to find exact match at the same position or nearby
-    const searchStart = Math.max(0, i - 1);
-    const searchEnd = Math.min(correctWords.length - 1, i + 1);
-    
-    for (let j = searchStart; j <= searchEnd; j++) {
-      if (userWord === correctWords[j].toLowerCase() && !correctWordElements[j].matched) {
+    // Try to find in the entire correct sentence
+    for (let j = 0; j < normCorrectWords.length; j++) {
+      if (correctWordElements[j].matched) continue;
+      
+      if (userWord === normCorrectWords[j]) {
         userWordElements[i].matched = true;
         correctWordElements[j].matched = true;
         break;
@@ -166,26 +183,30 @@ export function compareWordByWord(
   }
   
   // Second pass: Find words with high similarity
-  for (let i = 0; i < userWords.length; i++) {
-    const userWord = userWords[i].toLowerCase();
+  for (let i = 0; i < normUserWords.length; i++) {
+    // Skip already matched words
+    if (userWordElements[i].matched) continue;
     
-    // Skip very short words or already matched words
-    if (userWord.length < 3 || userWordElements[i].matched) continue;
+    const userWord = normUserWords[i];
+    if (userWord.length < 2) continue;
     
     // Look for similar words in the entire correct sentence
-    for (let j = 0; j < correctWords.length; j++) {
-      const correctWord = correctWords[j].toLowerCase();
+    for (let j = 0; j < normCorrectWords.length; j++) {
+      if (correctWordElements[j].matched) continue;
       
-      // Skip very short words or already matched words
-      if (correctWord.length < 3 || correctWordElements[j].matched) continue;
+      const correctWord = normCorrectWords[j];
+      if (correctWord.length < 2) continue;
       
       // Calculate word similarity
       const distance = levenshteinDistance(userWord, correctWord);
       const maxLength = Math.max(userWord.length, correctWord.length);
       const wordSimilarity = 1 - (distance / maxLength);
       
+      // Even short words can match if they're very similar
+      const similarityThreshold = (userWord.length <= 3 || correctWord.length <= 3) ? 0.85 : 0.75;
+      
       // If words are very similar, mark as matched
-      if (wordSimilarity > 0.75) {
+      if (wordSimilarity > similarityThreshold) {
         userWordElements[i].matched = true;
         correctWordElements[j].matched = true;
         break;

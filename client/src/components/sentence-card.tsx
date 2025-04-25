@@ -13,49 +13,33 @@ interface HighlightedComparisonProps {
 function HighlightedComparison({ correctSentence, userSentence }: HighlightedComparisonProps) {
   // Use compareWordByWord to determine which words match
   const comparison = compareWordByWord(correctSentence, userSentence);
-  
-  // Split the original sentences to preserve capitalization
-  const originalCorrectWords = correctSentence.split(' ');
-  const originalUserWords = userSentence.split(' ');
 
   return (
     <div className="space-y-3">
       <div className="p-2 rounded">
         <p className="text-base leading-relaxed">
-          {originalCorrectWords.map((word, index) => {
-            // Find the corresponding element in our comparison
-            const isMatched = index < comparison.correctWordElements.length && 
-                             comparison.correctWordElements[index].matched;
-            
-            return (
-              <span 
-                key={`correct-${index}`}
-                className={isMatched ? "text-green-600 dark:text-green-400 font-medium" : "text-red-600 dark:text-red-400 font-medium"}
-              >
-                {word}{index < originalCorrectWords.length - 1 ? ' ' : ''}
-              </span>
-            );
-          })}
+          {comparison.correctWordElements.map((element, index) => (
+            <span 
+              key={`correct-${index}`}
+              className={element.matched ? "text-green-600 dark:text-green-400 font-medium" : "text-red-600 dark:text-red-400 font-medium"}
+            >
+              {element.word}{index < comparison.correctWordElements.length - 1 ? ' ' : ''}
+            </span>
+          ))}
         </p>
       </div>
 
       <p className="text-sm font-medium mt-3 mb-1">Your translation:</p>
       <div className="p-2 rounded">
         <p className="text-base leading-relaxed">
-          {originalUserWords.map((word, index) => {
-            // Find the corresponding element in our comparison
-            const isMatched = index < comparison.userWordElements.length && 
-                             comparison.userWordElements[index].matched;
-            
-            return (
-              <span 
-                key={`user-${index}`}
-                className={isMatched ? "text-green-600 dark:text-green-400 font-medium" : "text-red-600 dark:text-red-400 font-medium"}
-              >
-                {word}{index < originalUserWords.length - 1 ? ' ' : ''}
-              </span>
-            );
-          })}
+          {comparison.userWordElements.map((element, index) => (
+            <span 
+              key={`user-${index}`}
+              className={element.matched ? "text-green-600 dark:text-green-400 font-medium" : "text-red-600 dark:text-red-400 font-medium"}
+            >
+              {element.word}{index < comparison.userWordElements.length - 1 ? ' ' : ''}
+            </span>
+          ))}
         </p>
       </div>
     </div>
