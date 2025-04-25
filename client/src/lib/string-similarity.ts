@@ -113,14 +113,14 @@ export function checkSimilarity(
 }
 
 /**
- * Map of Chinese pronouns that sound the same and should be treated as equivalent when heard
- * These are specifically: 他(tā: he), 她(tā: she), and 它(tā: it) which sound identical in Mandarin
+ * Map of Chinese pronoun homophones that should be treated as equivalent when heard
+ * These are specifically: 他(he), 她(she), and 它(it) which sound identical in Mandarin
  * Key: Chinese character, Value: Array of equivalent characters
  */
 const chineseHomophones: Record<string, string[]> = {
-  '他': ['她', '它'], // tā (he, she, it) - all sound identical
-  '她': ['他', '它'], // tā (she, he, it) - all sound identical
-  '它': ['他', '她']  // tā (it, he, she) - all sound identical
+  '他': ['她', '它'], // he, she, it - all sound identical
+  '她': ['他', '它'], // she, he, it - all sound identical
+  '它': ['他', '她']  // it, he, she - all sound identical
 };
 
 /**
