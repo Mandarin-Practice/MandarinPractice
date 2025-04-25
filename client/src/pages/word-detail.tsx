@@ -41,6 +41,19 @@ export default function WordDetail() {
     enabled: !!wordId,
     retry: 1
   });
+  
+  // Fetch word proficiency data
+  const { data: proficiency, isLoading: isLoadingProficiency } = useQuery({
+    queryKey: ['/api/word-proficiency', wordId],
+    queryFn: async () => {
+      const response = await apiRequest('GET', `/api/word-proficiency/${wordId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch word proficiency');
+      }
+      return response.json();
+    },
+    enabled: !!wordId,
+  });
 
   // Generate example sentence
   const handleGenerateExample = async () => {
@@ -146,6 +159,87 @@ export default function WordDetail() {
             <div>
               <h3 className="text-lg font-medium mb-2">Definition</h3>
               <p className="text-xl">{word.english}</p>
+            </div>
+
+            {/* Word Proficiency Section */}
+            <div>
+              <h3 className="text-lg font-medium mb-2">Word Proficiency</h3>
+              {isLoadingProficiency ? (
+                <Skeleton className="h-10 w-full" />
+              ) : proficiency ? (
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center text-sm">
+                    <span>Mastery Level</span>
+                    <span className="font-medium">{proficiency.proficiencyPercent}%</span>
+                  </div>
+
+                  <div className="relative pt-1">
+                    <div className="overflow-hidden h-2 text-xs flex rounded bg-gray-200 dark:bg-gray-700">
+                      <div 
+                        style={{ width: `${proficiency.proficiencyPercent}%` }} 
+                        className={`shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center
+                          ${proficiency.proficiencyPercent < 30 ? 'bg-red-500' : 
+                            proficiency.proficiencyPercent < 70 ? 'bg-yellow-500' : 'bg-green-500'}`}
+                      ></div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="bg-gray-100 dark:bg-gray-800 p-2 rounded">
+                      <div className="text-gray-500 dark:text-gray-400">Correct Answers</div>
+                      <div className="font-semibold">{proficiency.correctCount}</div>
+                    </div>
+                    <div className="bg-gray-100 dark:bg-gray-800 p-2 rounded">
+                      <div className="text-gray-500 dark:text-gray-400">Total Attempts</div>
+                      <div className="font-semibold">{proficiency.attemptCount}</div>
+                    </div>
+                  </div>
+
+                  {Number(proficiency.attemptCount) > 0 && (
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      Last practiced: {proficiency.lastPracticed !== "0" 
+                        ? new Date(parseInt(proficiency.lastPracticed)).toLocaleDateString() 
+                        : "Never"
+                      }
+                    </div>
+                  )}
+
+                  {Number(proficiency.attemptCount) > 0 && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="w-full mt-2"
+                      onClick={() => {
+                        if (confirm("Are you sure you want to reset your progress for this word?")) {
+                          // Reset word proficiency
+                          apiRequest('DELETE', `/api/word-proficiency/${wordId}`)
+                            .then(() => {
+                              queryClient.invalidateQueries({ queryKey: ['/api/word-proficiency', wordId] });
+                              toast({
+                                title: 'Progress reset',
+                                description: 'Word proficiency has been reset',
+                                variant: 'default',
+                              });
+                            })
+                            .catch(() => {
+                              toast({
+                                title: 'Error',
+                                description: 'Failed to reset word proficiency',
+                                variant: 'destructive',
+                              });
+                            });
+                        }
+                      }}
+                    >
+                      Reset Progress
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <div className="text-gray-500 dark:text-gray-400">
+                  No practice data available for this word yet. Practice with this word to build proficiency.
+                </div>
+              )}
             </div>
 
             <div>

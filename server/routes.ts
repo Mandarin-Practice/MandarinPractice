@@ -182,6 +182,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get proficiency for a specific word
+  app.get("/api/word-proficiency/:wordId", async (req, res) => {
+    try {
+      const wordId = parseInt(req.params.wordId);
+      
+      if (isNaN(wordId)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      const proficiency = await storage.getWordProficiency(wordId);
+      if (!proficiency) {
+        return res.json({ 
+          wordId: wordId.toString(),
+          correctCount: "0",
+          attemptCount: "0",
+          lastPracticed: "0",
+          proficiencyPercent: 0
+        });
+      }
+      
+      // Calculate proficiency percentage
+      const correct = parseInt(proficiency.correctCount);
+      const attempts = parseInt(proficiency.attemptCount);
+      const proficiencyPercent = attempts > 0 ? Math.round((correct / attempts) * 100) : 0;
+      
+      res.json({
+        ...proficiency,
+        proficiencyPercent
+      });
+    } catch (error) {
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to get word proficiency" });
+    }
+  });
+
+  // Update proficiency for a word (after practice)
+  app.post("/api/word-proficiency/:wordId", async (req, res) => {
+    try {
+      const wordId = parseInt(req.params.wordId);
+      
+      if (isNaN(wordId)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      const { isCorrect } = req.body;
+      if (typeof isCorrect !== 'boolean') {
+        return res.status(400).json({ message: "isCorrect parameter is required and must be a boolean" });
+      }
+      
+      const proficiency = await storage.updateWordProficiency(wordId, isCorrect);
+      
+      // Calculate proficiency percentage
+      const correct = parseInt(proficiency.correctCount);
+      const attempts = parseInt(proficiency.attemptCount);
+      const proficiencyPercent = attempts > 0 ? Math.round((correct / attempts) * 100) : 0;
+      
+      res.json({
+        ...proficiency,
+        proficiencyPercent
+      });
+    } catch (error) {
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to update word proficiency" });
+    }
+  });
+  
+  // Reset proficiency for a word
+  app.delete("/api/word-proficiency/:wordId", async (req, res) => {
+    try {
+      const wordId = parseInt(req.params.wordId);
+      
+      if (isNaN(wordId)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      await storage.resetWordProficiency(wordId);
+      res.json({ message: "Word proficiency reset successfully" });
+    } catch (error) {
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to reset word proficiency" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

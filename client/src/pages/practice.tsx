@@ -119,6 +119,16 @@ export default function Practice() {
     }
   };
 
+  // Update word proficiency in the backend
+  const updateWordProficiency = useMutation({
+    mutationFn: async (params: { wordId: number, isCorrect: boolean }) => {
+      const response = await apiRequest('POST', `/api/word-proficiency/${params.wordId}`, {
+        isCorrect: params.isCorrect
+      });
+      return response.json();
+    }
+  });
+
   // Check answer similarity with correct translation
   const checkAnswer = (input: string) => {
     if (!generateSentenceMutation.data || !input.trim()) {
@@ -132,10 +142,43 @@ export default function Practice() {
     if (similarity >= 0.8) {
       setFeedbackStatus("correct");
       calculateScore(similarity);
+      
+      // If we have vocabulary data and this is a correct answer,
+      // update proficiency for each word in the sentence
+      if (vocabularyWords && Array.isArray(vocabularyWords)) {
+        // Extract all Chinese characters from the sentence
+        const sentence = generateSentenceMutation.data.chinese;
+        
+        // For each word in our vocabulary, check if it's in the sentence
+        vocabularyWords.forEach(word => {
+          if (sentence.includes(word.chinese)) {
+            // Update proficiency for this word (it was correct)
+            updateWordProficiency.mutate({ 
+              wordId: word.id, 
+              isCorrect: true 
+            });
+          }
+        });
+      }
     } else if (similarity >= 0.4) {
       setFeedbackStatus("partial");
     } else {
       setFeedbackStatus("incorrect");
+      
+      // If answer is incorrect, update proficiency for words in the sentence
+      if (vocabularyWords && Array.isArray(vocabularyWords)) {
+        const sentence = generateSentenceMutation.data.chinese;
+        
+        vocabularyWords.forEach(word => {
+          if (sentence.includes(word.chinese)) {
+            // Update proficiency for this word (it was incorrect)
+            updateWordProficiency.mutate({ 
+              wordId: word.id, 
+              isCorrect: false 
+            });
+          }
+        });
+      }
     }
   };
 
