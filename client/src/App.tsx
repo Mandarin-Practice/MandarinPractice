@@ -1,0 +1,56 @@
+import { Route, Switch } from "wouter";
+import Home from "@/pages/home";
+import Practice from "@/pages/practice"; 
+import WordList from "@/pages/word-list";
+import Settings from "@/pages/settings";
+import Navbar from "@/components/navbar";
+import NotFound from "@/pages/not-found";
+import { useEffect, useState } from "react";
+import { Theme } from "@/lib/utils";
+
+function App() {
+  const [theme, setTheme] = useState<Theme>(() => {
+    // Check localStorage or use system preference
+    const savedTheme = localStorage.getItem("theme") as Theme | null;
+    if (savedTheme) return savedTheme;
+    
+    return window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "light";
+  });
+
+  useEffect(() => {
+    // Update the DOM based on the current theme
+    const root = window.document.documentElement;
+    root.classList.remove("light", "dark");
+    root.classList.add(theme);
+    
+    // Save to localStorage
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => (prev === "light" ? "dark" : "light"));
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100">
+      <Navbar theme={theme} toggleTheme={toggleTheme} />
+      <main className="container mx-auto px-4 py-8 max-w-4xl">
+        <Switch>
+          <Route path="/" component={Home} />
+          <Route path="/practice" component={Practice} />
+          <Route path="/word-list" component={WordList} />
+          <Route path="/settings" component={Settings} />
+          <Route component={NotFound} />
+        </Switch>
+      </main>
+      <footer className="mt-12 text-center text-gray-500 dark:text-gray-400 text-sm pb-8">
+        <p>Mandarin Listening Practice &copy; {new Date().getFullYear()}</p>
+        <p className="mt-1">Built to help you improve your Mandarin comprehension skills</p>
+      </footer>
+    </div>
+  );
+}
+
+export default App;
