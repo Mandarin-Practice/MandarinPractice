@@ -28,6 +28,21 @@ export class MemStorage implements IStorage {
   }
 
   async addVocabulary(word: InsertVocabulary): Promise<Vocabulary> {
+    // Check if a word with the same Chinese, pinyin, and English already exists
+    const existingWords = Array.from(this.vocabulary.values());
+    const duplicate = existingWords.find(
+      existing => 
+        existing.chinese === word.chinese && 
+        existing.pinyin === word.pinyin && 
+        existing.english === word.english
+    );
+    
+    // If duplicate found, return the existing word
+    if (duplicate) {
+      return duplicate;
+    }
+    
+    // Otherwise, add as a new word
     const id = this.currentVocabularyId++;
     // Set default active status if not provided
     const newWord: Vocabulary = { 

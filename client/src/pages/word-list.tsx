@@ -329,11 +329,21 @@ export default function WordList() {
       const response = await apiRequest('POST', '/api/vocabulary', { words });
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (result, variables) => {
       queryClient.invalidateQueries({ queryKey: ['/api/vocabulary'] });
+      
+      const originalCount = variables.length;
+      const savedCount = result.length;
+      const duplicateCount = originalCount - savedCount;
+      
+      let description = "Your vocabulary list has been updated.";
+      if (duplicateCount > 0) {
+        description = `${savedCount} words saved. ${duplicateCount} duplicate ${duplicateCount === 1 ? 'word was' : 'words were'} skipped.`;
+      }
+      
       toast({
         title: "Words saved",
-        description: "Your vocabulary list has been updated.",
+        description: description,
         variant: "default",
       });
     },
@@ -396,13 +406,27 @@ export default function WordList() {
       if (!wordList) throw new Error("Word list not found");
       
       const response = await apiRequest('POST', '/api/vocabulary/import', { words: wordList.words });
-      return response.json();
+      const result = await response.json();
+      return {
+        wordList,
+        savedWords: result
+      };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/vocabulary'] });
+      
+      const originalCount = data.wordList.words.length;
+      const savedCount = data.savedWords.length;
+      const duplicateCount = originalCount - savedCount;
+      
+      let description = "The word list has been added to your vocabulary.";
+      if (duplicateCount > 0) {
+        description = `${savedCount} words imported. ${duplicateCount} duplicate ${duplicateCount === 1 ? 'word was' : 'words were'} skipped.`;
+      }
+      
       toast({
         title: "Word list imported",
-        description: "The word list has been added to your vocabulary.",
+        description: description,
         variant: "default",
       });
     }
@@ -505,15 +529,27 @@ export default function WordList() {
       return;
     }
     
-    saveVocabularyMutation.mutate(selectedWordsToImport);
-    
-    toast({
-      title: "Words imported",
-      description: `${selectedWordsToImport.length} words have been imported from ${previewList.name}.`,
-      variant: "default",
+    // Save vocabulary and track duplicates
+    saveVocabularyMutation.mutate(selectedWordsToImport, {
+      onSuccess: (result) => {
+        const originalCount = selectedWordsToImport.length;
+        const savedCount = result.length;
+        const duplicateCount = originalCount - savedCount;
+        
+        let description = `${savedCount} words have been imported from ${previewList.name}.`;
+        if (duplicateCount > 0) {
+          description = `${savedCount} words imported. ${duplicateCount} duplicate ${duplicateCount === 1 ? 'word was' : 'words were'} skipped.`;
+        }
+        
+        toast({
+          title: "Words imported",
+          description: description,
+          variant: "default",
+        });
+        
+        handleClosePreview();
+      }
     });
-    
-    handleClosePreview();
   };
   
   const handleToggleActive = (id: number, currentActive: string) => {
