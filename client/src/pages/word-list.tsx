@@ -23,7 +23,7 @@ const SAMPLE_WORD_LISTS: WordList[] = [
   {
     id: "hsk1",
     name: "HSK Level 1 Basics",
-    description: "150 essential words for beginners",
+    description: "30 essential words for beginners",
     words: [
       { chinese: "我", pinyin: "wǒ", english: "I/me" },
       { chinese: "你", pinyin: "nǐ", english: "you" },
@@ -34,13 +34,33 @@ const SAMPLE_WORD_LISTS: WordList[] = [
       { chinese: "不", pinyin: "bù", english: "no/not" },
       { chinese: "人", pinyin: "rén", english: "person" },
       { chinese: "的", pinyin: "de", english: "possessive particle" },
-      { chinese: "在", pinyin: "zài", english: "at/in/on" }
+      { chinese: "在", pinyin: "zài", english: "at/in/on" },
+      { chinese: "这", pinyin: "zhè", english: "this" },
+      { chinese: "那", pinyin: "nà", english: "that" },
+      { chinese: "个", pinyin: "gè", english: "individual/measure word" },
+      { chinese: "们", pinyin: "men", english: "plural marker" },
+      { chinese: "有", pinyin: "yǒu", english: "to have" },
+      { chinese: "来", pinyin: "lái", english: "to come" },
+      { chinese: "去", pinyin: "qù", english: "to go" },
+      { chinese: "看", pinyin: "kàn", english: "to see/to look" },
+      { chinese: "听", pinyin: "tīng", english: "to listen" },
+      { chinese: "说", pinyin: "shuō", english: "to speak" },
+      { chinese: "吃", pinyin: "chī", english: "to eat" },
+      { chinese: "喝", pinyin: "hē", english: "to drink" },
+      { chinese: "做", pinyin: "zuò", english: "to do" },
+      { chinese: "想", pinyin: "xiǎng", english: "to think/to want" },
+      { chinese: "爱", pinyin: "ài", english: "to love" },
+      { chinese: "书", pinyin: "shū", english: "book" },
+      { chinese: "钱", pinyin: "qián", english: "money" },
+      { chinese: "什么", pinyin: "shén me", english: "what" },
+      { chinese: "谁", pinyin: "shuí", english: "who" },
+      { chinese: "哪里", pinyin: "nǎ lǐ", english: "where" }
     ]
   },
   {
     id: "travel",
     name: "Travel Phrases",
-    description: "100 useful travel expressions",
+    description: "25 useful travel expressions",
     words: [
       { chinese: "你好", pinyin: "nǐ hǎo", english: "hello" },
       { chinese: "谢谢", pinyin: "xiè xiè", english: "thank you" },
@@ -51,7 +71,22 @@ const SAMPLE_WORD_LISTS: WordList[] = [
       { chinese: "厕所", pinyin: "cè suǒ", english: "toilet" },
       { chinese: "多少钱", pinyin: "duō shǎo qián", english: "how much money" },
       { chinese: "饭店", pinyin: "fàn diàn", english: "restaurant" },
-      { chinese: "水", pinyin: "shuǐ", english: "water" }
+      { chinese: "水", pinyin: "shuǐ", english: "water" },
+      { chinese: "酒店", pinyin: "jiǔ diàn", english: "hotel" },
+      { chinese: "机场", pinyin: "jī chǎng", english: "airport" },
+      { chinese: "火车站", pinyin: "huǒ chē zhàn", english: "train station" },
+      { chinese: "地铁", pinyin: "dì tiě", english: "subway" },
+      { chinese: "公交车", pinyin: "gōng jiāo chē", english: "bus" },
+      { chinese: "出租车", pinyin: "chū zū chē", english: "taxi" },
+      { chinese: "左边", pinyin: "zuǒ biān", english: "left side" },
+      { chinese: "右边", pinyin: "yòu biān", english: "right side" },
+      { chinese: "前面", pinyin: "qián miàn", english: "in front" },
+      { chinese: "后面", pinyin: "hòu miàn", english: "behind" },
+      { chinese: "医院", pinyin: "yī yuàn", english: "hospital" },
+      { chinese: "药店", pinyin: "yào diàn", english: "pharmacy" },
+      { chinese: "银行", pinyin: "yín háng", english: "bank" },
+      { chinese: "帮助", pinyin: "bāng zhù", english: "help" },
+      { chinese: "紧急", pinyin: "jǐn jí", english: "emergency" }
     ]
   }
 ];
