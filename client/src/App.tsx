@@ -2,6 +2,7 @@ import { Route, Switch } from "wouter";
 import Home from "@/pages/home";
 import Practice from "@/pages/practice"; 
 import WordList from "@/pages/word-list";
+import WordDetail from "@/pages/word-detail";
 import Settings from "@/pages/settings";
 import Navbar from "@/components/navbar";
 import NotFound from "@/pages/not-found";
@@ -30,7 +31,7 @@ function App() {
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme(prev => (prev === "light" ? "dark" : "light"));
+    setTheme((prev: Theme) => (prev === "light" ? "dark" : "light"));
   };
 
   return (
@@ -41,6 +42,7 @@ function App() {
           <Route path="/" component={Home} />
           <Route path="/practice" component={Practice} />
           <Route path="/word-list" component={WordList} />
+          <Route path="/word/:id" component={WordDetail} />
           <Route path="/settings" component={Settings} />
           <Route component={NotFound} />
         </Switch>
