@@ -76,6 +76,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update a vocabulary word
+  app.patch("/api/vocabulary/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      const updates = req.body;
+      const updatedWord = await storage.updateVocabulary(id, updates);
+      res.status(200).json(updatedWord);
+    } catch (error) {
+      res.status(404).json({ message: error instanceof Error ? error.message : "Vocabulary not found" });
+    }
+  });
+
   // Delete a vocabulary word
   app.delete("/api/vocabulary/:id", async (req, res) => {
     try {
@@ -108,14 +125,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { difficulty = "beginner" } = req.body;
       
       // Get all vocabulary words
-      const vocabulary = await storage.getAllVocabulary();
+      const allVocabulary = await storage.getAllVocabulary();
       
-      if (vocabulary.length === 0) {
-        return res.status(400).json({ message: "No vocabulary words available. Please add some words first." });
+      // Filter for only active words
+      const activeVocabulary = allVocabulary.filter(word => word.active === "true");
+      
+      if (activeVocabulary.length === 0) {
+        return res.status(400).json({ message: "No active vocabulary words available. Please add or activate some words first." });
       }
       
       // Generate sentence using OpenAI
-      const sentence = await generateSentence(vocabulary, difficulty);
+      const sentence = await generateSentence(activeVocabulary, difficulty);
       
       res.json(sentence);
     } catch (error) {

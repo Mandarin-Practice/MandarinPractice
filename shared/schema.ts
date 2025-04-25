@@ -23,12 +23,14 @@ export const vocabulary = pgTable("vocabulary", {
   chinese: text("chinese").notNull(),
   pinyin: text("pinyin").notNull(),
   english: text("english").notNull(),
+  active: text("active").default("true").notNull(),
 });
 
 export const vocabularySchema = createInsertSchema(vocabulary).pick({
   chinese: true,
   pinyin: true,
   english: true,
+  active: true,
 });
 
 export type InsertVocabulary = z.infer<typeof vocabularySchema>;

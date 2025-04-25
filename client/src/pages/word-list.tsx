@@ -105,6 +105,17 @@ export default function WordList() {
       });
     }
   });
+  
+  // Toggle word active status mutation
+  const toggleActiveStatusMutation = useMutation({
+    mutationFn: async ({ id, active }: { id: number, active: string }) => {
+      const response = await apiRequest('PATCH', `/api/vocabulary/${id}`, { active });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/vocabulary'] });
+    }
+  });
 
   // Clear all words mutation
   const clearWordsMutation = useMutation({
@@ -191,6 +202,11 @@ export default function WordList() {
   const handleImportWordList = (listId: string) => {
     importWordListMutation.mutate(listId);
   };
+  
+  const handleToggleActive = (id: number, currentActive: string) => {
+    const newActive = currentActive === "true" ? "false" : "true";
+    toggleActiveStatusMutation.mutate({ id, active: newActive });
+  };
 
   return (
     <div className="word-list-section">
@@ -227,13 +243,14 @@ export default function WordList() {
               <div className="flex flex-wrap gap-2 mb-4">
                 <p>Loading vocabulary...</p>
               </div>
-            ) : vocabulary && vocabulary.length > 0 ? (
+            ) : vocabulary && Array.isArray(vocabulary) && vocabulary.length > 0 ? (
               <div className="flex flex-wrap gap-2 mb-4">
                 {vocabulary.map((word) => (
                   <WordChip
                     key={word.id}
                     word={word}
                     onRemove={() => handleRemoveWord(word.id)}
+                    onToggleActive={() => handleToggleActive(word.id, word.active)}
                   />
                 ))}
               </div>

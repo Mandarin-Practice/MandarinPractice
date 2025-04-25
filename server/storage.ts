@@ -5,6 +5,7 @@ export interface IStorage {
   getAllVocabulary(): Promise<Vocabulary[]>;
   getVocabulary(id: number): Promise<Vocabulary | undefined>;
   addVocabulary(word: InsertVocabulary): Promise<Vocabulary>;
+  updateVocabulary(id: number, updates: Partial<InsertVocabulary>): Promise<Vocabulary>;
   deleteVocabulary(id: number): Promise<void>;
   deleteAllVocabulary(): Promise<void>;
 }
@@ -28,9 +29,25 @@ export class MemStorage implements IStorage {
 
   async addVocabulary(word: InsertVocabulary): Promise<Vocabulary> {
     const id = this.currentVocabularyId++;
-    const newWord: Vocabulary = { ...word, id };
+    // Set default active status if not provided
+    const newWord: Vocabulary = { 
+      ...word, 
+      id,
+      active: word.active || "true" 
+    };
     this.vocabulary.set(id, newWord);
     return newWord;
+  }
+
+  async updateVocabulary(id: number, updates: Partial<InsertVocabulary>): Promise<Vocabulary> {
+    const word = this.vocabulary.get(id);
+    if (!word) {
+      throw new Error(`Vocabulary with ID ${id} not found`);
+    }
+    
+    const updatedWord: Vocabulary = { ...word, ...updates };
+    this.vocabulary.set(id, updatedWord);
+    return updatedWord;
   }
 
   async deleteVocabulary(id: number): Promise<void> {
