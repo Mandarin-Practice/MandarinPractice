@@ -213,6 +213,11 @@ export default function SentenceCard({
                     placeholder="Type your answer here... (Press Enter to check or next)"
                     className="w-full px-4 py-6 text-base"
                     disabled={isLoading || !sentence}
+                    autoComplete="off" // Disable browser autocomplete suggestions
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck="false"
+                    data-form-type="other" // Additional attribute to help prevent autocomplete
                   />
                   <div className="absolute right-3 top-3 text-gray-400">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
