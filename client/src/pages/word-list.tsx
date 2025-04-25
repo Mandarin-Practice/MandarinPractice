@@ -810,6 +810,7 @@ export default function WordList() {
                           <WordChip
                             key={word.id}
                             word={word}
+                            proficiency={proficiencyData[word.id]}
                             onRemove={() => handleRemoveWord(word.id)}
                             onToggleActive={() => handleToggleActive(word.id, word.active)}
                           />
@@ -825,6 +826,7 @@ export default function WordList() {
                     <WordChip
                       key={word.id}
                       word={word}
+                      proficiency={proficiencyData[word.id]}
                       onRemove={() => handleRemoveWord(word.id)}
                       onToggleActive={() => handleToggleActive(word.id, word.active)}
                     />
