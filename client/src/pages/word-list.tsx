@@ -322,6 +322,39 @@ export default function WordList() {
     queryKey: ['/api/vocabulary'],
     refetchOnWindowFocus: false,
   });
+  
+  // Fetch word proficiency data for all words
+  const [proficiencyData, setProficiencyData] = useState<Record<number, any>>({});
+  const [isLoadingProficiency, setIsLoadingProficiency] = useState(false);
+  
+  useEffect(() => {
+    if (vocabulary && Array.isArray(vocabulary) && vocabulary.length > 0) {
+      setIsLoadingProficiency(true);
+      
+      // Fetch proficiency data for each word
+      const fetchProficiencyData = async () => {
+        const proficiencyMap: Record<number, any> = {};
+        
+        const promises = vocabulary.map(async (word) => {
+          try {
+            const response = await apiRequest('GET', `/api/word-proficiency/${word.id}`);
+            if (response.ok) {
+              const data = await response.json();
+              proficiencyMap[word.id] = data;
+            }
+          } catch (error) {
+            console.error(`Failed to fetch proficiency for word ID ${word.id}:`, error);
+          }
+        });
+        
+        await Promise.all(promises);
+        setProficiencyData(proficiencyMap);
+        setIsLoadingProficiency(false);
+      };
+      
+      fetchProficiencyData();
+    }
+  }, [vocabulary]);
 
   // Save vocabulary mutation
   const saveVocabularyMutation = useMutation({
@@ -749,6 +782,7 @@ export default function WordList() {
                           <WordChip
                             key={word.id}
                             word={word}
+                            proficiency={proficiencyData[word.id]}
                             onRemove={() => handleRemoveWord(word.id)}
                             onToggleActive={() => handleToggleActive(word.id, word.active)}
                           />

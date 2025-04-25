@@ -1,4 +1,4 @@
-import { X, CheckCircle, XCircle, Info } from "lucide-react";
+import { X, CheckCircle, XCircle, Info, Star } from "lucide-react";
 import { Link } from "wouter";
 
 interface WordChipProps {
@@ -9,12 +9,24 @@ interface WordChipProps {
     english: string;
     active: string;
   };
+  proficiency?: {
+    proficiencyPercent: number;
+    correctCount: string;
+    attemptCount: string;
+  } | null;
   onRemove: () => void;
   onToggleActive?: () => void;
 }
 
-export default function WordChip({ word, onRemove, onToggleActive }: WordChipProps) {
+export default function WordChip({ word, proficiency, onRemove, onToggleActive }: WordChipProps) {
   const isActive = word.active === "true";
+  
+  // Determine proficiency color
+  const getProficiencyColor = (percent: number) => {
+    if (percent >= 70) return "text-green-500 dark:text-green-400";
+    if (percent >= 30) return "text-yellow-500 dark:text-yellow-400";
+    return "text-red-500 dark:text-red-400";
+  };
   
   return (
     <div className={`inline-flex items-center px-3 py-1 rounded-full ${
@@ -24,6 +36,16 @@ export default function WordChip({ word, onRemove, onToggleActive }: WordChipPro
     }`}>
       <span className="font-['Noto_Sans_SC',sans-serif] mr-1">{word.chinese}</span>
       <span className="text-xs text-gray-500 dark:text-gray-400">({word.pinyin})</span>
+      
+      {/* Proficiency indicator */}
+      {proficiency && Number(proficiency.attemptCount) > 0 && (
+        <span 
+          className={`ml-1.5 flex items-center ${getProficiencyColor(proficiency.proficiencyPercent)}`}
+          title={`Proficiency: ${proficiency.proficiencyPercent}% (${proficiency.correctCount}/${proficiency.attemptCount})`}
+        >
+          <Star className="h-3 w-3 fill-current" />
+        </span>
+      )}
       
       <Link 
         to={`/word/${word.id}`} 
