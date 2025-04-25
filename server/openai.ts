@@ -94,3 +94,66 @@ export async function generateSentence(
     throw new Error("Failed to generate sentence. Please try again.");
   }
 }
+
+/**
+ * Generate a Mandarin sentence that includes a specific word
+ * @param word The Chinese word to include in the sentence
+ * @param difficulty Difficulty level of the sentence
+ * @returns Object with chinese, pinyin, and english fields
+ */
+export async function generateSentenceWithWord(
+  word: string,
+  difficulty: "beginner" | "intermediate" | "advanced" = "beginner"
+) {
+  if (!word || word.trim() === '') {
+    throw new Error("No word provided");
+  }
+
+  const difficultyGuide = {
+    beginner: "Use simple sentence structures with basic subject-verb patterns. Include 3-5 words.",
+    intermediate: "Use more complex grammar with some compounds and basic conjunctions. Include 5-8 words.",
+    advanced: "Use sophisticated grammar and sentence structures. Include 8-10 words or more."
+  };
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: `You are a Mandarin Chinese language teacher creating example sentences. 
+          Generate a grammatically correct Mandarin sentence that includes the word "${word}".
+          ${difficultyGuide[difficulty]}
+          Provide the sentence in Chinese characters, pinyin (with proper tone marks), and an English translation.
+          Format your response as a valid JSON object with 'chinese', 'pinyin', and 'english' fields.`
+        },
+        {
+          role: "user",
+          content: `Create a natural, grammatically correct sentence in Mandarin that includes the word "${word}".
+          Difficulty level: ${difficulty}.`
+        }
+      ],
+      response_format: { type: "json_object" }
+    });
+
+    const generatedContent = response.choices[0].message.content;
+    if (!generatedContent) {
+      throw new Error("No content generated");
+    }
+
+    const parsedContent = JSON.parse(generatedContent);
+    
+    // Validate that the sentence contains the requested word
+    if (!parsedContent.chinese.includes(word)) {
+      throw new Error("Generated sentence does not contain the specified word");
+    }
+    
+    return {
+      ...parsedContent,
+      difficulty
+    };
+  } catch (error) {
+    console.error("Error generating sentence:", error);
+    throw new Error("Failed to generate example sentence. Please try again.");
+  }
+}

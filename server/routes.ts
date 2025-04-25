@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { vocabularySchema } from "@shared/schema";
 import { ZodError } from "zod";
-import { generateSentence } from "./openai";
+import { generateSentence, generateSentenceWithWord } from "./openai";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Get all vocabulary words
@@ -119,6 +119,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get a specific vocabulary word by ID
+  app.get("/api/vocabulary/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      const word = await storage.getVocabulary(id);
+      
+      if (!word) {
+        return res.status(404).json({ message: "Vocabulary not found" });
+      }
+      
+      res.json(word);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch vocabulary" });
+    }
+  });
+
   // Generate a sentence using the user's vocabulary
   app.post("/api/sentence/generate", async (req, res) => {
     try {
@@ -136,6 +157,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Generate sentence using OpenAI
       const sentence = await generateSentence(activeVocabulary, difficulty);
+      
+      res.json(sentence);
+    } catch (error) {
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to generate sentence" });
+    }
+  });
+  
+  // Generate a sentence using a specific word
+  app.post("/api/sentence/generate/word", async (req, res) => {
+    try {
+      const { word, difficulty = "beginner" } = req.body;
+      
+      if (!word) {
+        return res.status(400).json({ message: "Word is required" });
+      }
+      
+      // Generate sentence using OpenAI with specific word
+      const sentence = await generateSentenceWithWord(word, difficulty);
       
       res.json(sentence);
     } catch (error) {
