@@ -34,6 +34,8 @@ export default function Practice() {
   const [showPinyin, setShowPinyin] = useState(true);
   const [score, setScore] = useState(0);
   const [startTime, setStartTime] = useState<number | null>(null);
+  // Track recently seen sentences to avoid repetition
+  const [recentSentences, setRecentSentences] = useState<string[]>([]);
   const [stats, setStats] = useState<Stats>({
     completed: 0,
     accuracy: "0%",
@@ -51,14 +53,32 @@ export default function Practice() {
     refetchOnWindowFocus: false,
   });
 
+  // Function to get a new sentence, with duplicate prevention
+  const fetchNewSentence = async (maxAttempts = 3): Promise<any> => {
+    const difficulty = localStorage.getItem('difficulty') || 'beginner';
+    
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      const response = await apiRequest('POST', '/api/sentence/generate', { difficulty });
+      const data = await response.json();
+      
+      // Check if this sentence has been seen recently
+      if (data.chinese && recentSentences.includes(data.chinese)) {
+        console.log(`Sentence "${data.chinese}" was recently used, trying again... (attempt ${attempt + 1}/${maxAttempts})`);
+      } else {
+        // New sentence found, return it
+        return data;
+      }
+    }
+    
+    // If we've tried max attempts and still got duplicates, just use the last generated sentence
+    console.log("Max attempts reached, accepting any sentence");
+    const response = await apiRequest('POST', '/api/sentence/generate', { difficulty });
+    return response.json();
+  };
+  
   // Generate sentence mutation
   const generateSentenceMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest('POST', '/api/sentence/generate', {
-        difficulty: localStorage.getItem('difficulty') || 'beginner'
-      });
-      return response.json();
-    },
+    mutationFn: fetchNewSentence,
     onSuccess: (data) => {
       // Reset states for new sentence
       setUserTranslation("");
@@ -67,6 +87,12 @@ export default function Practice() {
       
       // Play the audio for the new sentence
       if (data?.chinese) {
+        // Add to recent sentences
+        setRecentSentences(prev => {
+          const updated = [data.chinese, ...prev.slice(0, 4)]; // Keep last 5 sentences
+          return updated;
+        });
+        
         speak(data.chinese);
       }
     }
@@ -82,7 +108,7 @@ export default function Practice() {
   // Generate first sentence when component mounts and update totalWords count
   useEffect(() => {
     if (!isLoadingVocabulary && vocabularyWords && Array.isArray(vocabularyWords) && vocabularyWords.length > 0) {
-      generateSentenceMutation.mutate();
+      generateSentenceMutation.mutate(undefined);
       
       // Update the total words count when vocabulary is loaded
       setStats(prev => ({
