@@ -30,16 +30,30 @@ export class MemStorage implements IStorage {
   async addVocabulary(word: InsertVocabulary): Promise<Vocabulary> {
     // Check if a word with the same Chinese, pinyin, and English already exists
     const existingWords = Array.from(this.vocabulary.values());
-    const duplicate = existingWords.find(
+    
+    // First check for exact match (all three fields)
+    const exactDuplicate = existingWords.find(
       existing => 
         existing.chinese === word.chinese && 
         existing.pinyin === word.pinyin && 
         existing.english === word.english
     );
     
-    // If duplicate found, return the existing word
-    if (duplicate) {
-      return duplicate;
+    // If exact duplicate found, return it without adding a new one
+    if (exactDuplicate) {
+      console.log(`Skipping exact duplicate: ${word.chinese} (${word.pinyin}) - ${word.english}`);
+      return exactDuplicate;
+    }
+    
+    // Also check for a duplicate with same Chinese character, which is the most important check
+    const chineseDuplicate = existingWords.find(
+      existing => existing.chinese === word.chinese
+    );
+    
+    // If Chinese character duplicate found, return it without adding a new one
+    if (chineseDuplicate) {
+      console.log(`Skipping Chinese character duplicate: ${word.chinese}`);
+      return chineseDuplicate;
     }
     
     // Otherwise, add as a new word
