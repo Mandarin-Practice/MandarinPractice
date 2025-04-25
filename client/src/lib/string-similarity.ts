@@ -113,23 +113,19 @@ export function checkSimilarity(
 }
 
 /**
- * Map of Chinese homophones that sound the same and should be treated as equivalent
+ * Map of Chinese pronouns that sound the same and should be treated as equivalent when heard
+ * These are specifically: 他(tā: he), 她(tā: she), and 它(tā: it) which sound identical in Mandarin
  * Key: Chinese character, Value: Array of equivalent characters
  */
 const chineseHomophones: Record<string, string[]> = {
-  '他': ['她', '它'], // tā (he, she, it)
-  '她': ['他', '它'], // tā (she, he, it)
-  '它': ['他', '她'], // tā (it, he, she)
-  '吗': ['嗎', '馬'], // ma (question particle, horse)
-  '哪': ['那'], // nǎ/nà (which, that)
-  '那': ['哪'], // nà/nǎ (that, which)
-  '的': ['得', '地'], // de (possessive, adverbial, etc.)
-  '得': ['的', '地'], // de/děi (possessive, must)
-  '地': ['的', '得']  // de/dì (adverbial, ground)
+  '他': ['她', '它'], // tā (he, she, it) - all sound identical
+  '她': ['他', '它'], // tā (she, he, it) - all sound identical
+  '它': ['他', '她']  // tā (it, he, she) - all sound identical
 };
 
 /**
- * Map of English homophones or gender variations that should be treated as equivalent
+ * Map of English pronoun variations that should be treated as equivalent
+ * These correspond to the Chinese 他/她/它 which can't be distinguished by listening
  */
 const englishAlternatives: Record<string, string[]> = {
   'he': ['she', 'it'],
@@ -193,7 +189,8 @@ function areWordsEquivalent(word1: string, word2: string): boolean {
 
 /**
  * Compare two sentences word by word to identify matched and unmatched words
- * Takes into account Chinese homophones (她/他/它) and English gender variations (he/she/it)
+ * Takes into account Chinese pronoun homophones (她/他/它) and English gender variations (he/she/it)
+ * These are treated equivalently since they sound identical in Mandarin and can't be distinguished by listening
  * 
  * @param correctSentence The correct sentence (reference)
  * @param userSentence The user's sentence to compare
