@@ -34,7 +34,7 @@ export function levenshteinDistance(a: string, b: string): number {
 }
 
 /**
- * Normalize a string for comparison
+ * Normalize a string for comparison by removing punctuation and extra spaces
  * @param str String to normalize
  * @returns Normalized string
  */
@@ -147,7 +147,7 @@ export function compareWordByWord(
 
   // First pass: Find exact matches
   for (let i = 0; i < userWords.length; i++) {
-    const userWord = userWords[i];
+    const userWord = userWords[i].toLowerCase();
     
     // Skip very short words or already matched words
     if (userWord.length < 2 || userWordElements[i].matched) continue;
@@ -157,7 +157,7 @@ export function compareWordByWord(
     const searchEnd = Math.min(correctWords.length - 1, i + 1);
     
     for (let j = searchStart; j <= searchEnd; j++) {
-      if (userWord === correctWords[j] && !correctWordElements[j].matched) {
+      if (userWord === correctWords[j].toLowerCase() && !correctWordElements[j].matched) {
         userWordElements[i].matched = true;
         correctWordElements[j].matched = true;
         break;
@@ -167,14 +167,14 @@ export function compareWordByWord(
   
   // Second pass: Find words with high similarity
   for (let i = 0; i < userWords.length; i++) {
-    const userWord = userWords[i];
+    const userWord = userWords[i].toLowerCase();
     
     // Skip very short words or already matched words
     if (userWord.length < 3 || userWordElements[i].matched) continue;
     
     // Look for similar words in the entire correct sentence
     for (let j = 0; j < correctWords.length; j++) {
-      const correctWord = correctWords[j];
+      const correctWord = correctWords[j].toLowerCase();
       
       // Skip very short words or already matched words
       if (correctWord.length < 3 || correctWordElements[j].matched) continue;
