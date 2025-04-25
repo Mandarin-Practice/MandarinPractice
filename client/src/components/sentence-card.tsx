@@ -3,6 +3,47 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Play, SkipForward } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { compareWordByWord } from "@/lib/string-similarity";
+
+interface HighlightedComparisonProps {
+  correctSentence: string;
+  userSentence: string;
+}
+
+function HighlightedComparison({ correctSentence, userSentence }: HighlightedComparisonProps) {
+  const comparison = compareWordByWord(correctSentence, userSentence);
+
+  return (
+    <div className="space-y-3">
+      <div className="p-2 rounded">
+        <p className="text-base leading-relaxed">
+          {comparison.correctWordElements.map((element, index) => (
+            <span 
+              key={`correct-${index}`}
+              className={element.matched ? "text-green-600 dark:text-green-400 font-medium" : "text-red-600 dark:text-red-400 font-medium"}
+            >
+              {element.word}{index < comparison.correctWordElements.length - 1 ? ' ' : ''}
+            </span>
+          ))}
+        </p>
+      </div>
+
+      <p className="text-sm font-medium mt-3 mb-1">Your translation:</p>
+      <div className="p-2 rounded">
+        <p className="text-base leading-relaxed">
+          {comparison.userWordElements.map((element, index) => (
+            <span 
+              key={`user-${index}`}
+              className={element.matched ? "text-green-600 dark:text-green-400 font-medium" : "text-red-600 dark:text-red-400 font-medium"}
+            >
+              {element.word}{index < comparison.userWordElements.length - 1 ? ' ' : ''}
+            </span>
+          ))}
+        </p>
+      </div>
+    </div>
+  );
+}
 
 interface SentenceCardProps {
   sentence?: {
@@ -112,8 +153,8 @@ export default function SentenceCard({
               {showChinese && sentence?.chinese && (
                 <div className="mb-6">
                   <p className="text-2xl font-['Noto_Sans_SC',sans-serif] leading-relaxed">
+                    {/* Just highlighting all characters together since word-by-word doesn't make sense for Chinese */}
                     {feedbackStatus ? (
-                      // When feedback is shown, color the characters based on correctness
                       <span className={
                         feedbackStatus === "correct" 
                           ? "text-green-600 dark:text-green-400" 
@@ -172,26 +213,10 @@ export default function SentenceCard({
                 {feedbackStatus && sentence?.english && (
                   <div className="mt-4 p-3 border rounded-md bg-gray-50 dark:bg-gray-800">
                     <p className="text-sm font-medium mb-1">Correct translation:</p>
-                    <p className={
-                      feedbackStatus === "correct" 
-                        ? "text-green-600 dark:text-green-400 font-medium" 
-                        : feedbackStatus === "incorrect" 
-                          ? "text-red-600 dark:text-red-400 font-medium" 
-                          : "text-amber-600 dark:text-amber-400 font-medium"
-                    }>
-                      {sentence.english}
-                    </p>
-
-                    <p className="text-sm font-medium mt-3 mb-1">Your translation:</p>
-                    <p className={
-                      feedbackStatus === "correct" 
-                        ? "text-green-600 dark:text-green-400 font-medium" 
-                        : feedbackStatus === "incorrect" 
-                          ? "text-red-600 dark:text-red-400 font-medium" 
-                          : "text-amber-600 dark:text-amber-400 font-medium"
-                    }>
-                      {userTranslation}
-                    </p>
+                    <HighlightedComparison 
+                      correctSentence={sentence.english} 
+                      userSentence={userTranslation} 
+                    />
                   </div>
                 )}
               </div>

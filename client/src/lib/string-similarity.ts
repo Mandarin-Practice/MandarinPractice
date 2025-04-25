@@ -117,3 +117,84 @@ export function checkSimilarity(
   
   return similarity;
 }
+
+/**
+ * Compare two sentences word by word to identify matched and unmatched words
+ * @param correctSentence The correct sentence (reference)
+ * @param userSentence The user's sentence to compare
+ * @returns Object with HTML-ready arrays for rendering matched/unmatched words
+ */
+export function compareWordByWord(
+  correctSentence: string,
+  userSentence: string
+): { 
+  correctWordElements: { word: string; matched: boolean }[],
+  userWordElements: { word: string; matched: boolean }[] 
+} {
+  const correctWords = normalizeString(correctSentence).split(' ');
+  const userWords = normalizeString(userSentence).split(' ');
+  
+  // Initialize arrays to store match status for each word
+  const correctWordElements: { word: string; matched: boolean }[] = correctWords.map(word => ({ 
+    word, 
+    matched: false 
+  }));
+  
+  const userWordElements: { word: string; matched: boolean }[] = userWords.map(word => ({ 
+    word, 
+    matched: false 
+  }));
+
+  // First pass: Find exact matches
+  for (let i = 0; i < userWords.length; i++) {
+    const userWord = userWords[i];
+    
+    // Skip very short words or already matched words
+    if (userWord.length < 2 || userWordElements[i].matched) continue;
+    
+    // Try to find exact match at the same position or nearby
+    const searchStart = Math.max(0, i - 1);
+    const searchEnd = Math.min(correctWords.length - 1, i + 1);
+    
+    for (let j = searchStart; j <= searchEnd; j++) {
+      if (userWord === correctWords[j] && !correctWordElements[j].matched) {
+        userWordElements[i].matched = true;
+        correctWordElements[j].matched = true;
+        break;
+      }
+    }
+  }
+  
+  // Second pass: Find words with high similarity
+  for (let i = 0; i < userWords.length; i++) {
+    const userWord = userWords[i];
+    
+    // Skip very short words or already matched words
+    if (userWord.length < 3 || userWordElements[i].matched) continue;
+    
+    // Look for similar words in the entire correct sentence
+    for (let j = 0; j < correctWords.length; j++) {
+      const correctWord = correctWords[j];
+      
+      // Skip very short words or already matched words
+      if (correctWord.length < 3 || correctWordElements[j].matched) continue;
+      
+      // Calculate word similarity
+      const distance = levenshteinDistance(userWord, correctWord);
+      const maxLength = Math.max(userWord.length, correctWord.length);
+      const wordSimilarity = 1 - (distance / maxLength);
+      
+      // If words are very similar, mark as matched
+      if (wordSimilarity > 0.75) {
+        userWordElements[i].matched = true;
+        correctWordElements[j].matched = true;
+        break;
+      }
+    }
+  }
+  
+  return {
+    correctWordElements,
+    userWordElements
+  };
+}
