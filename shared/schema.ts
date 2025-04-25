@@ -62,3 +62,22 @@ export const practiceSessionSchema = createInsertSchema(practiceSession).pick({
 
 export type InsertPracticeSession = z.infer<typeof practiceSessionSchema>;
 export type PracticeSession = typeof practiceSession.$inferSelect;
+
+// Word proficiency schema to track mastery of individual words
+export const wordProficiency = pgTable("word_proficiency", {
+  id: serial("id").primaryKey(),
+  wordId: text("word_id").notNull(),
+  correctCount: text("correct_count").default("0").notNull(),
+  attemptCount: text("attempt_count").default("0").notNull(),
+  lastPracticed: text("last_practiced").default("0").notNull(),
+});
+
+export const wordProficiencySchema = createInsertSchema(wordProficiency).pick({
+  wordId: true,
+  correctCount: true,
+  attemptCount: true,
+  lastPracticed: true,
+});
+
+export type InsertWordProficiency = z.infer<typeof wordProficiencySchema>;
+export type WordProficiency = typeof wordProficiency.$inferSelect;
