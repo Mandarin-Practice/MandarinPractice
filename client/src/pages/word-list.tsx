@@ -312,6 +312,8 @@ const SAMPLE_WORD_LISTS: WordList[] = [
 export default function WordList() {
   const [wordInput, setWordInput] = useState("");
   const [groupByHomophones, setGroupByHomophones] = useState(false);
+  const [previewList, setPreviewList] = useState<WordList | null>(null);
+  const [selectedWords, setSelectedWords] = useState<Record<number, boolean>>({});
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -453,8 +455,65 @@ export default function WordList() {
     }
   };
 
+  // Show word list preview
+  const handleShowPreview = (listId: string) => {
+    const list = SAMPLE_WORD_LISTS.find(l => l.id === listId);
+    if (list) {
+      setPreviewList(list);
+      
+      // Initialize all words as selected
+      const initialSelectedState: Record<number, boolean> = {};
+      list.words.forEach((_, index) => {
+        initialSelectedState[index] = true;
+      });
+      setSelectedWords(initialSelectedState);
+    }
+  };
+  
+  // Close word list preview
+  const handleClosePreview = () => {
+    setPreviewList(null);
+    setSelectedWords({});
+  };
+  
+  // Toggle selection of a specific word
+  const handleToggleWordSelection = (index: number) => {
+    setSelectedWords(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
+  };
+  
+  // Import entire word list without preview
   const handleImportWordList = (listId: string) => {
     importWordListMutation.mutate(listId);
+  };
+  
+  // Import only selected words from preview
+  const handleImportSelectedWords = () => {
+    if (!previewList) return;
+    
+    // Filter words based on selection
+    const selectedWordsToImport = previewList.words.filter((_, index) => selectedWords[index]);
+    
+    if (selectedWordsToImport.length === 0) {
+      toast({
+        title: "No words selected",
+        description: "Please select at least one word to import.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    saveVocabularyMutation.mutate(selectedWordsToImport);
+    
+    toast({
+      title: "Words imported",
+      description: `${selectedWordsToImport.length} words have been imported from ${previewList.name}.`,
+      variant: "default",
+    });
+    
+    handleClosePreview();
   };
   
   const handleToggleActive = (id: number, currentActive: string) => {
@@ -489,6 +548,107 @@ export default function WordList() {
 
   return (
     <div className="word-list-section">
+      {/* Word List Preview Modal */}
+      {previewList && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-3xl w-full max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+              <h3 className="text-xl font-semibold">{previewList.name}</h3>
+              <button 
+                onClick={handleClosePreview}
+                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+            
+            <div className="flex p-4 bg-gray-50 dark:bg-gray-900">
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    // Select all words
+                    const allSelected: Record<number, boolean> = {};
+                    previewList.words.forEach((_, index) => {
+                      allSelected[index] = true;
+                    });
+                    setSelectedWords(allSelected);
+                  }}
+                >
+                  Select All
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    // Deselect all words
+                    const noneSelected: Record<number, boolean> = {};
+                    previewList.words.forEach((_, index) => {
+                      noneSelected[index] = false;
+                    });
+                    setSelectedWords(noneSelected);
+                  }}
+                >
+                  Deselect All
+                </Button>
+                <span className="ml-4 text-sm">
+                  {Object.values(selectedWords).filter(Boolean).length} of {previewList.words.length} selected
+                </span>
+              </div>
+            </div>
+            
+            <div className="overflow-y-auto p-4 flex-grow">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {previewList.words.map((word, index) => (
+                  <div 
+                    key={index} 
+                    className={`border rounded-md p-2 transition-colors cursor-pointer ${
+                      selectedWords[index] 
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900 dark:bg-opacity-20' 
+                        : 'border-gray-200 dark:border-gray-700'
+                    }`}
+                    onClick={() => handleToggleWordSelection(index)}
+                  >
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="checkbox" 
+                        checked={selectedWords[index] || false}
+                        onChange={() => handleToggleWordSelection(index)}
+                        className="h-4 w-4 text-blue-600"
+                      />
+                      <div>
+                        <div className="font-medium">{word.chinese}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">{word.pinyin}</div>
+                        <div className="text-sm">{word.english}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-2">
+              <Button 
+                variant="outline" 
+                onClick={handleClosePreview}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleImportSelectedWords}
+                disabled={Object.values(selectedWords).filter(Boolean).length === 0}
+              >
+                Import Selected Words
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    
       <Card className="mb-6">
         <CardHeader>
           <CardTitle>Your Vocabulary Words</CardTitle>
@@ -636,21 +796,37 @@ export default function WordList() {
               <div key={list.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-blue-300 dark:hover:border-blue-500 transition-colors">
                 <h4 className="font-medium mb-2">{list.name}</h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{list.description}</p>
-                <Button 
-                  variant="link" 
-                  className="p-0 h-auto text-sm text-primary hover:text-blue-700 dark:hover:text-blue-300"
-                  onClick={() => handleImportWordList(list.id)}
-                  disabled={importWordListMutation.isPending}
-                >
-                  <span className="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                      <polyline points="17 8 12 3 7 8"></polyline>
-                      <line x1="12" y1="3" x2="12" y2="15"></line>
-                    </svg>
-                    Import List
-                  </span>
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="text-sm"
+                    onClick={() => handleShowPreview(list.id)}
+                  >
+                    <span className="flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                      Preview & Select
+                    </span>
+                  </Button>
+                  <Button 
+                    variant="link" 
+                    className="p-0 h-auto text-sm text-primary hover:text-blue-700 dark:hover:text-blue-300"
+                    onClick={() => handleImportWordList(list.id)}
+                    disabled={importWordListMutation.isPending}
+                  >
+                    <span className="flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                      </svg>
+                      Import All
+                    </span>
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
