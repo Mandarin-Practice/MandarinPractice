@@ -911,14 +911,17 @@ export default function WordList() {
   
   // Calculate how many words from a list are already in the user's vocabulary
   const getWordListStats = (listId: string) => {
-    if (!vocabulary || !Array.isArray(vocabulary) || vocabulary.length === 0) {
-      return { total: 0, imported: 0 };
-    }
-    
+    // Default total count regardless of vocabulary state
     const wordList = SAMPLE_WORD_LISTS.find(list => list.id === listId);
     if (!wordList) return { total: 0, imported: 0 };
     
     const total = wordList.words.length;
+    
+    // If no vocabulary yet, return zero imported
+    if (!vocabulary || !Array.isArray(vocabulary) || vocabulary.length === 0) {
+      return { total, imported: 0 };
+    }
+    
     let imported = 0;
     
     // Check how many words from this list are already in the user's vocabulary
@@ -1214,7 +1217,7 @@ export default function WordList() {
                     variant="link" 
                     className="p-0 h-auto text-sm text-primary hover:text-blue-700 dark:hover:text-blue-300"
                     onClick={() => handleImportWordList(list.id)}
-                    disabled={importWordListMutation.isPending || imported === total}
+                    disabled={importWordListMutation.isPending || (imported > 0 && imported === total)}
                   >
                     <span className="flex items-center">
                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
@@ -1222,7 +1225,7 @@ export default function WordList() {
                         <polyline points="17 8 12 3 7 8"></polyline>
                         <line x1="12" y1="3" x2="12" y2="15"></line>
                       </svg>
-                      {imported === total ? "All Added" : "Import All"}
+                      {imported > 0 && imported === total ? "All Added" : "Import All"}
                     </span>
                   </Button>
                 </div>
