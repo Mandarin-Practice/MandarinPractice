@@ -83,8 +83,8 @@ export default function Practice() {
   };
   
   // Generate sentence mutation
-  const generateSentenceMutation = useMutation({
-    mutationFn: fetchNewSentence,
+  const generateSentenceMutation = useMutation<any, unknown, void>({
+    mutationFn: () => fetchNewSentence(),
     onSuccess: (data) => {
       // Reset states for new sentence
       setUserTranslation("");
@@ -168,7 +168,7 @@ export default function Practice() {
   };
 
   // Update word proficiency in the backend
-  const updateWordProficiency = useMutation({
+  const updateWordProficiency = useMutation<any, unknown, { wordId: number, isCorrect: boolean }>({
     mutationFn: async (params: { wordId: number, isCorrect: boolean }) => {
       const response = await apiRequest('POST', `/api/word-proficiency/${params.wordId}`, {
         isCorrect: params.isCorrect

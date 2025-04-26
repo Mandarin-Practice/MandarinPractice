@@ -69,20 +69,49 @@ export async function generateSentence(
 
     const parsedContent = JSON.parse(generatedContent);
     
-    // Validate that the sentence only uses words from the vocabulary
+    // Validate that the sentence uses mostly words from the vocabulary
     const sentenceWords = parsedContent.chinese.replace(/[，。！？]/g, '').split('');
-    const uniqueSentenceWords = [...new Set(sentenceWords)];
     
-    // Check if all words in the sentence are in the vocabulary
-    // Note: This is a simple check and may not catch all cases due to word combinations
+    // Create a unique array of characters in a simpler way
+    const uniqueSentenceWords = [];
+    for (const char of sentenceWords) {
+      if (!uniqueSentenceWords.includes(char)) {
+        uniqueSentenceWords.push(char);
+      }
+    }
+    
+    // Common Chinese characters that are allowed regardless of difficulty level
+    // These are basic characters like particles, pronouns, and common verbs
+    const commonChineseChars = ['的', '了', '和', '是', '在', '有', '我', '你', '他', '她', '它', '们', '这', '那', '不', '很', '都', '也', '个', '吗', '吧', '呢', '啊', '就', '说', '能', '要', '会', '对', '给', '到', '得', '着', '过', '被', '上', '下', '前', '后', '里', '外', '左', '右', '中', '大', '小', '多', '少', '好', '与', '为', '因'];
+    
+    // Create a vocabulary set of all characters in the vocabulary
     const vocabularySet = new Set(vocabulary.map(w => w.chinese).join('').split(''));
     
-    const validSentence = uniqueSentenceWords.every(word => 
-      vocabularySet.has(word) || word.trim() === '' || /\s/.test(word)
-    );
-
-    if (!validSentence) {
-      throw new Error("Generated sentence contains words not in vocabulary");
+    // For beginner difficulty, be very strict - only allow characters in the vocabulary
+    if (difficulty === "beginner") {
+      const validSentence = uniqueSentenceWords.every(word => 
+        vocabularySet.has(word) || word.trim() === '' || /\s/.test(word) || commonChineseChars.includes(word)
+      );
+      
+      if (!validSentence) {
+        throw new Error("Beginner level sentences must only use vocabulary from the list");
+      }
+    } 
+    // For intermediate difficulty, allow some common characters not in vocabulary
+    else if (difficulty === "intermediate" || difficulty === "advanced") {
+      // Count characters that are neither in vocabulary nor in common chars
+      const unknownChars = uniqueSentenceWords.filter(word => 
+        !vocabularySet.has(word) && !commonChineseChars.includes(word) && word.trim() !== '' && !/\s/.test(word)
+      );
+      
+      // For intermediate, allow at most 20% unknown characters
+      const maxUnknownRatio = difficulty === "intermediate" ? 0.2 : 0.35; // 20% for intermediate, 35% for advanced
+      const unknownRatio = unknownChars.length / uniqueSentenceWords.length;
+      
+      // Verify that the sentence isn't too complex
+      if (unknownRatio > maxUnknownRatio) {
+        throw new Error(`${difficulty} level sentences have too many unknown characters (${unknownRatio.toFixed(2)})`);
+      }
     }
     
     return {
