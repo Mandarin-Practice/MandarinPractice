@@ -689,12 +689,23 @@ export default function WordList() {
       const response = await apiRequest('DELETE', `/api/vocabulary/${id}`);
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/vocabulary'] });
+    onSuccess: (_, deletedId) => {
+      // Perform a background refetch to refresh the data after deletion
+      queryClient.refetchQueries({ queryKey: ['/api/vocabulary'] });
+      
       toast({
         title: "Word removed",
         description: "The word has been removed from your vocabulary list.",
         variant: "default",
+      });
+    },
+    onError: () => {
+      // If there was an error, make sure to refresh the data
+      queryClient.invalidateQueries({ queryKey: ['/api/vocabulary'] });
+      toast({
+        title: "Error removing word",
+        description: "There was a problem removing the word.",
+        variant: "destructive",
       });
     }
   });
@@ -798,26 +809,25 @@ export default function WordList() {
     setWordInput("");
   };
 
-  // Key function that handles word removal with optimistic UI updates
+  // Fix to ensure removing a homophone doesn't affect the display of other homophones
   const handleRemoveWord = (id: number) => {
-    // Immediately update the UI before waiting for the server response
-    if (vocabulary && Array.isArray(vocabulary)) {
-      // Keep track of the current word list component's state
-      const currentGroupByHomophones = groupByHomophones;
+    // Get the current vocabulary data before deleting
+    const currentVocabulary = queryClient.getQueryData(['/api/vocabulary']) as any[];
+    
+    if (currentVocabulary && Array.isArray(currentVocabulary)) {
+      // Create a filtered list that doesn't include the word being deleted
+      const filteredVocabulary = currentVocabulary.filter(word => word.id !== id);
       
-      // Only remove the exact word with matching ID - preserve other homophones
-      const updatedVocabulary = vocabulary.filter(word => word.id !== id);
-      
-      // Optimistically update the query cache with our modified list
-      queryClient.setQueryData(['/api/vocabulary'], updatedVocabulary);
+      // Update the query cache with this filtered list (optimistic update)
+      queryClient.setQueryData(['/api/vocabulary'], filteredVocabulary);
       
       // Also update proficiency data for the removed word
       const updatedProficiencyData = { ...proficiencyData };
-      delete updatedProficiencyData[id]; 
+      delete updatedProficiencyData[id];
       setProficiencyData(updatedProficiencyData);
     }
     
-    // Then perform the actual API call to delete on the server
+    // Then perform the server-side deletion
     deleteWordMutation.mutate(id);
   };
 
