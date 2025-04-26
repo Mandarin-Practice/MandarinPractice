@@ -168,11 +168,12 @@ const SAMPLE_WORD_LISTS: WordList[] = [
   },
   {
     id: "ic-lesson1",
-    name: "Integrated Chinese Level 1 Part 1",
-    description: "45 words from Lesson 1-3",
+    name: "Integrated Chinese Lesson 1",
+    description: "Greetings - 15 essential words",
     words: [
       { chinese: "你", pinyin: "nǐ", english: "you" },
       { chinese: "好", pinyin: "hǎo", english: "good" },
+      { chinese: "您", pinyin: "nín", english: "you (polite)" },
       { chinese: "请问", pinyin: "qǐng wèn", english: "may I ask" },
       { chinese: "是", pinyin: "shì", english: "to be" },
       { chinese: "老师", pinyin: "lǎo shī", english: "teacher" },
@@ -184,6 +185,14 @@ const SAMPLE_WORD_LISTS: WordList[] = [
       { chinese: "认识", pinyin: "rèn shi", english: "to know (someone)" },
       { chinese: "很", pinyin: "hěn", english: "very" },
       { chinese: "高兴", pinyin: "gāo xìng", english: "happy, pleased" },
+      { chinese: "再见", pinyin: "zài jiàn", english: "goodbye" }
+    ]
+  },
+  {
+    id: "ic-lesson2",
+    name: "Integrated Chinese Lesson 2",
+    description: "Family - 15 words about names & greetings",
+    words: [
       { chinese: "贵姓", pinyin: "guì xìng", english: "your surname" },
       { chinese: "叫", pinyin: "jiào", english: "to be called" },
       { chinese: "什么", pinyin: "shén me", english: "what" },
@@ -197,6 +206,15 @@ const SAMPLE_WORD_LISTS: WordList[] = [
       { chinese: "朋友", pinyin: "péng you", english: "friend" },
       { chinese: "同学", pinyin: "tóng xué", english: "classmate" },
       { chinese: "谁", pinyin: "shuí", english: "who" },
+      { chinese: "爸爸", pinyin: "bà ba", english: "father" },
+      { chinese: "妈妈", pinyin: "mā ma", english: "mother" }
+    ]
+  },
+  {
+    id: "ic-lesson3",
+    name: "Integrated Chinese Lesson 3",
+    description: "Dates and Time - 15 location-related words",
+    words: [
       { chinese: "那", pinyin: "nà", english: "that" },
       { chinese: "的", pinyin: "de", english: "possessive marker" },
       { chinese: "家", pinyin: "jiā", english: "home, family" },
@@ -205,16 +223,12 @@ const SAMPLE_WORD_LISTS: WordList[] = [
       { chinese: "美国", pinyin: "měi guó", english: "America" },
       { chinese: "日本", pinyin: "rì běn", english: "Japan" },
       { chinese: "英国", pinyin: "yīng guó", english: "England" },
-      { chinese: "法国", pinyin: "fǎ guó", english: "France" },
       { chinese: "这", pinyin: "zhè", english: "this" },
       { chinese: "北京", pinyin: "běi jīng", english: "Beijing" },
-      { chinese: "纽约", pinyin: "niǔ yuē", english: "New York" },
-      { chinese: "老", pinyin: "lǎo", english: "old" },
+      { chinese: "上海", pinyin: "shàng hǎi", english: "Shanghai" },
       { chinese: "忙", pinyin: "máng", english: "busy" },
       { chinese: "呢", pinyin: "ne", english: "question particle" },
       { chinese: "哪", pinyin: "nǎ", english: "which" },
-      { chinese: "来", pinyin: "lái", english: "to come" },
-      { chinese: "哪里", pinyin: "nǎ li", english: "where" },
       { chinese: "住", pinyin: "zhù", english: "to live" }
     ]
   },
@@ -262,8 +276,8 @@ const SAMPLE_WORD_LISTS: WordList[] = [
   },
   {
     id: "ic-lesson4",
-    name: "Integrated Chinese Level 1 Part 2",
-    description: "40 words from Lesson 4-6",
+    name: "Integrated Chinese Lesson 4",
+    description: "Hobbies - 15 time expressions",
     words: [
       { chinese: "现在", pinyin: "xiàn zài", english: "now" },
       { chinese: "几", pinyin: "jǐ", english: "how many" },
@@ -271,13 +285,22 @@ const SAMPLE_WORD_LISTS: WordList[] = [
       { chinese: "分", pinyin: "fēn", english: "minute" },
       { chinese: "上午", pinyin: "shàng wǔ", english: "morning" },
       { chinese: "下午", pinyin: "xià wǔ", english: "afternoon" },
+      { chinese: "晚上", pinyin: "wǎn shang", english: "evening" },
       { chinese: "星期", pinyin: "xīng qī", english: "week" },
       { chinese: "今天", pinyin: "jīn tiān", english: "today" },
       { chinese: "昨天", pinyin: "zuó tiān", english: "yesterday" },
       { chinese: "明天", pinyin: "míng tiān", english: "tomorrow" },
+      { chinese: "小时", pinyin: "xiǎo shí", english: "hour" },
       { chinese: "有", pinyin: "yǒu", english: "to have" },
       { chinese: "没有", pinyin: "méi yǒu", english: "don't have" },
-      { chinese: "课", pinyin: "kè", english: "class, lesson" },
+      { chinese: "课", pinyin: "kè", english: "class, lesson" }
+    ]
+  },
+  {
+    id: "ic-lesson5",
+    name: "Integrated Chinese Lesson 5",
+    description: "Visiting Friends - 15 question expressions",
+    words: [
       { chinese: "电影", pinyin: "diàn yǐng", english: "movie" },
       { chinese: "时候", pinyin: "shí hou", english: "time" },
       { chinese: "想", pinyin: "xiǎng", english: "to want, to think" },
@@ -292,7 +315,14 @@ const SAMPLE_WORD_LISTS: WordList[] = [
       { chinese: "得", pinyin: "děi", english: "must, have to" },
       { chinese: "做", pinyin: "zuò", english: "to do" },
       { chinese: "作业", pinyin: "zuò yè", english: "homework" },
-      { chinese: "怎么样", pinyin: "zěn me yàng", english: "how about" },
+      { chinese: "怎么样", pinyin: "zěn me yàng", english: "how about" }
+    ]
+  },
+  {
+    id: "ic-lesson6",
+    name: "Integrated Chinese Lesson 6",
+    description: "Making Appointments - 15 food and activity words",
+    words: [
       { chinese: "喜欢", pinyin: "xǐ huan", english: "to like" },
       { chinese: "爱", pinyin: "ài", english: "to love" },
       { chinese: "有意思", pinyin: "yǒu yì si", english: "interesting" },
@@ -304,7 +334,54 @@ const SAMPLE_WORD_LISTS: WordList[] = [
       { chinese: "咖啡", pinyin: "kā fēi", english: "coffee" },
       { chinese: "东西", pinyin: "dōng xi", english: "thing" },
       { chinese: "中文", pinyin: "zhōng wén", english: "Chinese language" },
-      { chinese: "学习", pinyin: "xué xí", english: "to study" }
+      { chinese: "学习", pinyin: "xué xí", english: "to study" },
+      { chinese: "聊天", pinyin: "liáo tiān", english: "to chat" },
+      { chinese: "玩儿", pinyin: "wán'r", english: "to play" },
+      { chinese: "累", pinyin: "lèi", english: "tired" }
+    ]
+  },
+  {
+    id: "ic-lesson7",
+    name: "Integrated Chinese Lesson 7",
+    description: "Studying Chinese - 15 study-related words",
+    words: [
+      { chinese: "教授", pinyin: "jiào shòu", english: "professor" },
+      { chinese: "学院", pinyin: "xué yuàn", english: "college" },
+      { chinese: "系", pinyin: "xì", english: "department" },
+      { chinese: "专业", pinyin: "zhuān yè", english: "major" },
+      { chinese: "年级", pinyin: "nián jí", english: "grade, year in school" },
+      { chinese: "上课", pinyin: "shàng kè", english: "to attend class" },
+      { chinese: "放学", pinyin: "fàng xué", english: "to get out of school" },
+      { chinese: "复习", pinyin: "fù xí", english: "to review" },
+      { chinese: "预习", pinyin: "yù xí", english: "to preview" },
+      { chinese: "功课", pinyin: "gōng kè", english: "schoolwork" },
+      { chinese: "练习", pinyin: "liàn xí", english: "to practice" },
+      { chinese: "容易", pinyin: "róng yì", english: "easy" },
+      { chinese: "难", pinyin: "nán", english: "difficult" },
+      { chinese: "考试", pinyin: "kǎo shì", english: "to take a test" },
+      { chinese: "问题", pinyin: "wèn tí", english: "question, problem" }
+    ]
+  },
+  {
+    id: "ic-lesson8", 
+    name: "Integrated Chinese Lesson 8",
+    description: "School Life - 15 campus experience words",
+    words: [
+      { chinese: "宿舍", pinyin: "sù shè", english: "dormitory" },
+      { chinese: "同屋", pinyin: "tóng wū", english: "roommate" },
+      { chinese: "帮助", pinyin: "bāng zhù", english: "to help" },
+      { chinese: "马马虎虎", pinyin: "mǎ ma hū hū", english: "so-so" },
+      { chinese: "打电话", pinyin: "dǎ diàn huà", english: "to make a phone call" },
+      { chinese: "号码", pinyin: "hào mǎ", english: "number" },
+      { chinese: "常常", pinyin: "cháng cháng", english: "often" },
+      { chinese: "早上", pinyin: "zǎo shang", english: "morning" },
+      { chinese: "起床", pinyin: "qǐ chuáng", english: "to get up" },
+      { chinese: "睡觉", pinyin: "shuì jiào", english: "to sleep" },
+      { chinese: "宿舍楼", pinyin: "sù shè lóu", english: "dormitory building" },
+      { chinese: "图书馆", pinyin: "tú shū guǎn", english: "library" },
+      { chinese: "自习室", pinyin: "zì xí shì", english: "study room" },
+      { chinese: "教室", pinyin: "jiào shì", english: "classroom" },
+      { chinese: "食堂", pinyin: "shí táng", english: "dining hall" }
     ]
   },
   {
