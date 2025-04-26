@@ -605,6 +605,7 @@ const SAMPLE_WORD_LISTS: WordList[] = [
 
 export default function WordList() {
   const [wordInput, setWordInput] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [groupByHomophones, setGroupByHomophones] = useState(false);
   const [previewList, setPreviewList] = useState<WordList | null>(null);
   const [selectedWords, setSelectedWords] = useState<Record<number, boolean>>({});
@@ -971,6 +972,20 @@ export default function WordList() {
     return result;
   };
   
+  // Function to filter vocabulary based on search query
+  const filterVocabulary = (words: any[]) => {
+    if (!searchQuery.trim() || !Array.isArray(words)) {
+      return words;
+    }
+    
+    const query = searchQuery.toLowerCase();
+    return words.filter(word => 
+      word.chinese.toLowerCase().includes(query) || 
+      word.pinyin.toLowerCase().includes(query) || 
+      word.english.toLowerCase().includes(query)
+    );
+  };
+
   // Calculate how many words from a list are already in the user's vocabulary
   const getWordListStats = (listId: string) => {
     // Default total count regardless of vocabulary state
@@ -1147,16 +1162,52 @@ export default function WordList() {
               </div>
             </div>
             
+            {/* Search input */}
+            {vocabulary && Array.isArray(vocabulary) && vocabulary.length > 0 && (
+              <div className="relative mb-4">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search words (Chinese, pinyin, or English)"
+                  className="w-full px-10 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                />
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                </div>
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                )}
+              </div>
+            )}
+            
             {isLoading ? (
               <div className="flex flex-wrap gap-2 mb-4">
                 <p>Loading vocabulary...</p>
               </div>
             ) : vocabulary && Array.isArray(vocabulary) && vocabulary.length > 0 ? (
+              // Check if there are any results after filtering
+              filterVocabulary(vocabulary).length === 0 ? (
+                <div className="text-gray-500 dark:text-gray-400 italic mb-4">
+                  No words match your search query.
+                </div>
+              ) : (
               groupByHomophones ? (
                 // Homophone grouping mode - new implementation
                 <div className="space-y-4 mb-4">
                   {/* Display homophone groups */}
-                  {getHomophoneGroups(vocabulary).map((group, index) => (
+                  {getHomophoneGroups(filterVocabulary(vocabulary)).map((group, index) => (
                     <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
                       <h4 className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-300">
                         {group.type === 'pronoun' 
@@ -1179,14 +1230,17 @@ export default function WordList() {
                   
                   {/* Display words without homophones */}
                   {(() => {
+                    // Get filtered vocabulary
+                    const filteredVocab = filterVocabulary(vocabulary);
+                    
                     // Get all words that are in homophone groups
-                    const homophoneGroups = getHomophoneGroups(vocabulary);
+                    const homophoneGroups = getHomophoneGroups(filteredVocab);
                     const wordsInHomophoneGroups = homophoneGroups.flatMap(group => 
                       group.words.map(word => word.id)
                     );
                     
                     // Find words that aren't in any homophone group
-                    const singleWords = vocabulary.filter(word => 
+                    const singleWords = filteredVocab.filter(word => 
                       !wordsInHomophoneGroups.includes(word.id)
                     );
                     
@@ -1213,7 +1267,7 @@ export default function WordList() {
               ) : (
                 // Normal list mode
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {vocabulary.map((word) => (
+                  {filterVocabulary(vocabulary).map((word) => (
                     <WordChip
                       key={word.id}
                       word={word}
@@ -1223,6 +1277,7 @@ export default function WordList() {
                     />
                   ))}
                 </div>
+              )
               )
             ) : (
               <div className="text-gray-500 dark:text-gray-400 italic mb-4">
