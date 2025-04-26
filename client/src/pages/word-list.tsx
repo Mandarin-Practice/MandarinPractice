@@ -922,56 +922,53 @@ export default function WordList() {
   };
   
   // Chinese pronoun homophones that should be treated specially
-  const chinesePronouns = {
-    '他': ['她', '它'], // he, she, it - all sound identical
-    '她': ['他', '它'], // she, he, it - all sound identical
-    '它': ['他', '她']  // it, he, she - all sound identical
-  };
+  const chinesePronouns = ['他', '她', '它']; // he, she, it - all sound identical
 
-  // Group words by homophone (same pinyin without tones)
-  const getHomophoneGroups = (words: any[]) => {
+  // Define the type for homophone groups
+  type HomophoneGroup = {
+    type: 'pronoun' | 'pinyin';
+    words: Array<{
+      id: number;
+      chinese: string;
+      pinyin: string;
+      english: string;
+      active: string;
+    }>;
+  };
+  
+  // Simplified group words by homophone (same pinyin without tones)
+  const getHomophoneGroups = (words: any[]): HomophoneGroup[] => {
     if (!Array.isArray(words) || words.length === 0) return [];
     
-    // Create a map to store homophone groups keyed by normalized pinyin
-    const groups: { [key: string]: any[] } = {};
+    // First, handle pronouns (他/她/它) separately
+    const pronouns = words.filter(word => chinesePronouns.includes(word.chinese));
+    const nonPronouns = words.filter(word => !chinesePronouns.includes(word.chinese));
     
-    // First pass: group by normalized pinyin (without tone marks)
-    words.forEach(word => {
-      // Skip words with empty pinyin
+    // Create groups by normalized pinyin
+    const pinyinGroups: Record<string, any[]> = {};
+    
+    // Group non-pronouns by pinyin
+    nonPronouns.forEach(word => {
       if (!word.pinyin) return;
       
       const normalizedPinyin = normalizePinyin(word.pinyin);
-      
-      // Special case for Chinese pronouns (他/她/它)
-      if (Object.keys(chinesePronouns).includes(word.chinese)) {
-        // Use the Chinese character as the key for these special pronouns
-        const groupKey = `pronoun-${normalizedPinyin}`;
-        if (!groups[groupKey]) {
-          groups[groupKey] = [];
-        }
-        groups[groupKey].push(word);
-        
-        // Look for any existing matching pronouns to add to this group
-        const alternativePronouns = chinesePronouns[word.chinese as keyof typeof chinesePronouns] || [];
-        words.forEach(otherWord => {
-          if (otherWord.id !== word.id && alternativePronouns.includes(otherWord.chinese)) {
-            // Add to the group if not already included
-            if (!groups[groupKey].some(w => w.id === otherWord.id)) {
-              groups[groupKey].push(otherWord);
-            }
-          }
-        });
-      } else {
-        // Normal homophone handling for non-pronouns
-        if (!groups[normalizedPinyin]) {
-          groups[normalizedPinyin] = [];
-        }
-        groups[normalizedPinyin].push(word);
+      if (!pinyinGroups[normalizedPinyin]) {
+        pinyinGroups[normalizedPinyin] = [];
       }
+      pinyinGroups[normalizedPinyin].push(word);
     });
     
-    // Only keep groups with multiple words (actual homophones)
-    return Object.values(groups).filter(group => group.length > 1);
+    // Turn the pinyinGroups object into an array of groups
+    const result: HomophoneGroup[] = Object.values(pinyinGroups)
+      .filter(group => group.length > 1) // Only include groups with multiple words
+      .map(group => ({ type: 'pinyin', words: group }));
+    
+    // Add pronouns as a separate group if there are at least 2
+    if (pronouns.length > 1) {
+      result.unshift({ type: 'pronoun', words: pronouns });
+    }
+    
+    return result;
   };
   
   // Calculate how many words from a list are already in the user's vocabulary
@@ -1156,78 +1153,18 @@ export default function WordList() {
               </div>
             ) : vocabulary && Array.isArray(vocabulary) && vocabulary.length > 0 ? (
               groupByHomophones ? (
-                // Homophone grouping mode
+                // Homophone grouping mode - new implementation
                 <div className="space-y-4 mb-4">
-                  {getHomophoneGroups(vocabulary).map((group, index) => {
-                    // Check if this is a pronoun group
-                    const isPronounGroup = Object.keys(chinesePronouns).includes(group[0].chinese);
-                    
-                    return (
-                      <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
-                        <h4 className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-300">
-                          {isPronounGroup 
-                            ? `${normalizePinyin(group[0].pinyin)} - Pronoun Homophones (他/她/它)` 
-                            : `${normalizePinyin(group[0].pinyin)} - Homophones`}
-                        </h4>
-                        <div className="flex flex-wrap gap-2">
-                          {group.map((word) => (
-                            <WordChip
-                              key={word.id}
-                              word={word}
-                              proficiency={proficiencyData[word.id]}
-                              onRemove={() => handleRemoveWord(word.id)}
-                              onToggleActive={() => handleToggleActive(word.id, word.active)}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
-                  
-                  {/* Display words that don't have homophones */}
-                  {vocabulary.filter(word => {
-                    // Skip words with empty pinyin
-                    if (!word.pinyin) return false;
-                    
-                    // Special case for Chinese pronouns (他/她/它)
-                    if (Object.keys(chinesePronouns).includes(word.chinese)) {
-                      // Check if any of the corresponding pronouns exist
-                      const alternativePronouns = chinesePronouns[word.chinese as keyof typeof chinesePronouns] || [];
-                      const hasHomophones = vocabulary.some(w => 
-                        w.id !== word.id && alternativePronouns.includes(w.chinese)
-                      );
-                      return !hasHomophones;
-                    }
-                    
-                    // Normal homophone check for other words
-                    const normalizedPinyin = normalizePinyin(word.pinyin);
-                    const group = vocabulary.filter(w => normalizePinyin(w.pinyin) === normalizedPinyin);
-                    return group.length === 1;
-                  }).length > 0 && (
-                    <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                  {/* Display homophone groups */}
+                  {getHomophoneGroups(vocabulary).map((group, index) => (
+                    <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
                       <h4 className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-300">
-                        Words without homophones
+                        {group.type === 'pronoun' 
+                          ? 'tā - Pronoun Homophones (他/她/它)' 
+                          : `${normalizePinyin(group.words[0].pinyin)} - Homophones`}
                       </h4>
                       <div className="flex flex-wrap gap-2">
-                        {vocabulary.filter(word => {
-                          // Skip words with empty pinyin
-                          if (!word.pinyin) return false;
-                          
-                          // Special case for Chinese pronouns (他/她/它)
-                          if (Object.keys(chinesePronouns).includes(word.chinese)) {
-                            // Check if any of the corresponding pronouns exist
-                            const alternativePronouns = chinesePronouns[word.chinese as keyof typeof chinesePronouns] || [];
-                            const hasHomophones = vocabulary.some(w => 
-                              w.id !== word.id && alternativePronouns.includes(w.chinese)
-                            );
-                            return !hasHomophones;
-                          }
-                          
-                          // Normal homophone check for other words
-                          const normalizedPinyin = normalizePinyin(word.pinyin);
-                          const group = vocabulary.filter(w => normalizePinyin(w.pinyin) === normalizedPinyin);
-                          return group.length === 1;
-                        }).map((word) => (
+                        {group.words.map((word) => (
                           <WordChip
                             key={word.id}
                             word={word}
@@ -1238,7 +1175,40 @@ export default function WordList() {
                         ))}
                       </div>
                     </div>
-                  )}
+                  ))}
+                  
+                  {/* Display words without homophones */}
+                  {(() => {
+                    // Get all words that are in homophone groups
+                    const homophoneGroups = getHomophoneGroups(vocabulary);
+                    const wordsInHomophoneGroups = homophoneGroups.flatMap(group => 
+                      group.words.map(word => word.id)
+                    );
+                    
+                    // Find words that aren't in any homophone group
+                    const singleWords = vocabulary.filter(word => 
+                      !wordsInHomophoneGroups.includes(word.id)
+                    );
+                    
+                    return singleWords.length > 0 ? (
+                      <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                        <h4 className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-300">
+                          Words without homophones
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {singleWords.map((word) => (
+                            <WordChip
+                              key={word.id}
+                              word={word}
+                              proficiency={proficiencyData[word.id]}
+                              onRemove={() => handleRemoveWord(word.id)}
+                              onToggleActive={() => handleToggleActive(word.id, word.active)}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    ) : null;
+                  })()}
                 </div>
               ) : (
                 // Normal list mode
