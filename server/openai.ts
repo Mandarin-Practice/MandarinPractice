@@ -73,7 +73,7 @@ export async function generateSentence(
     const sentenceWords = parsedContent.chinese.replace(/[，。！？]/g, '').split('');
     
     // Create a unique array of characters in a simpler way
-    const uniqueSentenceWords = [];
+    const uniqueSentenceWords: string[] = [];
     for (const char of sentenceWords) {
       if (!uniqueSentenceWords.includes(char)) {
         uniqueSentenceWords.push(char);
@@ -89,7 +89,7 @@ export async function generateSentence(
     
     // For beginner difficulty, be very strict - only allow characters in the vocabulary
     if (difficulty === "beginner") {
-      const validSentence = uniqueSentenceWords.every(word => 
+      const validSentence = uniqueSentenceWords.every((word: string) => 
         vocabularySet.has(word) || word.trim() === '' || /\s/.test(word) || commonChineseChars.includes(word)
       );
       
@@ -100,7 +100,7 @@ export async function generateSentence(
     // For intermediate difficulty, allow some common characters not in vocabulary
     else if (difficulty === "intermediate" || difficulty === "advanced") {
       // Count characters that are neither in vocabulary nor in common chars
-      const unknownChars = uniqueSentenceWords.filter(word => 
+      const unknownChars = uniqueSentenceWords.filter((word: string) => 
         !vocabularySet.has(word) && !commonChineseChars.includes(word) && word.trim() !== '' && !/\s/.test(word)
       );
       
