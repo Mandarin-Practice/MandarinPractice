@@ -1096,7 +1096,7 @@ export default function WordList() {
                   {getHomophoneGroups(vocabulary).map((group, index) => (
                     <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
                       <h4 className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-300">
-                        {normalizePinyin(group[0].pinyin)} - Homophones with different tones
+                        {normalizePinyin(group[0].pinyin)} - Homophones
                       </h4>
                       <div className="flex flex-wrap gap-2">
                         {group.map((word) => (
