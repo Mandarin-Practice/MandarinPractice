@@ -802,15 +802,21 @@ export default function WordList() {
   const handleRemoveWord = (id: number) => {
     // Update the local state immediately for a responsive UI
     if (vocabulary && Array.isArray(vocabulary)) {
-      // Create an optimistic update by filtering out the removed word
-      const updatedVocabulary = vocabulary.filter(word => word.id !== id);
-      // Update the query cache immediately
-      queryClient.setQueryData(['/api/vocabulary'], updatedVocabulary);
+      // Get the word that's being deleted
+      const wordToDelete = vocabulary.find(word => word.id === id);
       
-      // Also update the proficiency data 
-      const updatedProficiencyData = { ...proficiencyData };
-      delete updatedProficiencyData[id];
-      setProficiencyData(updatedProficiencyData);
+      if (wordToDelete) {
+        // Create an optimistic update by filtering out ONLY the specific word
+        const updatedVocabulary = vocabulary.filter(word => word.id !== id);
+        
+        // Update the query cache immediately
+        queryClient.setQueryData(['/api/vocabulary'], updatedVocabulary);
+        
+        // Update the proficiency data for only this specific word
+        const updatedProficiencyData = { ...proficiencyData };
+        delete updatedProficiencyData[id];
+        setProficiencyData(updatedProficiencyData);
+      }
     }
     
     // Then perform the actual API call
