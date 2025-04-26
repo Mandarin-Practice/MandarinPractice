@@ -911,6 +911,13 @@ export default function WordList() {
     return pinyin.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   };
   
+  // Chinese pronoun homophones that should be treated specially
+  const chinesePronouns = {
+    '他': ['她', '它'], // he, she, it - all sound identical
+    '她': ['他', '它'], // she, he, it - all sound identical
+    '它': ['他', '她']  // it, he, she - all sound identical
+  };
+
   // Group words by homophone (same pinyin without tones)
   const getHomophoneGroups = (words: any[]) => {
     if (!Array.isArray(words) || words.length === 0) return [];
@@ -924,10 +931,33 @@ export default function WordList() {
       if (!word.pinyin) return;
       
       const normalizedPinyin = normalizePinyin(word.pinyin);
-      if (!groups[normalizedPinyin]) {
-        groups[normalizedPinyin] = [];
+      
+      // Special case for Chinese pronouns (他/她/它)
+      if (Object.keys(chinesePronouns).includes(word.chinese)) {
+        // Use the Chinese character as the key for these special pronouns
+        const groupKey = `pronoun-${normalizedPinyin}`;
+        if (!groups[groupKey]) {
+          groups[groupKey] = [];
+        }
+        groups[groupKey].push(word);
+        
+        // Look for any existing matching pronouns to add to this group
+        const alternativePronouns = chinesePronouns[word.chinese as keyof typeof chinesePronouns] || [];
+        words.forEach(otherWord => {
+          if (otherWord.id !== word.id && alternativePronouns.includes(otherWord.chinese)) {
+            // Add to the group if not already included
+            if (!groups[groupKey].some(w => w.id === otherWord.id)) {
+              groups[groupKey].push(otherWord);
+            }
+          }
+        });
+      } else {
+        // Normal homophone handling for non-pronouns
+        if (!groups[normalizedPinyin]) {
+          groups[normalizedPinyin] = [];
+        }
+        groups[normalizedPinyin].push(word);
       }
-      groups[normalizedPinyin].push(word);
     });
     
     // Only keep groups with multiple words (actual homophones)
@@ -1118,27 +1148,48 @@ export default function WordList() {
               groupByHomophones ? (
                 // Homophone grouping mode
                 <div className="space-y-4 mb-4">
-                  {getHomophoneGroups(vocabulary).map((group, index) => (
-                    <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
-                      <h4 className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-300">
-                        {normalizePinyin(group[0].pinyin)} - Homophones
-                      </h4>
-                      <div className="flex flex-wrap gap-2">
-                        {group.map((word) => (
-                          <WordChip
-                            key={word.id}
-                            word={word}
-                            proficiency={proficiencyData[word.id]}
-                            onRemove={() => handleRemoveWord(word.id)}
-                            onToggleActive={() => handleToggleActive(word.id, word.active)}
-                          />
-                        ))}
+                  {getHomophoneGroups(vocabulary).map((group, index) => {
+                    // Check if this is a pronoun group
+                    const isPronounGroup = Object.keys(chinesePronouns).includes(group[0].chinese);
+                    
+                    return (
+                      <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                        <h4 className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-300">
+                          {isPronounGroup 
+                            ? `${normalizePinyin(group[0].pinyin)} - Pronoun Homophones (他/她/它)` 
+                            : `${normalizePinyin(group[0].pinyin)} - Homophones`}
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {group.map((word) => (
+                            <WordChip
+                              key={word.id}
+                              word={word}
+                              proficiency={proficiencyData[word.id]}
+                              onRemove={() => handleRemoveWord(word.id)}
+                              onToggleActive={() => handleToggleActive(word.id, word.active)}
+                            />
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                   
                   {/* Display words that don't have homophones */}
                   {vocabulary.filter(word => {
+                    // Skip words with empty pinyin
+                    if (!word.pinyin) return false;
+                    
+                    // Special case for Chinese pronouns (他/她/它)
+                    if (Object.keys(chinesePronouns).includes(word.chinese)) {
+                      // Check if any of the corresponding pronouns exist
+                      const alternativePronouns = chinesePronouns[word.chinese as keyof typeof chinesePronouns] || [];
+                      const hasHomophones = vocabulary.some(w => 
+                        w.id !== word.id && alternativePronouns.includes(w.chinese)
+                      );
+                      return !hasHomophones;
+                    }
+                    
+                    // Normal homophone check for other words
                     const normalizedPinyin = normalizePinyin(word.pinyin);
                     const group = vocabulary.filter(w => normalizePinyin(w.pinyin) === normalizedPinyin);
                     return group.length === 1;
@@ -1149,6 +1200,20 @@ export default function WordList() {
                       </h4>
                       <div className="flex flex-wrap gap-2">
                         {vocabulary.filter(word => {
+                          // Skip words with empty pinyin
+                          if (!word.pinyin) return false;
+                          
+                          // Special case for Chinese pronouns (他/她/它)
+                          if (Object.keys(chinesePronouns).includes(word.chinese)) {
+                            // Check if any of the corresponding pronouns exist
+                            const alternativePronouns = chinesePronouns[word.chinese as keyof typeof chinesePronouns] || [];
+                            const hasHomophones = vocabulary.some(w => 
+                              w.id !== word.id && alternativePronouns.includes(w.chinese)
+                            );
+                            return !hasHomophones;
+                          }
+                          
+                          // Normal homophone check for other words
                           const normalizedPinyin = normalizePinyin(word.pinyin);
                           const group = vocabulary.filter(w => normalizePinyin(w.pinyin) === normalizedPinyin);
                           return group.length === 1;
