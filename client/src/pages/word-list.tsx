@@ -798,28 +798,26 @@ export default function WordList() {
     setWordInput("");
   };
 
-  // Handler to immediately update the UI when removing a word
+  // Key function that handles word removal with optimistic UI updates
   const handleRemoveWord = (id: number) => {
-    // Update the local state immediately for a responsive UI
+    // Immediately update the UI before waiting for the server response
     if (vocabulary && Array.isArray(vocabulary)) {
-      // Get the word that's being deleted
-      const wordToDelete = vocabulary.find(word => word.id === id);
+      // Keep track of the current word list component's state
+      const currentGroupByHomophones = groupByHomophones;
       
-      if (wordToDelete) {
-        // Create an optimistic update by filtering out ONLY the specific word
-        const updatedVocabulary = vocabulary.filter(word => word.id !== id);
-        
-        // Update the query cache immediately
-        queryClient.setQueryData(['/api/vocabulary'], updatedVocabulary);
-        
-        // Update the proficiency data for only this specific word
-        const updatedProficiencyData = { ...proficiencyData };
-        delete updatedProficiencyData[id];
-        setProficiencyData(updatedProficiencyData);
-      }
+      // Only remove the exact word with matching ID - preserve other homophones
+      const updatedVocabulary = vocabulary.filter(word => word.id !== id);
+      
+      // Optimistically update the query cache with our modified list
+      queryClient.setQueryData(['/api/vocabulary'], updatedVocabulary);
+      
+      // Also update proficiency data for the removed word
+      const updatedProficiencyData = { ...proficiencyData };
+      delete updatedProficiencyData[id]; 
+      setProficiencyData(updatedProficiencyData);
     }
     
-    // Then perform the actual API call
+    // Then perform the actual API call to delete on the server
     deleteWordMutation.mutate(id);
   };
 
@@ -917,10 +915,14 @@ export default function WordList() {
   const getHomophoneGroups = (words: any[]) => {
     if (!Array.isArray(words) || words.length === 0) return [];
     
+    // Create a map to store homophone groups keyed by normalized pinyin
     const groups: { [key: string]: any[] } = {};
     
-    // First pass: group by normalized pinyin
+    // First pass: group by normalized pinyin (without tone marks)
     words.forEach(word => {
+      // Skip words with empty pinyin
+      if (!word.pinyin) return;
+      
       const normalizedPinyin = normalizePinyin(word.pinyin);
       if (!groups[normalizedPinyin]) {
         groups[normalizedPinyin] = [];
@@ -928,7 +930,7 @@ export default function WordList() {
       groups[normalizedPinyin].push(word);
     });
     
-    // Only keep groups with multiple words
+    // Only keep groups with multiple words (actual homophones)
     return Object.values(groups).filter(group => group.length > 1);
   };
   
