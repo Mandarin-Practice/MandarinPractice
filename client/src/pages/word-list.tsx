@@ -699,6 +699,8 @@ export default function WordList() {
     }
   });
   
+
+  
   // Toggle word active status mutation
   const toggleActiveStatusMutation = useMutation({
     mutationFn: async ({ id, active }: { id: number, active: string }) => {
@@ -796,7 +798,17 @@ export default function WordList() {
     setWordInput("");
   };
 
+  // Handler to immediately update the UI when removing a word
   const handleRemoveWord = (id: number) => {
+    // Update the local vocabulary state to immediately remove the word
+    if (vocabulary && Array.isArray(vocabulary)) {
+      // Create an optimistic update by removing the word from the current list
+      const updatedVocabulary = vocabulary.filter(word => word.id !== id);
+      // Update the query cache optimistically
+      queryClient.setQueryData(['/api/vocabulary'], updatedVocabulary);
+    }
+    
+    // Then perform the actual API call
     deleteWordMutation.mutate(id);
   };
 
