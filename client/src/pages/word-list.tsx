@@ -908,6 +908,30 @@ export default function WordList() {
     // Only keep groups with multiple words
     return Object.values(groups).filter(group => group.length > 1);
   };
+  
+  // Calculate how many words from a list are already in the user's vocabulary
+  const getWordListStats = (listId: string) => {
+    if (!vocabulary || !Array.isArray(vocabulary) || vocabulary.length === 0) {
+      return { total: 0, imported: 0 };
+    }
+    
+    const wordList = SAMPLE_WORD_LISTS.find(list => list.id === listId);
+    if (!wordList) return { total: 0, imported: 0 };
+    
+    const total = wordList.words.length;
+    let imported = 0;
+    
+    // Check how many words from this list are already in the user's vocabulary
+    wordList.words.forEach(listWord => {
+      const isImported = vocabulary.some(vocabWord => 
+        vocabWord.chinese === listWord.chinese && 
+        vocabWord.pinyin === listWord.pinyin
+      );
+      if (isImported) imported++;
+    });
+    
+    return { total, imported };
+  };
 
   return (
     <div className="word-list-section">
@@ -1158,9 +1182,18 @@ export default function WordList() {
           <p className="text-gray-600 dark:text-gray-400 mb-4">Import pre-made lists to get started quickly</p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {SAMPLE_WORD_LISTS.map((list) => (
+            {SAMPLE_WORD_LISTS.map((list) => {
+              const { total, imported } = getWordListStats(list.id);
+              return (
               <div key={list.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-blue-300 dark:hover:border-blue-500 transition-colors">
-                <h4 className="font-medium mb-2">{list.name}</h4>
+                <div className="flex justify-between items-start mb-2">
+                  <h4 className="font-medium">{list.name}</h4>
+                  <div className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-full">
+                    <span className={imported === total ? "text-green-600 dark:text-green-400" : "text-blue-600 dark:text-blue-400"}>
+                      {imported}/{total} words added
+                    </span>
+                  </div>
+                </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{list.description}</p>
                 <div className="flex gap-2">
                   <Button 
@@ -1181,7 +1214,7 @@ export default function WordList() {
                     variant="link" 
                     className="p-0 h-auto text-sm text-primary hover:text-blue-700 dark:hover:text-blue-300"
                     onClick={() => handleImportWordList(list.id)}
-                    disabled={importWordListMutation.isPending}
+                    disabled={importWordListMutation.isPending || imported === total}
                   >
                     <span className="flex items-center">
                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
@@ -1189,12 +1222,13 @@ export default function WordList() {
                         <polyline points="17 8 12 3 7 8"></polyline>
                         <line x1="12" y1="3" x2="12" y2="15"></line>
                       </svg>
-                      Import All
+                      {imported === total ? "All Added" : "Import All"}
                     </span>
                   </Button>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </CardContent>
       </Card>
