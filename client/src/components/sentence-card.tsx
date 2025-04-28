@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Play, SkipForward } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { compareWordByWord } from "@/lib/string-similarity";
 import InteractiveChineseText from "./interactive-chinese-text";
 
@@ -250,20 +251,22 @@ export default function SentenceCard({
               Hover over words to manage vocabulary
             </p>
           )}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                className="bg-secondary hover:bg-violet-600 transition"
-                onClick={onNextSentence}
-                disabled={isLoading}
-              >
-                Next Sentence <SkipForward className="ml-1 h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Continue to next sentence after managing words</p>
-            </TooltipContent>
-          </Tooltip>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  className="bg-secondary hover:bg-violet-600 transition"
+                  onClick={onNextSentence}
+                  disabled={isLoading}
+                >
+                  Next Sentence <SkipForward className="ml-1 h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Continue to next sentence after managing words</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </CardFooter>
       </Card>
     </div>
