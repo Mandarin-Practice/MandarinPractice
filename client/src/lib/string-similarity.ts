@@ -109,6 +109,11 @@ const equivalentPhrases: Array<string[]> = [
   ["that's", "that is", "that was"],
   ["we're", "we are"],
   
+  // Conjunctions and transitions
+  ["because", "since", "as", "due to the fact that", "given that", "for the reason that"],
+  ["so", "therefore", "thus", "hence", "consequently", "as a result"],
+  ["but", "however", "though", "although", "yet", "nevertheless", "nonetheless"],
+  
   // Prepositions that often vary
   ["in the", "at the"],
   ["on the", "at the"],
