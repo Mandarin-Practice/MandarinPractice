@@ -235,9 +235,27 @@ export default function Settings() {
                       <div className="p-2 text-sm text-gray-500">No Mandarin voices found</div>
                     ) : (
                       mandarinVoices.map((voice) => (
-                        <SelectItem key={voice.voiceURI} value={voice.voiceURI}>
-                          {voice.name} ({voice.lang})
-                        </SelectItem>
+                        <div key={voice.voiceURI} className="flex items-center justify-between py-1 px-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md">
+                          <SelectItem value={voice.voiceURI}>
+                            {voice.name} ({voice.lang})
+                          </SelectItem>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="ml-2 h-7 w-7 p-0 rounded-full"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              speak("你好", { voice: voice, rate: speechRate });
+                            }}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                              <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                            </svg>
+                            <span className="sr-only">Test voice</span>
+                          </Button>
+                        </div>
                       ))
                     )}
                   </SelectContent>
