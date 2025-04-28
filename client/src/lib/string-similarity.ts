@@ -90,13 +90,14 @@ const equivalentPhrases: Array<string[]> = [
   ["afternoon", "in the afternoon", "during the afternoon", "p.m."],
   ["evening", "in the evening", "during the evening", "at night", "night"],
   
-  // Locations
+  // Locations and location verbs
   ["at home", "in the house", "at the house", "in home", "in my home", "in his home", "in her home"],
   ["at school", "in school", "at the school", "in the school"],
   ["at work", "in work", "at the office", "in the office"],
-  ["at the library", "in the library"],
-  ["at the restaurant", "in the restaurant"],
-  ["at the store", "in the store", "at the shop", "in the shop"],
+  ["at the library", "in the library", "go to the library", "goes to the library", "going to the library", "went to the library"],
+  ["at the restaurant", "in the restaurant", "go to the restaurant", "goes to the restaurant", "going to the restaurant", "went to the restaurant"],
+  ["at the store", "in the store", "at the shop", "in the shop", "go to the store", "goes to the store", "going to the store", "went to the store"],
+  ["at the park", "in the park", "go to the park", "goes to the park", "going to the park", "went to the park"],
   
   // Pronouns and other common substitutions
   ["he's", "he is", "he was"],
@@ -109,33 +110,41 @@ const equivalentPhrases: Array<string[]> = [
   ["that's", "that is", "that was"],
   ["we're", "we are"],
   
+  // Subject pronoun variations
+  ["I and my classmate", "my classmate and I", "me and my classmate", "my classmate and me", "me and classmate", "classmate and me", "I and classmates", "my classmates and I", "me and my classmates", "my classmates and me", "we", "me and friend", "me and my friend", "my friend and I", "I and my friend"],
+  ["I and friends", "friends and I", "me and friends", "friends and me"],
+  
   // Conjunctions and transitions
   ["because", "since", "as", "due to the fact that", "given that", "for the reason that"],
   ["so", "therefore", "thus", "hence", "consequently", "as a result"],
   ["but", "however", "though", "although", "yet", "nevertheless", "nonetheless"],
   
-  // Prepositions that often vary
+  // Prepositions and directional modifiers that often vary
   ["in the", "at the"],
   ["on the", "at the"],
+  ["go to study", "study in", "study at"],
+  ["go to work", "work in", "work at"],
+  ["go to eat", "eat in", "eat at", "dine in", "dine at"],
   
   // Tense/aspect/mood markers (often interchangeable in translations)
   ["will", "going to", "will be", "is going to", "are going to", "going", "about to", "plan to", "plans to"],
   ["was", "has been", "had been", "had", "were"],
   ["is", "was being", "has been", "are", "was"],
   
-  // Common noun phrases
-  ["movie", "film", "picture", "cinema"],
-  ["movie theater", "cinema", "theater", "movie house"],
+  // Common noun phrases with singular/plural equivalence
+  ["movie", "film", "picture", "cinema", "movies", "films", "pictures"],
+  ["movie theater", "cinema", "theater", "movie house", "cinemas", "theaters", "movie houses"],
   ["friend", "friends", "buddy", "pal", "buddies", "pals", "companion", "companions"],
-  ["book", "textbook", "novel", "reading material", "reading"],
-  ["teacher", "professor", "instructor", "tutor"],
-  ["student", "pupil", "learner", "scholar"],
-  ["school", "university", "college", "classroom", "class", "campus"],
-  ["library", "study room", "reading room"],
-  ["park", "garden", "public park"],
-  ["restaurant", "cafe", "dining place", "eatery", "cafeteria"],
-  ["store", "shop", "market", "supermarket"],
-  ["home", "house", "residence", "apartment"],
+  ["book", "textbook", "novel", "reading material", "reading", "books", "textbooks", "novels"],
+  ["teacher", "professor", "instructor", "tutor", "teachers", "professors", "instructors", "tutors"],
+  ["student", "pupil", "learner", "scholar", "students", "pupils", "learners", "scholars"],
+  ["classmate", "classmates", "class mate", "class mates", "schoolmate", "schoolmates"],
+  ["school", "university", "college", "classroom", "class", "campus", "schools", "universities", "colleges", "classrooms", "classes", "campuses"],
+  ["library", "study room", "reading room", "libraries", "study rooms", "reading rooms"],
+  ["park", "garden", "public park", "parks", "gardens", "public parks"],
+  ["restaurant", "cafe", "dining place", "eatery", "cafeteria", "restaurants", "cafes", "dining places", "eateries", "cafeterias"],
+  ["store", "shop", "market", "supermarket", "stores", "shops", "markets", "supermarkets"],
+  ["home", "house", "residence", "apartment", "homes", "houses", "residences", "apartments"],
 ];
 
 /**
