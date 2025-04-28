@@ -185,9 +185,23 @@ export default function Practice() {
     }
 
     const correctAnswer = generateSentenceMutation.data.english;
-    const similarity = checkSimilarity(input, correctAnswer);
+    // Get the match strictness from localStorage or use default
+    const matchStrictness = localStorage.getItem('matchStrictness') || 'moderate';
+    // Use the improved semantic similarity check with the configured strictness level
+    const similarity = checkSimilarity(input, correctAnswer, matchStrictness as 'lenient' | 'moderate' | 'strict');
 
-    if (similarity >= 0.8) {
+    // Console log for debugging
+    console.log('Answer comparison:', { 
+      user: input,
+      correct: correctAnswer,
+      similarity,
+      matchStrictness
+    });
+
+    // Threshold adjustments:
+    // - With semantic matching, we can be more flexible with thresholds for "correct"
+    // - Lower threshold for "partial" to account for more variation
+    if (similarity >= 0.75) {
       setFeedbackStatus("correct");
       calculateScore(similarity);
       
@@ -208,7 +222,7 @@ export default function Practice() {
           }
         });
       }
-    } else if (similarity >= 0.4) {
+    } else if (similarity >= 0.45) {
       setFeedbackStatus("partial");
     } else {
       setFeedbackStatus("incorrect");
