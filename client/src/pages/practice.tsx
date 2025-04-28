@@ -157,12 +157,17 @@ export default function Practice() {
   // Handle key press in the input field (for Enter key)
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      if (feedbackStatus === "correct") {
-        // If already correct, move to next sentence
-        nextSentence();
-      } else {
-        // Otherwise check the answer
+      if (feedbackStatus === null) {
+        // If no feedback yet, check the answer first
         checkAnswer(userTranslation);
+      } else {
+        // If we already have feedback (correct, partial, or incorrect),
+        // pressing Enter will move to the next sentence
+        nextSentence();
+        // Reset user translation for the new sentence
+        setUserTranslation("");
+        // Reset feedback status
+        setFeedbackStatus(null);
       }
     }
   };

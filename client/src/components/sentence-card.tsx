@@ -108,9 +108,9 @@ export default function SentenceCard({
     };
     
     const feedbackMessages = {
-      correct: "Correct! Great job.",
-      partial: "Close! Keep trying.",
-      incorrect: "Not quite right. Try again."
+      correct: "Correct! Great job. Press Enter for next sentence.",
+      partial: "Close! Try again or press Enter for next sentence.",
+      incorrect: "Not quite right. Try again or press Enter to move on."
     };
     
     return (
@@ -194,7 +194,7 @@ export default function SentenceCard({
                     value={userTranslation}
                     onChange={onUpdateTranslation}
                     onKeyDown={onKeyPress}
-                    placeholder="Type your answer here... (Press Enter to check or next)"
+                    placeholder="Type your answer here... (Press Enter to check or to go to next)"
                     className="w-full px-4 py-6 text-base"
                     disabled={isLoading || !sentence}
                     autoComplete="off" // Disable browser autocomplete suggestions
