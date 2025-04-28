@@ -972,6 +972,108 @@ export default function WordList() {
     return result;
   };
   
+  // Function to convert Chinese characters to pinyin using a mapping (simplified version)
+  const chineseToPinyinMap: Record<string, string[]> = {
+    '我': ['wo'],
+    '你': ['ni'],
+    '他': ['ta'],
+    '她': ['ta'],
+    '它': ['ta'],
+    '们': ['men'],
+    '是': ['shi'],
+    '的': ['de'],
+    '人': ['ren'],
+    '有': ['you'],
+    '在': ['zai'],
+    '个': ['ge'],
+    '好': ['hao'],
+    '来': ['lai'],
+    '这': ['zhe'],
+    '去': ['qu'],
+    '了': ['le'],
+    '不': ['bu'],
+    '会': ['hui'],
+    '想': ['xiang'],
+    '能': ['neng'],
+    '吗': ['ma'],
+    '做': ['zuo'],
+    '说': ['shuo'],
+    '看': ['kan'],
+    '中': ['zhong'],
+    '文': ['wen'],
+    '和': ['he'],
+    '什': ['shen'],
+    '么': ['me'],
+    '学': ['xue'],
+    '习': ['xi'],
+    '喜': ['xi'],
+    '欢': ['huan'],
+    '吃': ['chi'],
+    '饭': ['fan'],
+    '水': ['shui'],
+    '茶': ['cha'],
+    '工': ['gong'],
+    '作': ['zuo'],
+    '家': ['jia'],
+    '大': ['da'],
+    '小': ['xiao'],
+    '多': ['duo'],
+    '少': ['shao'],
+    '朋': ['peng'],
+    '友': ['you'],
+    '年': ['nian'],
+    '月': ['yue'],
+    '日': ['ri'],
+    '时': ['shi'],
+    '分': ['fen'],
+    '秒': ['miao'],
+    '明': ['ming'],
+    '天': ['tian'],
+    '昨': ['zuo'],
+    '今': ['jin'],
+    '谢': ['xie'],
+    '对': ['dui'],
+    '起': ['qi'],
+    '请': ['qing'],
+    '再': ['zai'],
+    '见': ['jian'],
+  };
+
+  // Function to attempt converting search query to pinyin or vice versa
+  const getPossibleSearchPatterns = (query: string): string[] => {
+    const result: string[] = [query]; // Always include original query
+    
+    // 1. If query is likely Chinese characters
+    if (/[\u4e00-\u9fa5]/.test(query)) {
+      // Try to convert each character to its pinyin
+      const possiblePinyin = Array.from(query)
+        .map(char => chineseToPinyinMap[char] || [char])
+        .reduce((acc, curr) => {
+          if (acc.length === 0) return curr;
+          const newAcc: string[] = [];
+          acc.forEach(a => {
+            curr.forEach(c => {
+              newAcc.push(a + c);
+            });
+          });
+          return newAcc;
+        }, [] as string[]);
+      
+      result.push(...possiblePinyin);
+    } 
+    // 2. If query is likely pinyin (latin characters)
+    else if (/^[a-z]+$/i.test(query)) {
+      // Find Chinese characters that match this pinyin
+      Object.entries(chineseToPinyinMap).forEach(([char, pinyinOptions]) => {
+        if (pinyinOptions.some(p => p.includes(query))) {
+          result.push(char);
+        }
+      });
+    }
+    
+    return result;
+  };
+
   // Function to filter vocabulary based on search query
   const filterVocabulary = (words: any[]) => {
     if (!searchQuery.trim() || !Array.isArray(words)) {
@@ -979,11 +1081,33 @@ export default function WordList() {
     }
     
     const query = searchQuery.toLowerCase();
-    return words.filter(word => 
-      word.chinese.toLowerCase().includes(query) || 
-      word.pinyin.toLowerCase().includes(query) || 
-      word.english.toLowerCase().includes(query)
-    );
+    const possiblePatterns = getPossibleSearchPatterns(query);
+    
+    return words.filter(word => {
+      // Check original fields
+      if (
+        word.chinese.toLowerCase().includes(query) || 
+        word.pinyin.toLowerCase().includes(query) || 
+        word.english.toLowerCase().includes(query)
+      ) {
+        return true;
+      }
+      
+      // Check against all possible search patterns
+      for (const pattern of possiblePatterns) {
+        if (pattern !== query) { // Skip original query as we already checked it
+          if (
+            word.chinese.toLowerCase().includes(pattern) || 
+            word.pinyin.toLowerCase().includes(pattern) ||
+            word.english.toLowerCase().includes(pattern)
+          ) {
+            return true;
+          }
+        }
+      }
+      
+      return false;
+    });
   };
 
   // Calculate how many words from a list are already in the user's vocabulary
@@ -1169,14 +1293,20 @@ export default function WordList() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search words (Chinese, pinyin, or English)"
+                  placeholder="Search by Chinese character (我) or pinyin (wo)"
                   className="w-full px-10 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  title="Type either Chinese characters or pinyin to search. For example, typing '我' will find words with '我', and typing 'wo' will find words with the pinyin 'wo'."
                 />
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                  </svg>
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3">
+                  <div className="group relative">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 cursor-help">
+                      <circle cx="11" cy="11" r="8"></circle>
+                      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 -translate-y-2 hidden group-hover:block bg-black text-white text-xs rounded py-1 px-2 w-64 z-10">
+                      You can search by typing either Chinese characters or pinyin. The search is smart enough to find matching words regardless of which you use.
+                    </div>
+                  </div>
                 </div>
                 {searchQuery && (
                   <button
