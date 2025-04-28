@@ -242,14 +242,28 @@ export default function SentenceCard({
           )}
         </CardContent>
         
-        <CardFooter className="py-4 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 justify-end">
-          <Button
-            className="bg-secondary hover:bg-violet-600 transition"
-            onClick={onNextSentence}
-            disabled={isLoading}
-          >
-            Next Sentence <SkipForward className="ml-1 h-4 w-4" />
-          </Button>
+        <CardFooter className="py-4 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 justify-between">
+          {feedbackStatus && (
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {sentence && sentence.chinese.length > 0 ? `${sentence.chinese.length} characters` : ''}
+              <span className="mx-1">•</span>
+              Hover over words to manage vocabulary
+            </p>
+          )}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                className="bg-secondary hover:bg-violet-600 transition"
+                onClick={onNextSentence}
+                disabled={isLoading}
+              >
+                Next Sentence <SkipForward className="ml-1 h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Continue to next sentence after managing words</p>
+            </TooltipContent>
+          </Tooltip>
         </CardFooter>
       </Card>
     </div>

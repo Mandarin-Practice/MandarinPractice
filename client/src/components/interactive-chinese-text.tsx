@@ -143,6 +143,9 @@ export default function InteractiveChineseText({
                     
                     {charInfo.wordId && (
                       <div className="flex flex-col space-y-2 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                        <div className="text-xs text-gray-500 mb-1">
+                          Manage this word (you can update multiple words before continuing)
+                        </div>
                         <Button 
                           variant="outline" 
                           size="sm"
