@@ -67,16 +67,17 @@ const nonCriticalWords: Record<string, string[]> = {
 const equivalentPhrases: Array<string[]> = [
   // Verbs with similar meaning
   ["study", "learn", "studying", "learning"],
-  ["see", "look at", "looking at", "viewing", "watching"],
-  ["eat", "have a meal", "having a meal", "having food", "having dinner", "having lunch", "having breakfast"],
-  ["drink", "having a drink"],
-  ["walk", "walking", "go", "going"],
-  ["say", "tell", "saying", "telling"],
-  ["buy", "purchase", "buying", "purchasing"],
-  ["like", "enjoy", "loves", "enjoys"],
-  ["want", "would like", "would love", "wishes"],
-  ["give", "hand", "pass", "giving", "handing", "passing"],
-  ["speak", "talk", "speaking", "talking"],
+  ["see", "look at", "looking at", "viewing", "watching", "watch", "saw", "watched", "seeing"],
+  ["eat", "have a meal", "having a meal", "having food", "having dinner", "having lunch", "having breakfast", "ate", "eats", "eating"],
+  ["drink", "having a drink", "drank", "drinking", "drinks"],
+  ["walk", "walking", "go", "going", "went", "goes", "walked"],
+  ["say", "tell", "saying", "telling", "said", "told", "mentioned", "mentioning", "stated"],
+  ["buy", "purchase", "buying", "purchasing", "bought", "purchases", "purchased"],
+  ["like", "enjoy", "loves", "enjoys", "liked", "enjoyed", "loving", "enjoying", "fond of", "fond"],
+  ["want", "would like", "would love", "wishes", "wanted", "wanting", "desires", "desired", "desiring", "wish", "wished"],
+  ["give", "hand", "pass", "giving", "handing", "passing", "gave", "handed", "passed", "given"],
+  ["speak", "talk", "speaking", "talking", "spoke", "talked", "speaks", "talks"],
+  ["read", "reading", "reads", "studying", "look at", "looking at", "looked at", "read through"],
   
   // Time expressions
   ["now", "at the moment", "currently", "at present", "right now"],
@@ -113,9 +114,23 @@ const equivalentPhrases: Array<string[]> = [
   ["on the", "at the"],
   
   // Tense/aspect/mood markers (often interchangeable in translations)
-  ["will", "going to", "will be", "is going to"],
-  ["was", "has been", "had been"],
-  ["is", "was being", "has been"],
+  ["will", "going to", "will be", "is going to", "are going to", "going", "about to", "plan to", "plans to"],
+  ["was", "has been", "had been", "had", "were"],
+  ["is", "was being", "has been", "are", "was"],
+  
+  // Common noun phrases
+  ["movie", "film", "picture", "cinema"],
+  ["movie theater", "cinema", "theater", "movie house"],
+  ["friend", "friends", "buddy", "pal", "buddies", "pals", "companion", "companions"],
+  ["book", "textbook", "novel", "reading material", "reading"],
+  ["teacher", "professor", "instructor", "tutor"],
+  ["student", "pupil", "learner", "scholar"],
+  ["school", "university", "college", "classroom", "class", "campus"],
+  ["library", "study room", "reading room"],
+  ["park", "garden", "public park"],
+  ["restaurant", "cafe", "dining place", "eatery", "cafeteria"],
+  ["store", "shop", "market", "supermarket"],
+  ["home", "house", "residence", "apartment"],
 ];
 
 /**
