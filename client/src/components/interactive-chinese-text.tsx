@@ -1,0 +1,157 @@
+import { useState } from 'react';
+import { Button } from './ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { apiRequest } from '@/lib/queryClient';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+
+interface CharacterInfo {
+  character: string;
+  definition?: string;
+  pinyin?: string;
+  wordId?: number;
+}
+
+interface InteractiveChineseTextProps {
+  chinese: string;
+  vocabularyWords: Array<{
+    id: number;
+    chinese: string;
+    pinyin: string;
+    english: string;
+    active: string;
+  }>;
+  feedbackStatus: "correct" | "partial" | "incorrect" | null;
+}
+
+export default function InteractiveChineseText({
+  chinese,
+  vocabularyWords,
+  feedbackStatus,
+}: InteractiveChineseTextProps) {
+  const queryClient = useQueryClient();
+  
+  // Process the Chinese text to identify words from vocabulary
+  const processedText: CharacterInfo[] = [];
+  
+  // Iterate through each character in the Chinese text
+  for (let i = 0; i < chinese.length; i++) {
+    const char = chinese[i];
+    const charInfo: CharacterInfo = { character: char };
+    
+    // Find if this character is part of a word in our vocabulary
+    // We check multi-character words first, from longest to shortest
+    const matchedWord = vocabularyWords
+      .filter(word => word.chinese.includes(char))
+      .sort((a, b) => b.chinese.length - a.chinese.length) // Sort by length descending
+      .find(word => {
+        const startIndex = chinese.indexOf(word.chinese, Math.max(0, i - word.chinese.length + 1));
+        return startIndex !== -1 && i >= startIndex && i < startIndex + word.chinese.length;
+      });
+    
+    if (matchedWord) {
+      charInfo.definition = matchedWord.english;
+      charInfo.pinyin = matchedWord.pinyin;
+      charInfo.wordId = matchedWord.id;
+    }
+    
+    processedText.push(charInfo);
+  }
+  
+  // Mutation to toggle the active status of a word
+  const toggleWordActive = useMutation({
+    mutationFn: async (wordId: number) => {
+      const word = vocabularyWords.find(w => w.id === wordId);
+      if (!word) return null;
+      
+      const response = await apiRequest('PATCH', `/api/vocabulary/${wordId}`, {
+        active: word.active === 'true' ? 'false' : 'true'
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      // Invalidate vocabulary cache to refresh the list
+      queryClient.invalidateQueries({ queryKey: ['/api/vocabulary'] });
+    }
+  });
+  
+  // Mutation to delete a word
+  const deleteWord = useMutation({
+    mutationFn: async (wordId: number) => {
+      const response = await apiRequest('DELETE', `/api/vocabulary/${wordId}`);
+      return response.status === 204;
+    },
+    onSuccess: () => {
+      // Invalidate vocabulary cache to refresh the list
+      queryClient.invalidateQueries({ queryKey: ['/api/vocabulary'] });
+    }
+  });
+  
+  return (
+    <div className="text-2xl font-['Noto_Sans_SC',sans-serif] leading-relaxed">
+      {feedbackStatus ? (
+        // Display with hover functionality after checking answer
+        <span className={
+          feedbackStatus === "correct" 
+            ? "text-green-600 dark:text-green-400" 
+            : feedbackStatus === "incorrect" 
+              ? "text-red-600 dark:text-red-400" 
+              : ""
+        }>
+          {processedText.map((charInfo, index) => (
+            charInfo.definition ? (
+              <Popover key={index}>
+                <PopoverTrigger asChild>
+                  <span 
+                    className="cursor-help hover:bg-gray-100 dark:hover:bg-gray-800 px-0.5 py-0.5 rounded transition-colors" 
+                    title={charInfo.definition}
+                  >
+                    {charInfo.character}
+                  </span>
+                </PopoverTrigger>
+                <PopoverContent className="w-64 p-4">
+                  <div className="space-y-2">
+                    <div className="text-2xl font-bold">{charInfo.character}</div>
+                    <div className="text-sm text-gray-500">{charInfo.pinyin}</div>
+                    <div className="text-base">{charInfo.definition}</div>
+                    
+                    {charInfo.wordId && (
+                      <div className="flex flex-col space-y-2 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => toggleWordActive.mutate(charInfo.wordId as number)}
+                          className="text-xs justify-start"
+                        >
+                          {vocabularyWords.find(w => w.id === charInfo.wordId)?.active === 'true' 
+                            ? 'Mark as Inactive' 
+                            : 'Mark as Active'}
+                        </Button>
+                        <Button 
+                          variant="destructive" 
+                          size="sm"
+                          onClick={() => {
+                            if (window.confirm('Are you sure you want to delete this word?')) {
+                              deleteWord.mutate(charInfo.wordId as number);
+                            }
+                          }}
+                          className="text-xs justify-start"
+                        >
+                          Delete Word
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            ) : (
+              <span key={index}>{charInfo.character}</span>
+            )
+          ))}
+        </span>
+      ) : (
+        // Normal display when no feedback
+        chinese
+      )}
+    </div>
+  );
+}

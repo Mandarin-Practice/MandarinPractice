@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Play, SkipForward } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { compareWordByWord } from "@/lib/string-similarity";
+import InteractiveChineseText from "./interactive-chinese-text";
 
 interface HighlightedComparisonProps {
   correctSentence: string;
@@ -60,6 +61,13 @@ interface SentenceCardProps {
   feedbackStatus: "correct" | "partial" | "incorrect" | null;
   isLoading: boolean;
   isPlaying: boolean;
+  vocabularyWords?: Array<{
+    id: number;
+    chinese: string;
+    pinyin: string;
+    english: string;
+    active: string;
+  }>;
   onUpdateTranslation: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onPlayAudio: () => void;
   onNextSentence: () => void;
@@ -74,6 +82,7 @@ export default function SentenceCard({
   feedbackStatus,
   isLoading,
   isPlaying,
+  vocabularyWords = [],
   onUpdateTranslation,
   onPlayAudio,
   onNextSentence,
@@ -150,26 +159,27 @@ export default function SentenceCard({
             </div>
           ) : (
             <>
-              {/* Chinese Text */}
+              {/* Chinese Text with Interactive Hover */}
               {showChinese && sentence?.chinese && (
                 <div className="mb-6">
-                  <p className="text-2xl font-['Noto_Sans_SC',sans-serif] leading-relaxed">
-                    {/* Just highlighting all characters together since word-by-word doesn't make sense for Chinese */}
-                    {feedbackStatus ? (
-                      <span className={
-                        feedbackStatus === "correct" 
-                          ? "text-green-600 dark:text-green-400" 
-                          : feedbackStatus === "incorrect" 
-                            ? "text-red-600 dark:text-red-400" 
-                            : ""
-                      }>
-                        {sentence.chinese}
-                      </span>
-                    ) : (
-                      // Normal display when no feedback
-                      sentence.chinese
-                    )}
-                  </p>
+                  {/* After checking an answer, show the interactive component with hover info */}
+                  {feedbackStatus ? (
+                    <div className="relative">
+                      <InteractiveChineseText 
+                        chinese={sentence.chinese}
+                        vocabularyWords={vocabularyWords}
+                        feedbackStatus={feedbackStatus}
+                      />
+                      {feedbackStatus === "correct" && (
+                        <div className="mt-1 text-xs text-gray-500">Hover over any character to see word details</div>
+                      )}
+                    </div>
+                  ) : (
+                    // Normal display when no feedback yet
+                    <p className="text-2xl font-['Noto_Sans_SC',sans-serif] leading-relaxed">
+                      {sentence.chinese}
+                    </p>
+                  )}
                 </div>
               )}
               

@@ -329,6 +329,7 @@ export default function Practice() {
           onKeyPress={handleKeyPress}
           isLoading={generateSentenceMutation.isPending}
           isPlaying={isPlaying}
+          vocabularyWords={vocabularyWords}
         />
         
         <ScoreCard
