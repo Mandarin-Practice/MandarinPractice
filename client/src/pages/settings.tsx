@@ -8,14 +8,18 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useTextToSpeech } from "@/hooks/use-text-to-speech";
 
 export default function Settings() {
   const [difficulty, setDifficulty] = useState<string>("beginner");
   const [speechRate, setSpeechRate] = useState<number>(1.0);
+  const [selectedVoiceURI, setSelectedVoiceURI] = useState<string>("");
   const [autoReplay, setAutoReplay] = useState<boolean>(false);
   const [matchStrictness, setMatchStrictness] = useState<string>("moderate");
   const [timeWeight, setTimeWeight] = useState<number>(3);
   const { toast } = useToast();
+  const { mandarinVoices, speak } = useTextToSpeech();
 
   // Load settings from localStorage on component mount
   useEffect(() => {
@@ -24,6 +28,9 @@ export default function Settings() {
 
     const storedSpeechRate = localStorage.getItem("speechRate");
     if (storedSpeechRate) setSpeechRate(parseFloat(storedSpeechRate));
+
+    const storedVoiceURI = localStorage.getItem("selectedVoiceURI");
+    if (storedVoiceURI) setSelectedVoiceURI(storedVoiceURI);
 
     const storedAutoReplay = localStorage.getItem("autoReplay");
     if (storedAutoReplay) setAutoReplay(storedAutoReplay === "true");
@@ -39,6 +46,7 @@ export default function Settings() {
   const saveSettings = () => {
     localStorage.setItem("difficulty", difficulty);
     localStorage.setItem("speechRate", speechRate.toString());
+    localStorage.setItem("selectedVoiceURI", selectedVoiceURI);
     localStorage.setItem("autoReplay", autoReplay.toString());
     localStorage.setItem("matchStrictness", matchStrictness);
     localStorage.setItem("timeWeight", timeWeight.toString());
@@ -57,6 +65,7 @@ export default function Settings() {
       settings: {
         difficulty,
         speechRate,
+        selectedVoiceURI,
         autoReplay,
         matchStrictness,
         timeWeight
@@ -103,6 +112,11 @@ export default function Settings() {
           if (data.settings.speechRate) {
             setSpeechRate(data.settings.speechRate);
             localStorage.setItem("speechRate", data.settings.speechRate.toString());
+          }
+          
+          if (data.settings.selectedVoiceURI) {
+            setSelectedVoiceURI(data.settings.selectedVoiceURI);
+            localStorage.setItem("selectedVoiceURI", data.settings.selectedVoiceURI);
           }
           
           if (data.settings.autoReplay !== undefined) {
@@ -203,6 +217,65 @@ export default function Settings() {
           
           <div className="mb-6">
             <h3 className="text-lg font-medium mb-3">Audio Settings</h3>
+            
+            <div className="mb-4">
+              <Label htmlFor="voice-select" className="block text-sm font-medium mb-2">
+                Voice Selection
+              </Label>
+              <div className="mb-2">
+                <Select
+                  value={selectedVoiceURI}
+                  onValueChange={setSelectedVoiceURI}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select a voice" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {mandarinVoices.length === 0 ? (
+                      <div className="p-2 text-sm text-gray-500">No Mandarin voices found</div>
+                    ) : (
+                      mandarinVoices.map((voice) => (
+                        <SelectItem key={voice.voiceURI} value={voice.voiceURI}>
+                          {voice.name} ({voice.lang})
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs mt-1 text-gray-500">
+                  {selectedVoiceURI ? 
+                    `Selected: ${mandarinVoices.find(v => v.voiceURI === selectedVoiceURI)?.name || selectedVoiceURI}` : 
+                    "Default voice will be used if none selected"
+                  }
+                </p>
+              </div>
+              
+              {selectedVoiceURI && (
+                <div className="mb-4">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      const selectedVoice = mandarinVoices.find(v => v.voiceURI === selectedVoiceURI);
+                      speak("你好，这是普通话的声音测试。", { 
+                        voice: selectedVoice,
+                        rate: speechRate
+                      });
+                    }}
+                    className="w-full"
+                  >
+                    <span className="flex items-center justify-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                        <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                      </svg>
+                      Test Voice
+                    </span>
+                  </Button>
+                </div>
+              )}
+            </div>
             
             <div className="mb-4">
               <Label htmlFor="speech-rate" className="block text-sm font-medium mb-2">
