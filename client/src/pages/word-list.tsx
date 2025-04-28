@@ -332,7 +332,7 @@ const SAMPLE_WORD_LISTS: WordList[] = [
       { chinese: "喝", pinyin: "hē", english: "to drink" },
       { chinese: "茶", pinyin: "chá", english: "tea" },
       { chinese: "咖啡", pinyin: "kā fēi", english: "coffee" },
-      { chinese: "东西", pinyin: "dōng xi", english: "thing" },
+      { chinese: "东西", pinyin: "dōng xī", english: "thing" },
       { chinese: "中文", pinyin: "zhōng wén", english: "Chinese language" },
       { chinese: "学习", pinyin: "xué xí", english: "to study" },
       { chinese: "聊天", pinyin: "liáo tiān", english: "to chat" },
@@ -390,7 +390,7 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     description: "45 essential intermediate words",
     words: [
       { chinese: "汉语", pinyin: "hàn yǔ", english: "Chinese language" },
-      { chinese: "意思", pinyin: "yì si", english: "meaning" },
+      { chinese: "意思", pinyin: "yì sī", english: "meaning" },
       { chinese: "问题", pinyin: "wèn tí", english: "question/problem" },
       { chinese: "事情", pinyin: "shì qíng", english: "matter/affair" },
       { chinese: "经常", pinyin: "jīng cháng", english: "often" },
@@ -433,7 +433,7 @@ const SAMPLE_WORD_LISTS: WordList[] = [
       { chinese: "蓝", pinyin: "lán", english: "blue" },
       { chinese: "黑", pinyin: "hēi", english: "black" },
       { chinese: "白", pinyin: "bái", english: "white" },
-      { chinese: "便宜", pinyin: "pián yi", english: "cheap" }
+      { chinese: "便宜", pinyin: "pián yí", english: "cheap" }
     ]
   },
   {
@@ -548,7 +548,7 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     description: "25 essential health and medical terms",
     words: [
       { chinese: "医生", pinyin: "yī shēng", english: "doctor" },
-      { chinese: "护士", pinyin: "hù shi", english: "nurse" },
+      { chinese: "护士", pinyin: "hù shì", english: "nurse" },
       { chinese: "患者", pinyin: "huàn zhě", english: "patient" },
       { chinese: "医院", pinyin: "yī yuàn", english: "hospital" },
       { chinese: "诊所", pinyin: "zhěn suǒ", english: "clinic" },
@@ -560,7 +560,7 @@ const SAMPLE_WORD_LISTS: WordList[] = [
       { chinese: "头痛", pinyin: "tóu tòng", english: "headache" },
       { chinese: "发烧", pinyin: "fā shāo", english: "fever" },
       { chinese: "感冒", pinyin: "gǎn mào", english: "cold" },
-      { chinese: "咳嗽", pinyin: "ké sou", english: "cough" },
+      { chinese: "咳嗽", pinyin: "ké sòu", english: "cough" },
       { chinese: "过敏", pinyin: "guò mǐn", english: "allergy" },
       { chinese: "血", pinyin: "xuè", english: "blood" },
       { chinese: "检查", pinyin: "jiǎn chá", english: "examination" },
@@ -595,7 +595,7 @@ const SAMPLE_WORD_LISTS: WordList[] = [
       { chinese: "夏天", pinyin: "xià tiān", english: "summer" },
       { chinese: "秋天", pinyin: "qiū tiān", english: "autumn" },
       { chinese: "冬天", pinyin: "dōng tiān", english: "winter" },
-      { chinese: "凉快", pinyin: "liáng kuai", english: "cool" },
+      { chinese: "凉快", pinyin: "liáng kuài", english: "cool" },
       { chinese: "温暖", pinyin: "wēn nuǎn", english: "warm" },
       { chinese: "寒冷", pinyin: "hán lěng", english: "cold" },
       { chinese: "炎热", pinyin: "yán rè", english: "hot" }
