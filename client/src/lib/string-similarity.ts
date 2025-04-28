@@ -109,6 +109,12 @@ const equivalentPhrases: Array<string[]> = [
   ["there's", "there is", "there was"],
   ["that's", "that is", "that was"],
   ["we're", "we are"],
+  ["what's", "what is"],
+  ["who's", "who is"],
+  ["where's", "where is"],
+  ["when's", "when is"],
+  ["how's", "how is"],
+  ["why's", "why is"],
   
   // Subject pronoun variations
   ["I and my classmate", "my classmate and I", "me and my classmate", "my classmate and me", "me and classmate", "classmate and me", "I and classmates", "my classmates and I", "me and my classmates", "my classmates and me", "we", "me and friend", "me and my friend", "my friend and I", "I and my friend"],
