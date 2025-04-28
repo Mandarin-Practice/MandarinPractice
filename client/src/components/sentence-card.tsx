@@ -170,8 +170,10 @@ export default function SentenceCard({
                         vocabularyWords={vocabularyWords}
                         feedbackStatus={feedbackStatus}
                       />
-                      {feedbackStatus === "correct" && (
-                        <div className="mt-1 text-xs text-gray-500">Hover over any character to see word details</div>
+                      {feedbackStatus && (
+                        <div className="mt-1 text-xs text-gray-500">
+                          Hover over any character to see details and manage words
+                        </div>
                       )}
                     </div>
                   ) : (
