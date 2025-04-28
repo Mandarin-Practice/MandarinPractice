@@ -9,6 +9,8 @@ interface CharacterInfo {
   definition?: string;
   pinyin?: string;
   wordId?: number;
+  fullWord?: string;
+  positionInWord?: number;
 }
 
 interface InteractiveChineseTextProps {
@@ -52,6 +54,14 @@ export default function InteractiveChineseText({
       charInfo.definition = matchedWord.english;
       charInfo.pinyin = matchedWord.pinyin;
       charInfo.wordId = matchedWord.id;
+      
+      // Store the full word and the position of this character within the word
+      const startIndex = chinese.indexOf(matchedWord.chinese, Math.max(0, i - matchedWord.chinese.length + 1));
+      if (startIndex !== -1) {
+        const positionInWord = i - startIndex;
+        charInfo.fullWord = matchedWord.chinese;
+        charInfo.positionInWord = positionInWord;
+      }
     }
     
     processedText.push(charInfo);
@@ -109,7 +119,25 @@ export default function InteractiveChineseText({
                 </HoverCardTrigger>
                 <HoverCardContent className="w-64 p-4 z-50">
                   <div className="space-y-2">
-                    <div className="text-2xl font-bold">{charInfo.character}</div>
+                    {/* Display full word with the current character highlighted */}
+                    {charInfo.fullWord && charInfo.positionInWord !== undefined ? (
+                      <div className="text-2xl font-bold">
+                        {Array.from(charInfo.fullWord).map((char, i) => (
+                          <span 
+                            key={i} 
+                            className={i === charInfo.positionInWord 
+                              ? "bg-secondary/25 text-secondary-foreground/90 px-0.5 rounded" 
+                              : ""
+                            }
+                          >
+                            {char}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-2xl font-bold">{charInfo.character}</div>
+                    )}
+                    
                     <div className="text-sm text-gray-500">{charInfo.pinyin}</div>
                     <div className="text-base">{charInfo.definition}</div>
                     
