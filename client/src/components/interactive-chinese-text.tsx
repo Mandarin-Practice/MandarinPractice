@@ -1,6 +1,12 @@
 import { useState } from 'react';
 import { Button } from './ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from './ui/tooltip';
 import { apiRequest } from '@/lib/queryClient';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -99,50 +105,66 @@ export default function InteractiveChineseText({
         }>
           {processedText.map((charInfo, index) => (
             charInfo.definition ? (
-              <Popover key={index}>
-                <PopoverTrigger asChild>
-                  <span 
-                    className="cursor-help hover:bg-gray-100 dark:hover:bg-gray-800 px-0.5 py-0.5 rounded transition-colors" 
-                    title={charInfo.definition}
-                  >
-                    {charInfo.character}
-                  </span>
-                </PopoverTrigger>
-                <PopoverContent className="w-64 p-4">
-                  <div className="space-y-2">
-                    <div className="text-2xl font-bold">{charInfo.character}</div>
-                    <div className="text-sm text-gray-500">{charInfo.pinyin}</div>
-                    <div className="text-base">{charInfo.definition}</div>
-                    
-                    {charInfo.wordId && (
-                      <div className="flex flex-col space-y-2 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => toggleWordActive.mutate(charInfo.wordId as number)}
-                          className="text-xs justify-start"
+              <TooltipProvider key={index}>
+                <Tooltip>
+                  <Popover>
+                    <TooltipTrigger asChild>
+                      <PopoverTrigger asChild>
+                        <span 
+                          className="cursor-help hover:bg-gray-100 dark:hover:bg-gray-800 px-0.5 py-0.5 rounded transition-colors"
                         >
-                          {vocabularyWords.find(w => w.id === charInfo.wordId)?.active === 'true' 
-                            ? 'Mark as Inactive' 
-                            : 'Mark as Active'}
-                        </Button>
-                        <Button 
-                          variant="destructive" 
-                          size="sm"
-                          onClick={() => {
-                            if (window.confirm('Are you sure you want to delete this word?')) {
-                              deleteWord.mutate(charInfo.wordId as number);
-                            }
-                          }}
-                          className="text-xs justify-start"
-                        >
-                          Delete Word
-                        </Button>
+                          {charInfo.character}
+                        </span>
+                      </PopoverTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent 
+                      side="top"
+                      className="z-50 bg-white dark:bg-gray-800 px-3 py-2 text-sm shadow-md rounded"
+                      sideOffset={5}
+                    >
+                      <div className="flex flex-col gap-1">
+                        <span className="font-bold">{charInfo.pinyin}</span>
+                        <span>{charInfo.definition}</span>
+                        <span className="text-xs text-gray-500 italic">Click for more options</span>
                       </div>
-                    )}
-                  </div>
-                </PopoverContent>
-              </Popover>
+                    </TooltipContent>
+                    <PopoverContent className="w-64 p-4 z-40">
+                      <div className="space-y-2">
+                        <div className="text-2xl font-bold">{charInfo.character}</div>
+                        <div className="text-sm text-gray-500">{charInfo.pinyin}</div>
+                        <div className="text-base">{charInfo.definition}</div>
+                        
+                        {charInfo.wordId && (
+                          <div className="flex flex-col space-y-2 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => toggleWordActive.mutate(charInfo.wordId as number)}
+                              className="text-xs justify-start"
+                            >
+                              {vocabularyWords.find(w => w.id === charInfo.wordId)?.active === 'true' 
+                                ? 'Mark as Inactive' 
+                                : 'Mark as Active'}
+                            </Button>
+                            <Button 
+                              variant="destructive" 
+                              size="sm"
+                              onClick={() => {
+                                if (window.confirm('Are you sure you want to delete this word?')) {
+                                  deleteWord.mutate(charInfo.wordId as number);
+                                }
+                              }}
+                              className="text-xs justify-start"
+                            >
+                              Delete Word
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </Tooltip>
+              </TooltipProvider>
             ) : (
               <span key={index}>{charInfo.character}</span>
             )
