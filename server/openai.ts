@@ -48,6 +48,18 @@ export async function generateSentence(
           content: `You are a Mandarin Chinese language teacher creating practice sentences for students.
           Generate a grammatically correct Mandarin sentence using ONLY the vocabulary words provided.
           ${difficultyGuide[difficulty]}
+          
+          Use varied sentence structures, such as:
+          - Questions (using 吗, 呢, 吧)
+          - Imperative statements
+          - Comparison sentences
+          - If/then structures
+          - Opinion statements
+          - Time-based sentences
+          - Descriptive sentences
+          - Cause and effect relationships
+          
+          Avoid generating similar sentence patterns repeatedly. Try to introduce variety.
           Provide the sentence in Chinese characters, pinyin (with proper tone marks), and an English translation.
           Important: ONLY use words from the provided vocabulary list. If you need common connecting words like "的" or "是", you may use them ONLY if they're in the vocabulary list.
           Format your response as a valid JSON object with 'chinese', 'pinyin', and 'english' fields.`
@@ -56,7 +68,7 @@ export async function generateSentence(
           role: "user",
           content: `Vocabulary words (in Chinese): ${chineseWords}. 
           Difficulty level: ${difficulty}.
-          Generate a sentence using only these words.`
+          Generate a sentence using only these words. Make sure to use a different sentence structure than recently generated sentences. Be creative with the structure.`
         }
       ],
       response_format: { type: "json_object" }
@@ -153,13 +165,26 @@ export async function generateSentenceWithWord(
           content: `You are a Mandarin Chinese language teacher creating example sentences. 
           Generate a grammatically correct Mandarin sentence that includes the word "${word}".
           ${difficultyGuide[difficulty]}
+          
+          Use varied sentence structures, such as:
+          - Questions (using 吗, 呢, 吧)
+          - Imperative statements
+          - Comparison sentences
+          - If/then structures
+          - Opinion statements
+          - Time-based sentences
+          - Descriptive sentences
+          - Cause and effect relationships
+          
+          Avoid generating similar sentence patterns repeatedly. Try to introduce variety.
           Provide the sentence in Chinese characters, pinyin (with proper tone marks), and an English translation.
           Format your response as a valid JSON object with 'chinese', 'pinyin', and 'english' fields.`
         },
         {
           role: "user",
           content: `Create a natural, grammatically correct sentence in Mandarin that includes the word "${word}".
-          Difficulty level: ${difficulty}.`
+          Difficulty level: ${difficulty}.
+          Make sure to use a different sentence structure than what might be typically generated. Be creative with the grammatical structure while maintaining natural Chinese expression.`
         }
       ],
       response_format: { type: "json_object" }
