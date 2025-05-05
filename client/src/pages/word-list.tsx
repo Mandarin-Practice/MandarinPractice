@@ -1704,13 +1704,16 @@ export default function WordList() {
                 <div className="space-y-4 mb-4">
                   {/* Display homophone groups */}
                   {getHomophoneGroups(filterVocabulary(vocabulary)).map((group, index) => (
-                    <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
-                      <h4 className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-300">
+                    <div key={index} className="border border-border rounded-md p-4 bg-accent/10">
+                      <h4 className="text-sm font-medium mb-3 text-primary flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
+                          <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+                        </svg>
                         {group.type === 'pronoun' 
-                          ? 'tā - Pronoun Homophones (他/她/它)' 
-                          : `${normalizePinyin(group.words[0].pinyin)} - Homophones`}
+                          ? <span><span className="font-semibold">tā</span> - Pronoun Homophones (他/她/它)</span> 
+                          : <span><span className="font-semibold">{normalizePinyin(group.words[0].pinyin)}</span> - Homophones</span>}
                       </h4>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-2.5 ml-1">
                         {group.words.map((word) => (
                           <WordChip
                             key={word.id}
@@ -1741,11 +1744,17 @@ export default function WordList() {
                     );
                     
                     return singleWords.length > 0 ? (
-                      <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
-                        <h4 className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-300">
-                          Words without homophones
+                      <div className="border border-border rounded-md p-4 bg-background">
+                        <h4 className="text-sm font-medium mb-3 text-primary flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
+                            <path d="M7 20h10"></path>
+                            <path d="M10 20c5.5-2.5.8-6.4 3-10"></path>
+                            <path d="M9.5 9.4c1.1.8 1.8 1.7 2.3 3.7"></path>
+                            <path d="M14.1 6a7 7 0 0 0-4.2 0"></path>
+                          </svg>
+                          <span className="chinese-text mr-1">独特词汇</span> Words without homophones
                         </h4>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-2.5 ml-1">
                           {singleWords.map((word) => (
                             <WordChip
                               key={word.id}
@@ -1762,40 +1771,74 @@ export default function WordList() {
                 </div>
               ) : (
                 // Normal list mode
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {filterVocabulary(vocabulary).map((word) => (
-                    <WordChip
-                      key={word.id}
-                      word={word}
-                      proficiency={proficiencyData[word.id]}
-                      onRemove={() => handleRemoveWord(word.id)}
-                      onToggleActive={() => handleToggleActive(word.id, word.active)}
-                    />
-                  ))}
+                <div className="border border-border rounded-md p-4 mb-4 bg-background">
+                  <h4 className="text-sm font-medium mb-3 text-primary flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
+                      <path d="M3 5v14"></path>
+                      <path d="M8 5v14"></path>
+                      <path d="M12 5v14"></path>
+                      <path d="M17 5v14"></path>
+                      <path d="M21 5v14"></path>
+                    </svg>
+                    <span className="chinese-text mr-1">所有词汇</span> All Vocabulary Words
+                  </h4>
+                  <div className="flex flex-wrap gap-2.5 ml-1">
+                    {filterVocabulary(vocabulary).map((word) => (
+                      <WordChip
+                        key={word.id}
+                        word={word}
+                        proficiency={proficiencyData[word.id]}
+                        onRemove={() => handleRemoveWord(word.id)}
+                        onToggleActive={() => handleToggleActive(word.id, word.active)}
+                      />
+                    ))}
+                  </div>
                 </div>
               )
               )
             ) : (
-              <div className="text-gray-500 dark:text-gray-400 italic mb-4">
-                No words in your vocabulary list yet.
+              <div className="border border-border rounded-md p-6 mb-4 bg-background/50 text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="mx-auto mb-3 text-primary/50">
+                  <rect width="16" height="20" x="4" y="2" rx="2" ry="2"></rect>
+                  <path d="M9 22v-4h6v4"></path>
+                  <path d="M8 8h8"></path>
+                  <path d="M8 12h8"></path>
+                  <path d="M8 16h8"></path>
+                </svg>
+                <p className="text-foreground/70 mb-1">No words in your vocabulary list yet.</p>
+                <p className="text-sm text-foreground/50">Add words above or import a pre-made word list below.</p>
               </div>
             )}
           </div>
         </CardContent>
         
-        <CardFooter className="flex justify-between">
+        <CardFooter className="flex justify-between bg-accent/20 border-t border-border">
           <Button
             variant="outline"
             onClick={handleClearWords}
             disabled={isLoading || !vocabulary || !Array.isArray(vocabulary) || vocabulary.length === 0}
+            className="border-primary text-primary hover:bg-primary/10"
           >
-            Clear List
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
+              <path d="M3 6h18"></path>
+              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+              <line x1="10" x2="10" y1="11" y2="17"></line>
+              <line x1="14" x2="14" y1="11" y2="17"></line>
+            </svg>
+            <span className="chinese-text mr-1">清空</span> Clear List
           </Button>
           <Button
             onClick={parseWords}
             disabled={!wordInput.trim()}
+            variant="chinese"
           >
-            Save Words
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+              <polyline points="17 21 17 13 7 13 7 21"></polyline>
+              <polyline points="7 3 7 8 15 8"></polyline>
+            </svg>
+            <span className="chinese-text mr-1">保存</span> Save Words
           </Button>
         </CardFooter>
       </Card>
@@ -1821,9 +1864,34 @@ export default function WordList() {
               return (
                 <div key={category} className="mb-8">
                   {/* Category header with count */}
-                  <div className="flex items-center border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">
-                    <h4 className="text-md font-medium">{category}</h4>
-                    <div className="ml-2 px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 dark:text-gray-400">
+                  <div className="flex items-center border-b border-primary/20 pb-3 mb-5">
+                    <h4 className="text-md font-medium text-primary flex items-center">
+                      {category === "HSK" && (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                          <path d="M12 2v8"></path>
+                          <path d="m4.93 10.93 1.41 1.41"></path>
+                          <path d="M2 18h2"></path>
+                          <path d="M20 18h2"></path>
+                          <path d="m19.07 10.93-1.41 1.41"></path>
+                          <path d="M22 22H2"></path>
+                          <path d="m16 8-4 4-4-4"></path>
+                          <path d="M16 16a4 4 0 0 0-8 0"></path>
+                        </svg>
+                      )}
+                      {category === "Integrated Chinese" && (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                        </svg>
+                      )}
+                      {category === "Topics" && (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                          <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path>
+                        </svg>
+                      )}
+                      {category}
+                    </h4>
+                    <div className="ml-2 px-2.5 py-1 rounded-md bg-accent/30 border border-primary/20 text-xs text-primary">
                       {listsInCategory.length} sets
                     </div>
                   </div>
@@ -1833,43 +1901,44 @@ export default function WordList() {
                     {listsInCategory.map((list) => {
                       const { total, imported } = getWordListStats(list.id);
                       return (
-                        <div key={list.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-blue-300 dark:hover:border-blue-500 transition-colors">
-                          <div className="flex justify-between items-start mb-2">
-                            <h4 className="font-medium">{list.name}</h4>
-                            <div className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-full">
-                              <span className={imported === total ? "text-green-600 dark:text-green-400" : "text-blue-600 dark:text-blue-400"}>
+                        <div key={list.id} className="border border-border rounded-md p-4 hover:border-primary/50 hover:bg-accent/5 transition-all">
+                          <div className="flex justify-between items-start mb-3">
+                            <h4 className="font-medium text-primary">{list.name}</h4>
+                            <div className="text-xs px-2.5 py-1 rounded-md border border-border bg-background">
+                              <span className={imported === total ? "text-green-600 font-medium" : "text-primary font-medium"}>
                                 {imported}/{total} words added
                               </span>
                             </div>
                           </div>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{list.description}</p>
-                          <div className="flex gap-2">
+                          <p className="text-sm text-foreground/80 mb-3">{list.description}</p>
+                          <div className="flex gap-3">
                             <Button 
                               variant="outline" 
                               size="sm"
-                              className="text-sm"
+                              className="text-sm border-primary/50 text-primary hover:bg-primary/10"
                               onClick={() => handleShowPreview(list.id)}
                             >
                               <span className="flex items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
                                   <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
                                   <circle cx="12" cy="12" r="3"></circle>
                                 </svg>
-                                Preview & Select
+                                <span className="chinese-text mr-1">预览</span> Preview
                               </span>
                             </Button>
                             <Button 
                               variant="link" 
-                              className="p-0 h-auto text-sm text-primary hover:text-blue-700 dark:hover:text-blue-300"
+                              className="p-0 h-auto text-sm text-primary"
                               onClick={() => handleImportWordList(list.id)}
                               disabled={importWordListMutation.isPending || (imported > 0 && imported === total)}
                             >
                               <span className="flex items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
                                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                   <polyline points="17 8 12 3 7 8"></polyline>
                                   <line x1="12" y1="3" x2="12" y2="15"></line>
                                 </svg>
+                                <span className="chinese-text mr-1">导入</span>
                                 {imported > 0 && imported === total ? "All Added" : "Import All"}
                               </span>
                             </Button>

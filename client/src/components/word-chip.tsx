@@ -23,59 +23,59 @@ export default function WordChip({ word, proficiency, onRemove, onToggleActive }
   
   // Determine proficiency color
   const getProficiencyColor = (percent: number) => {
-    if (percent >= 70) return "text-green-500 dark:text-green-400";
-    if (percent >= 30) return "text-yellow-500 dark:text-yellow-400";
-    return "text-red-500 dark:text-red-400";
+    if (percent >= 70) return "text-green-600 dark:text-green-500";
+    if (percent >= 30) return "text-amber-600 dark:text-amber-500";
+    return "text-primary dark:text-primary/90";
   };
   
   return (
-    <div className={`inline-flex items-center px-3 py-1 rounded-full ${
+    <div className={`inline-flex items-center px-3 py-1.5 rounded-md border ${
       isActive 
-        ? "bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200" 
-        : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+        ? "bg-accent/30 border-primary/30 text-foreground" 
+        : "bg-background border-border text-foreground/70"
     }`}>
-      <span className="font-['Noto_Sans_SC',sans-serif] mr-1">{word.chinese}</span>
-      <span className="text-xs text-gray-500 dark:text-gray-400">({word.pinyin})</span>
+      <span className="chinese-text mr-1.5 font-medium">{word.chinese}</span>
+      <span className="text-xs text-foreground/60 italic">({word.pinyin})</span>
       
       {/* Proficiency indicator */}
       {proficiency && Number(proficiency.attemptCount) > 0 && (
         <span 
-          className={`ml-1.5 flex items-center ${getProficiencyColor(proficiency.proficiencyPercent)}`}
+          className={`ml-2 flex items-center ${getProficiencyColor(proficiency.proficiencyPercent)}`}
           title={`Proficiency: ${proficiency.proficiencyPercent}% (${proficiency.correctCount}/${proficiency.attemptCount})`}
         >
-          <Star className="h-3 w-3 fill-current" />
+          <Star className="h-3.5 w-3.5 fill-current" />
         </span>
       )}
       
       <Link 
         to={`/word/${word.id}`} 
-        className="ml-2 text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 cursor-pointer"
+        className="ml-2 text-primary hover:text-primary/80 cursor-pointer"
         title="View word details"
       >
-        <Info className="h-3 w-3" />
+        <Info className="h-3.5 w-3.5" />
       </Link>
       
       {onToggleActive && (
         <button
           onClick={onToggleActive}
-          className={`ml-1.5 ${
+          className={`ml-2 ${
             isActive 
-              ? "text-green-500 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300" 
-              : "text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-400"
+              ? "text-green-600 hover:text-green-700 dark:text-green-500 dark:hover:text-green-600" 
+              : "text-foreground/40 hover:text-foreground/60"
           }`}
           aria-label={isActive ? "Deactivate word" : "Activate word"}
           title={isActive ? "Active" : "Inactive"}
         >
-          {isActive ? <CheckCircle className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+          {isActive ? <CheckCircle className="h-3.5 w-3.5" /> : <XCircle className="h-3.5 w-3.5" />}
         </button>
       )}
       
       <button
         onClick={onRemove}
-        className="ml-1.5 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+        className="ml-2 text-primary hover:text-primary/80"
         aria-label="Remove word"
       >
-        <X className="h-3 w-3" />
+        <X className="h-3.5 w-3.5" />
       </button>
     </div>
   );
