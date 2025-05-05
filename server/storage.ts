@@ -433,7 +433,7 @@ export class DatabaseStorage implements IStorage {
       "homework": ["功课"],
       "handsome": ["帅"],
       "cool": ["酷"],
-      "text": ["课文"],
+      "lesson text": ["课文"],
       "work": ["工作"],
       "job": ["工作"],
       "teacher": ["老师"],
@@ -530,7 +530,10 @@ export class DatabaseStorage implements IStorage {
       const priorityResults = await db.select()
         .from(characters)
         .where(
-          inArray(characters.character, priorityChars)
+          and(
+            inArray(characters.character, priorityChars),
+            sql`characters.character !~ '[龥-鿋]+'` // Only simplified Chinese characters
+          )
         );
         
       if (priorityResults.length > 0) {
@@ -553,7 +556,7 @@ export class DatabaseStorage implements IStorage {
           .from(characters)
           .where(
             and(
-              sql`characters.character ~ '^[\u4e00-\u9fff]+$'`, // Only return Chinese characters
+              sql`characters.character ~ '^[\u4e00-\u9fff]+$' AND characters.character !~ '[龥-鿋]+'`, // Only return simplified Chinese characters
               or(
                 and(
                   like(characters.character, `%${query}%`),
@@ -572,8 +575,7 @@ export class DatabaseStorage implements IStorage {
               )
             )
           )
-          .orderBy(asc(characters.frequency))
-          .limit(1000 - priorityResults.length);
+          .orderBy(asc(characters.frequency));
           
         // Combine priority results with the rest
         const combinedResults = [...priorityResults, ...otherResults];
@@ -599,7 +601,7 @@ export class DatabaseStorage implements IStorage {
       .from(characters)
       .where(
         and(
-          sql`characters.character ~ '^[\u4e00-\u9fff]+$'`, // Only return Chinese characters
+          sql`characters.character ~ '^[\u4e00-\u9fff]+$' AND characters.character !~ '[龥-鿋]+'`, // Only return simplified Chinese characters
           or(
             like(characters.character, `%${query}%`),
             like(characters.pinyin, `%${query}%`),
@@ -610,8 +612,7 @@ export class DatabaseStorage implements IStorage {
           )
         )
       )
-      .orderBy(asc(characters.frequency))
-      .limit(1000);
+      .orderBy(asc(characters.frequency));
     
     // Convert numeric pinyin to tonal pinyin for display
     return this.formatPinyinForCharacters(results);
