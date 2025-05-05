@@ -324,7 +324,7 @@ export class DatabaseStorage implements IStorage {
         .from(characters)
         .where(sql`characters.character ~ '^[\u4e00-\u9fff]+$'`)
         .orderBy(asc(characters.frequency))
-        .limit(50);
+        .limit(1000); // Increased from 50 to 1000 to show more characters
       
       // Convert numeric pinyin to tonal pinyin for display
       return this.formatPinyinForCharacters(results);
@@ -356,7 +356,7 @@ export class DatabaseStorage implements IStorage {
         )
       )
       .orderBy(asc(characters.frequency))
-      .limit(100);
+      .limit(1000); // Increased from 100 to 1000 to show more search results
     
     // Convert numeric pinyin to tonal pinyin for display
     return this.formatPinyinForCharacters(results);
