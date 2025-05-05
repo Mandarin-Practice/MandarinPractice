@@ -1814,7 +1814,7 @@ export default function WordList() {
               )
               )
             ) : (
-              <div className="border border-border rounded-md p-6 mb-4 bg-background/50 text-center">
+              <div className="border-2 border-border rounded-md p-6 mb-4 bg-accent/10 shadow-md text-center">
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="mx-auto mb-3 text-primary/50">
                   <rect width="16" height="20" x="4" y="2" rx="2" ry="2"></rect>
                   <path d="M9 22v-4h6v4"></path>
@@ -1896,7 +1896,7 @@ export default function WordList() {
                 <div key={category} className="mb-8">
                   {/* Category header with count */}
                   <div className="flex items-center border-b border-primary/20 pb-3 mb-5">
-                    <h4 className="text-md font-medium text-primary flex items-center">
+                    <h4 className="text-xl font-bold text-primary flex items-center">
                       {category === "HSK" && (
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
                           <path d="M12 2v8"></path>
@@ -1922,7 +1922,7 @@ export default function WordList() {
                       )}
                       {category}
                     </h4>
-                    <div className="ml-2 px-2.5 py-1 rounded-md bg-accent/30 border border-primary/20 text-xs text-primary">
+                    <div className="ml-2 px-3 py-1.5 rounded-md bg-accent/30 border-2 border-primary/30 text-sm font-bold text-primary shadow-sm">
                       {listsInCategory.length} sets
                     </div>
                   </div>
@@ -1932,11 +1932,11 @@ export default function WordList() {
                     {listsInCategory.map((list) => {
                       const { total, imported } = getWordListStats(list.id);
                       return (
-                        <div key={list.id} className="border border-border rounded-md p-4 hover:border-primary/50 hover:bg-accent/5 transition-all">
+                        <div key={list.id} className="border-2 border-border rounded-md p-4 bg-accent/10 hover:border-primary/50 hover:bg-accent/20 transition-all shadow-sm">
                           <div className="flex justify-between items-start mb-3">
-                            <h4 className="font-medium text-primary">{list.name}</h4>
-                            <div className="text-xs px-2.5 py-1 rounded-md border border-border bg-background">
-                              <span className={imported === total ? "text-green-600 font-medium" : "text-primary font-medium"}>
+                            <h4 className="font-bold text-primary text-lg">{list.name}</h4>
+                            <div className="text-sm px-3 py-1.5 rounded-md border-2 border-primary/30 bg-background shadow-sm">
+                              <span className={imported === total ? "text-green-600 font-bold" : "text-primary font-bold"}>
                                 {imported}/{total} words added
                               </span>
                             </div>
