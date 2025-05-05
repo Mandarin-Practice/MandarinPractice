@@ -1689,7 +1689,7 @@ export default function WordList() {
             </div>
             
             {/* Search input */}
-            {vocabulary && Array.isArray(vocabulary) && vocabulary.length > 0 && (
+            {vocabulary && Array.isArray(vocabulary) && vocabulary.length > 0 ? (
               <div className="relative mb-5 mt-2">
                 <div className="text-xs text-primary font-medium uppercase tracking-wider mb-1 flex items-center">
                   <span className="chinese-text mr-1">搜索</span> Search Words
@@ -1725,7 +1725,7 @@ export default function WordList() {
                   </button>
                 )}
               </div>
-            )}
+            ) : null}
             
             {isLoading ? (
               <div className="flex flex-wrap gap-2 mb-4">
