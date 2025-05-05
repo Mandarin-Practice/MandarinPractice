@@ -410,6 +410,17 @@ export class DatabaseStorage implements IStorage {
       "sleep": ["睡觉", "睡"],
       "ask": ["请"],
       "please": ["请"],
+      "walk": ["走"],
+      "run": ["跑"],
+      "fly": ["飞"],
+      "swim": ["游泳"],
+      "like": ["喜欢"],
+      "love": ["爱"],
+      "call": ["打电话"],
+      "text": ["发短信"],
+      "drive": ["开车"],
+      "ride": ["骑车"],
+      "rest": ["休息"],
       
       // Common nouns and other vocabulary
       "paper": ["纸"],
@@ -435,7 +446,79 @@ export class DatabaseStorage implements IStorage {
       "today": ["今天"],
       "tomorrow": ["明天"],
       "yesterday": ["昨天"],
-      "student": ["学生"]
+      "student": ["学生"],
+      
+      // Food and drink
+      "rice": ["米饭", "饭"],
+      "noodles": ["面条"],
+      "fruit": ["水果"],
+      "meat": ["肉"],
+      "chicken": ["鸡"],
+      "beef": ["牛肉"],
+      "pork": ["猪肉"],
+      "fish": ["鱼"],
+      "tea": ["茶"],
+      "coffee": ["咖啡"],
+      "milk": ["牛奶"],
+      "beer": ["啤酒"],
+      
+      // Colors
+      "red": ["红"],
+      "blue": ["蓝"],
+      "green": ["绿"],
+      "yellow": ["黄"],
+      "black": ["黑"],
+      "white": ["白"],
+      "pink": ["粉"],
+      "orange": ["橙"],
+      
+      // Numbers and time
+      "one": ["一"],
+      "two": ["二"],
+      "three": ["三"],
+      "four": ["四"],
+      "five": ["五"],
+      "six": ["六"],
+      "seven": ["七"],
+      "eight": ["八"],
+      "nine": ["九"],
+      "ten": ["十"],
+      "hundred": ["百"],
+      "thousand": ["千"],
+      "week": ["星期"],
+      "minute": ["分钟"],
+      "hour": ["小时"],
+      "day": ["天"],
+      "month": ["月"],
+      "year": ["年"],
+      
+      // Family
+      "father": ["爸爸"],
+      "mother": ["妈妈"],
+      "dad": ["爸爸"],
+      "mom": ["妈妈"],
+      "brother": ["哥哥", "弟弟"],
+      "sister": ["姐姐", "妹妹"],
+      "older brother": ["哥哥"],
+      "younger brother": ["弟弟"],
+      "older sister": ["姐姐"],
+      "younger sister": ["妹妹"],
+      "grandfather": ["爷爷"],
+      "grandmother": ["奶奶"],
+      "child": ["孩子"],
+      "son": ["儿子"],
+      "daughter": ["女儿"],
+      "wife": ["妻子"],
+      
+      // Transportation
+      "car": ["汽车", "车"],
+      "bicycle": ["自行车"],
+      "train": ["火车"],
+      "airplane": ["飞机"],
+      "bus": ["公共汽车"],
+      "subway": ["地铁"],
+      "metro": ["地铁"],
+      "taxi": ["出租车"]
     };
     
     // Check if this is a search for a common word
