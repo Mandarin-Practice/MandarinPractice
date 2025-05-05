@@ -1843,7 +1843,7 @@ export default function WordList() {
               <line x1="10" x2="10" y1="11" y2="17"></line>
               <line x1="14" x2="14" y1="11" y2="17"></line>
             </svg>
-            <span className="chinese-text mr-1">清空</span> Clear List
+            Clear List
           </Button>
           <Button
             onClick={parseWords}
@@ -1855,7 +1855,7 @@ export default function WordList() {
               <polyline points="17 21 17 13 7 13 7 21"></polyline>
               <polyline points="7 3 7 8 15 8"></polyline>
             </svg>
-            <span className="chinese-text mr-1">保存</span> Save Words
+            Save Words
           </Button>
         </CardFooter>
       </Card>
@@ -1870,8 +1870,8 @@ export default function WordList() {
               <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
             </svg>
             <div>
-              <CardTitle className="text-primary flex items-center">
-                <span className="chinese-text mr-2">推荐词表</span> Suggested Word Lists
+              <CardTitle className="text-primary">
+                Suggested Word Lists
               </CardTitle>
               <CardDescription className="text-foreground/70">Import pre-made lists to get started quickly</CardDescription>
             </div>
@@ -1954,7 +1954,7 @@ export default function WordList() {
                                   <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
                                   <circle cx="12" cy="12" r="3"></circle>
                                 </svg>
-                                <span className="chinese-text mr-1">预览</span> Preview
+                                Preview
                               </span>
                             </Button>
                             <Button 
@@ -1969,7 +1969,6 @@ export default function WordList() {
                                   <polyline points="17 8 12 3 7 8"></polyline>
                                   <line x1="12" y1="3" x2="12" y2="15"></line>
                                 </svg>
-                                <span className="chinese-text mr-1">导入</span>
                                 {imported > 0 && imported === total ? "All Added" : "Import All"}
                               </span>
                             </Button>

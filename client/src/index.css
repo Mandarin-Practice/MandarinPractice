@@ -139,11 +139,17 @@
     @apply text-primary text-lg font-bold;
   }
   
-  /* Card custom styling with fun elements */
+  /* Card custom styling with fun Duolingo-inspired elements */
   .card-custom {
-    @apply bg-card border-border rounded-lg overflow-hidden;
+    @apply bg-card rounded-xl overflow-hidden;
     box-shadow: 0 6px 0 hsl(var(--primary)/0.3), 0 8px 20px rgba(0, 0, 0, 0.1);
     border: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .card-custom:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 0 hsl(var(--primary)/0.3), 0 12px 24px rgba(0, 0, 0, 0.15);
   }
 }
 
