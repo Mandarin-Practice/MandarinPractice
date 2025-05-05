@@ -141,7 +141,6 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     id: "travel",
     name: "Travel Phrases",
     description: "25 useful travel expressions",
-    category: "Topics",
     words: [
       { chinese: "你好", pinyin: "nǐ hǎo", english: "hello" },
       { chinese: "谢谢", pinyin: "xiè xiè", english: "thank you" },
@@ -174,7 +173,6 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     id: "ic-lesson1",
     name: "Integrated Chinese Lesson 1",
     description: "Greetings - 25 essential words",
-    category: "Integrated Chinese",
     words: [
       { chinese: "你", pinyin: "nǐ", english: "you" },
       { chinese: "好", pinyin: "hǎo", english: "fine; good; nice; O.K.; it's settled" },
@@ -210,7 +208,6 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     id: "ic-lesson2",
     name: "Integrated Chinese Lesson 2",
     description: "Family - 38 family-related words",
-    category: "Integrated Chinese",
     words: [
       { chinese: "那", pinyin: "nà", english: "that" },
       { chinese: "的", pinyin: "de", english: "(a possessive or descriptive particle)" },
@@ -258,7 +255,6 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     id: "ic-lesson3",
     name: "Integrated Chinese Lesson 3",
     description: "Dates and Time - 45 time expressions and daily activities",
-    category: "Integrated Chinese",
     words: [
       { chinese: "九月", pinyin: "jiǔ yuè", english: "September" },
       { chinese: "月", pinyin: "yuè", english: "month" },
@@ -319,7 +315,6 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     id: "food",
     name: "Food & Dining",
     description: "35 common food and dining terms",
-    category: "Topics",
     words: [
       { chinese: "饭", pinyin: "fàn", english: "rice/meal" },
       { chinese: "菜", pinyin: "cài", english: "dish/vegetable" },
@@ -362,7 +357,6 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     id: "ic-lesson4",
     name: "Integrated Chinese Lesson 4",
     description: "Hobbies - 48 leisure activity words",
-    category: "Integrated Chinese",
     words: [
       { chinese: "周末", pinyin: "zhōu mò", english: "weekend" },
       { chinese: "打球", pinyin: "dǎ qiú", english: "to play ball" },
@@ -418,7 +412,6 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     id: "ic-lesson5",
     name: "Integrated Chinese Lesson 5",
     description: "Visiting Friends - 35 conversational expressions",
-    category: "Integrated Chinese",
     words: [
       { chinese: "呀", pinyin: "ya", english: "(interjectory particle used to soften a question)" },
       { chinese: "进", pinyin: "jìn", english: "to enter" },
@@ -463,7 +456,6 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     id: "ic-lesson6",
     name: "Integrated Chinese Lesson 6",
     description: "Making Appointments - 48 conversation and scheduling terms",
-    category: "Integrated Chinese",
     words: [
       { chinese: "给", pinyin: "gěi", english: "to; for" },
       { chinese: "打电话", pinyin: "dǎ diàn huà", english: "to make a phone call" },
@@ -520,7 +512,6 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     id: "ic-lesson7",
     name: "Integrated Chinese Lesson 7",
     description: "Studying Chinese - 40 academic vocabulary words",
-    category: "Integrated Chinese",
     words: [
       { chinese: "说话", pinyin: "shuō huà", english: "to talk" },
       { chinese: "话", pinyin: "huà", english: "word; speech" },
@@ -569,7 +560,6 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     id: "ic-lesson8", 
     name: "Integrated Chinese Lesson 8",
     description: "School Life - 40 daily routine and campus vocabulary words",
-    category: "Integrated Chinese",
     words: [
       { chinese: "篇", pinyin: "piān", english: "(measure word for essays, articles, etc.)" },
       { chinese: "日记", pinyin: "rì jì", english: "diary" },
@@ -617,7 +607,6 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     id: "hsk3",
     name: "HSK Level 3 Vocabulary",
     description: "45 essential intermediate words",
-    category: "HSK",
     words: [
       { chinese: "汉语", pinyin: "hàn yǔ", english: "Chinese language" },
       { chinese: "意思", pinyin: "yì sī", english: "meaning" },
@@ -670,7 +659,6 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     id: "business",
     name: "Business Chinese",
     description: "30 essential terms for professional settings",
-    category: "Topics",
     words: [
       { chinese: "公司", pinyin: "gōng sī", english: "company" },
       { chinese: "职位", pinyin: "zhí wèi", english: "position/job title" },
@@ -708,7 +696,6 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     id: "tech",
     name: "Technology Terms",
     description: "25 modern technology vocabulary words",
-    category: "Topics",
     words: [
       { chinese: "科技", pinyin: "kē jì", english: "technology" },
       { chinese: "电脑", pinyin: "diàn nǎo", english: "computer" },
@@ -741,7 +728,6 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     id: "ic-lesson9",
     name: "Integrated Chinese Lesson 9",
     description: "Shopping - 50 shopping and money-related terms",
-    category: "Integrated Chinese",
     words: [
       { chinese: "商店", pinyin: "shāng diàn", english: "store; shop" },
       { chinese: "买", pinyin: "mǎi", english: "to buy" },
@@ -802,7 +788,6 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     id: "emotions",
     name: "Emotions & Feelings",
     description: "30 words to express emotions and feelings",
-    category: "Topics",
     words: [
       { chinese: "高兴", pinyin: "gāo xìng", english: "happy" },
       { chinese: "开心", pinyin: "kāi xīn", english: "happy/joyful" },
@@ -840,7 +825,6 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     id: "medical",
     name: "Medical & Health",
     description: "25 essential health and medical terms",
-    category: "Topics",
     words: [
       { chinese: "医生", pinyin: "yī shēng", english: "doctor" },
       { chinese: "护士", pinyin: "hù shì", english: "nurse" },
@@ -873,7 +857,6 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     id: "ic-lesson10",
     name: "Integrated Chinese Lesson 10",
     description: "Transportation - 45 travel and transportation terms",
-    category: "Integrated Chinese",
     words: [
       { chinese: "寒假", pinyin: "hán jià", english: "winter vacation" },
       { chinese: "飞机", pinyin: "fēi jī", english: "airplane" },
@@ -929,7 +912,6 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     id: "weather",
     name: "Weather & Seasons",
     description: "20 common weather expressions",
-    category: "Topics",
     words: [
       { chinese: "天气", pinyin: "tiān qì", english: "weather" },
       { chinese: "晴天", pinyin: "qíng tiān", english: "sunny day" },
