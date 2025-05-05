@@ -456,6 +456,73 @@ export class DatabaseStorage implements IStorage {
     
     return updated;
   }
+  
+  // Character compound relationship methods
+  async getCharacterCompounds(componentId: number): Promise<{ compound: Character, position: number }[]> {
+    try {
+      // Get all compounds where this character is a component
+      const result = await db.select({
+        compound_id: characterCompounds.compoundId,
+        position: characterCompounds.position,
+      })
+      .from(characterCompounds)
+      .where(eq(characterCompounds.componentId, componentId))
+      .orderBy(asc(characterCompounds.position));
+      
+      // If no compounds found, return empty array
+      if (result.length === 0) return [];
+      
+      // Get the full compound character data for each compound ID
+      const compoundData: { compound: Character, position: number }[] = [];
+      
+      for (const { compound_id, position } of result) {
+        const [compound] = await db.select().from(characters)
+          .where(eq(characters.id, compound_id));
+          
+        if (compound) {
+          compoundData.push({ compound, position });
+        }
+      }
+      
+      return compoundData;
+    } catch (error) {
+      console.error('Error getting character compounds:', error);
+      return [];
+    }
+  }
+  
+  async getCompoundComponents(compoundId: number): Promise<{ component: Character, position: number }[]> {
+    try {
+      // Get all components of this compound
+      const result = await db.select({
+        component_id: characterCompounds.componentId,
+        position: characterCompounds.position,
+      })
+      .from(characterCompounds)
+      .where(eq(characterCompounds.compoundId, compoundId))
+      .orderBy(asc(characterCompounds.position));
+      
+      // If no components found, return empty array
+      if (result.length === 0) return [];
+      
+      // Get the full component character data for each component ID
+      const componentData: { component: Character, position: number }[] = [];
+      
+      for (const { component_id, position } of result) {
+        const [component] = await db.select().from(characters)
+          .where(eq(characters.id, component_id));
+          
+        if (component) {
+          componentData.push({ component, position });
+        }
+      }
+      
+      return componentData;
+    } catch (error) {
+      console.error('Error getting compound components:', error);
+      return [];
+    }
+  }
 }
 
 // Use Database storage instead of MemStorage
