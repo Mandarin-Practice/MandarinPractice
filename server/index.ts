@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { checkIfDatabaseNeedsSeed, seedDatabaseWithBasicDictionary } from "./db-seed";
 
 const app = express();
 app.use(express.json());
@@ -37,6 +38,21 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Check if database needs to be seeded with initial dictionary data
+  try {
+    const needsSeed = await checkIfDatabaseNeedsSeed();
+    if (needsSeed) {
+      log("Database needs seeding with initial dictionary data...");
+      await seedDatabaseWithBasicDictionary();
+      log("Initial dictionary data seeded successfully!");
+    } else {
+      log("Dictionary data already present in database");
+    }
+  } catch (error) {
+    log(`Error during database seed check: ${error}`);
+    // Continue with app startup even if seeding fails
+  }
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
