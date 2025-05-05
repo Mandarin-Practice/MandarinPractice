@@ -143,7 +143,11 @@ export default function Practice() {
   // Play audio for current sentence
   const playAudio = () => {
     if (generateSentenceMutation.data?.chinese) {
-      speak(generateSentenceMutation.data.chinese);
+      // Get stored speech rate
+      const storedSpeechRate = localStorage.getItem('speechRate');
+      const speechRate = storedSpeechRate ? parseFloat(storedSpeechRate) : 1.0;
+      
+      speak(generateSentenceMutation.data.chinese, { rate: speechRate });
     }
   };
 

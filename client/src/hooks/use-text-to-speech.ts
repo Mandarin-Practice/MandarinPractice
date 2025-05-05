@@ -15,6 +15,8 @@ export function useTextToSpeech() {
   const [mandarinVoices, setMandarinVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [preferredVoice, setPreferredVoice] = useState<SpeechSynthesisVoice | null>(null);
+  const [speechRate, setSpeechRate] = useState<number>(1.0);
 
   // Initialize voices when available
   useEffect(() => {
@@ -26,6 +28,22 @@ export function useTextToSpeech() {
           MANDARIN_LANG_CODES.some(code => voice.lang.includes(code))
         );
         setMandarinVoices(mandarinVoicesResult);
+
+        // Check for saved voice preference
+        const savedVoiceURI = localStorage.getItem('selectedVoiceURI');
+        if (savedVoiceURI) {
+          const savedVoice = availableVoices.find(v => v.voiceURI === savedVoiceURI);
+          if (savedVoice) {
+            setPreferredVoice(savedVoice);
+            console.log('Loaded preferred voice:', savedVoice.name);
+          }
+        }
+
+        // Check for saved speech rate
+        const savedSpeechRate = localStorage.getItem('speechRate');
+        if (savedSpeechRate) {
+          setSpeechRate(parseFloat(savedSpeechRate));
+        }
       }
     };
 
@@ -73,20 +91,36 @@ export function useTextToSpeech() {
       // Create a new utterance
       const utterance = new SpeechSynthesisUtterance(text);
       
+      // Get saved speech rate if not provided in options
+      const savedRate = localStorage.getItem('speechRate');
+      const storedRate = savedRate ? parseFloat(savedRate) : 1.0;
+      
       // Apply options
-      utterance.rate = options.rate ?? 1;
+      utterance.rate = options.rate ?? storedRate;
       utterance.pitch = options.pitch ?? 1;
       utterance.volume = options.volume ?? 1;
       
       // Use a Mandarin voice if available and not overridden by options
       if (!options.voice) {
-        // Try to find a Mandarin voice
-        if (mandarinVoices.length > 0) {
+        // Try to use preferred voice first if available
+        const savedVoiceURI = localStorage.getItem('selectedVoiceURI');
+        if (savedVoiceURI && voices.length > 0) {
+          const savedVoice = voices.find(v => v.voiceURI === savedVoiceURI);
+          if (savedVoice) {
+            utterance.voice = savedVoice;
+          } else if (mandarinVoices.length > 0) {
+            utterance.voice = mandarinVoices[0];
+          } else if (options.lang) {
+            utterance.lang = options.lang;
+          } else {
+            // Default to Mandarin Chinese if no specific voice is found
+            utterance.lang = 'zh-CN';
+          }
+        } else if (mandarinVoices.length > 0) {
           utterance.voice = mandarinVoices[0];
         } else if (options.lang) {
           utterance.lang = options.lang;
         } else {
-          // Default to Mandarin Chinese if no specific voice is found
           utterance.lang = 'zh-CN';
         }
       } else {
@@ -108,7 +142,7 @@ export function useTextToSpeech() {
       setError(err instanceof Error ? err.message : 'Unknown error occurred');
       console.error('TTS error:', err);
     }
-  }, [mandarinVoices]);
+  }, [voices, mandarinVoices]);
 
   const stop = useCallback(() => {
     window.speechSynthesis.cancel();
@@ -122,5 +156,6 @@ export function useTextToSpeech() {
     error,
     voices,
     mandarinVoices,
+    preferredVoice,
   };
 }
