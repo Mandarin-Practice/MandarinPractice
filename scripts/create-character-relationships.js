@@ -1,6 +1,7 @@
 // Script to create relationships between characters and compounds
-const { Pool } = require('pg');
-const fs = require('fs');
+import pkg from 'pg';
+const { Pool } = pkg;
+import fs from 'fs';
 
 if (!process.env.DATABASE_URL) {
   console.error('DATABASE_URL environment variable not set');
