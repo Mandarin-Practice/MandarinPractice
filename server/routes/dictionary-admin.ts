@@ -293,6 +293,46 @@ router.post('/admin/dictionary/import', (req, res) => {
   }
 });
 
+// POST create character relationships
+router.post('/admin/dictionary/create-relationships', (req, res) => {
+  if (importStatus.isRunning) {
+    return res.status(409).json({ error: 'Import already in progress' });
+  }
+  
+  try {
+    // Reset status
+    importStatus = {
+      isRunning: true,
+      progress: 0,
+      logs: ['Starting character relationships creation...'],
+      error: null,
+      stats: {
+        charactersAdded: 0,
+        charactersUpdated: 0,
+        definitionsAdded: 0,
+        errors: 0
+      }
+    };
+    
+    const scriptPath = path.resolve(process.cwd(), 'scripts/create-character-relationships.js');
+    log(`Starting character relationship process: ${scriptPath}`, 'dictionary-admin');
+    
+    // Start the process
+    importProcess = spawn('node', ['--experimental-specifier-resolution=node', scriptPath], {
+      env: { ...process.env },
+      shell: true
+    });
+    
+    // Set up process output handlers
+    setupImportProcessHandlers(importProcess, res);
+  } catch (error: any) {
+    log(`Error starting relationship creation: ${error}`, 'dictionary-admin');
+    importStatus.isRunning = false;
+    importStatus.error = error.toString();
+    res.status(500).json({ error: error.toString() });
+  }
+});
+
 // GET import status as Server-Sent Events (SSE)
 router.get('/admin/dictionary/import-status', (req, res) => {
   // Set up SSE response headers
