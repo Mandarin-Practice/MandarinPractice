@@ -271,7 +271,15 @@ function containsTraditionalCharacters(text) {
     '鮮', '鳥', '鹼', '點', '無', '熱', '燒', '爐',
     '爺', '爾', '爛', '爭', '為', '煮', '煩', '煙', 
     '燕', '燈', '燃', '燙', '燭', '營', '牆', '牌',
-    '牘', '牠', '犧', '獨', '獵', '獸'
+    '牘', '牠', '犧', '獨', '獵', '獸', '鬧', '鬥',
+    '鬨', '鬱', '鬆', '鬃', '鬢', '鬣', '鬧', '鬮',
+    '鬯', '鬼', '會', '開', '關', '問', '閃', '閉',
+    '閏', '閒', '閔', '閘', '閡', '閤', '閨', '閩',
+    '閫', '閬', '閭', '閱', '閻', '闆', '闈', '闊',
+    '闋', '闌', '闐', '闔', '闕', '闖', '關', '闡',
+    '闢', '闤', '闥', '阪', '阬', '阮', '阯', '陘',
+    '陝', '陞', '陣', '陰', '陳', '陸', '陽', '隄',
+    '隆', '隊', '階', '隕', '隘', '隙', '際', '隨'
   ];
   
   // Check for exact matches of common traditional multi-character words/phrases
@@ -285,7 +293,10 @@ function containsTraditionalCharacters(text) {
     // Food dishes and other specific phrases with traditional characters
     '乾煸豆角', '乾煸四季豆', '乾煸肉絲', '乾煸土豆絲',
     '乾鍋', '乾燒', '乾燜', '乾隆', '乾坤', '乾旱', '乾淨',
-    '乾燥', '乾脆', '乾涸', '乾枯', '乾嘔', '乾餾', '乾爹'
+    '乾燥', '乾脆', '乾涸', '乾枯', '乾嘔', '乾餾', '乾爹',
+    // Specific phrases found with traditional characters
+    '一哭二鬧三上吊', '一哭二鬧', '鬧', '鬧鐘', '鬧鍾',
+    '鬧彆扭', '鬧事', '鬧脾氣', '鬧情緒', '鬧市'
   ];
   
   // Check for exact multi-character phrases first
