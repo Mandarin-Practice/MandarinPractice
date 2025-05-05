@@ -9,17 +9,17 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm border-none",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md border-none font-bold",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm border-none",
         outline:
-          "border-2 border-primary bg-background text-primary hover:bg-primary/10 shadow-sm",
+          "border-2 border-primary bg-background text-primary hover:bg-primary/10 shadow-md font-bold",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm border-none",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
         // Duolingo-inspired button
-        chinese: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_6px_0_0] shadow-primary/50 border-none font-bold relative overflow-hidden transition-all duration-200 active:shadow-none active:translate-y-1.5",
+        chinese: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_6px_0_0] shadow-primary/60 border-none font-extrabold relative overflow-hidden transition-all duration-200 active:shadow-none active:translate-y-1.5",
       },
       size: {
         default: "h-10 px-4 py-2",
