@@ -19,7 +19,7 @@ const buttonVariants = cva(
         ghost: "hover:bg-accent text-primary hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
         // Chinese theme styled button
-        chinese: "bg-background text-primary border border-primary hover:bg-primary hover:text-primary-foreground shadow-sm",
+        chinese: "bg-gradient-to-b from-accent/20 to-background text-primary border border-primary hover:bg-primary hover:text-white transition-all duration-200 shadow-sm",
       },
       size: {
         default: "h-10 px-4 py-2",

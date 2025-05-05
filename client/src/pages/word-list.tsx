@@ -1610,20 +1610,32 @@ export default function WordList() {
         
         <CardContent>
           <div className="mb-6">
-            <label htmlFor="word-input" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Add Words (one per line)
+            <label htmlFor="word-input" className="block text-sm font-medium text-primary mb-2 flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
+                <path d="M10 21v-6.5a3.5 3.5 0 0 0-7 0V21h18v-6a4 4 0 0 0-4-4h-1a4 4 0 0 0-4 4v.5"></path>
+                <path d="M4 14.5a22 22 0 0 1 16-4"></path>
+              </svg>
+              <span className="chinese-text mr-1">添加词汇</span> Add Words (one per line)
             </label>
-            <Textarea
-              id="word-input"
-              value={wordInput}
-              onChange={(e) => setWordInput(e.target.value)}
-              rows={5}
-              placeholder="学习 (xuéxí) - to study
+            <div className="relative">
+              <Textarea
+                id="word-input"
+                value={wordInput}
+                onChange={(e) => setWordInput(e.target.value)}
+                rows={6}
+                placeholder="学习 (xuéxí) - to study
 喜欢 (xǐhuān) - to like
 中文 (zhōngwén) - Chinese language"
-              className="w-full px-4 py-3 rounded-lg"
-            />
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                className="w-full px-4 py-3 rounded-md bg-background border-border focus:border-primary focus:ring-1 focus:ring-primary/50 chinese-textarea"
+              />
+              <div className="absolute -bottom-px right-0 left-0 h-1 bg-gradient-to-r from-transparent via-primary/20 to-transparent"></div>
+            </div>
+            <p className="text-sm text-foreground/70 mt-2 flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1 text-primary">
+                <path d="M12 9v4"></path>
+                <path d="M12 17h.01"></path>
+                <path d="M12 3c-1.2 0-2.4.6-3 1.7A4 4 0 0 0 9 12a4 4 0 0 1 1 7.3A4 4 0 0 0 12 21a4 4 0 0 0 2-7.3A4 4 0 0 1 15 6a4 4 0 0 0-.1-1.3c-.5-1.1-1.7-1.7-2.9-1.7Z"></path>
+              </svg>
               Format: Chinese characters (pinyin) - English meaning
             </p>
           </div>
