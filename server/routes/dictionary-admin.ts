@@ -35,20 +35,20 @@ function sendUpdateToAll(data: any) {
 // GET character count
 router.get('/characters/count', async (req, res) => {
   try {
-    const query = `
-      SELECT COUNT(DISTINCT c.id) as character_count
-      FROM characters c
-      JOIN character_definitions cd ON c.id = cd.character_id
-    `;
+    // Use SQL query from Drizzle
+    const result = await db.execute(
+      `SELECT COUNT(DISTINCT c.id) as character_count
+       FROM characters c
+       JOIN character_definitions cd ON c.id = cd.character_id`
+    );
     
-    const result = await db.execute({
-      sql: query,
-      args: []
-    });
+    // Get the first row of the result
+    const firstRow = (result as any)[0];
+    const count = firstRow?.character_count || 0;
     
-    res.json({ count: result[0]?.character_count || 0 });
-  } catch (err) {
-    log(`Error counting characters: ${err}`, 'dictionary-admin');
+    res.json({ count });
+  } catch (error: any) {
+    log(`Error counting characters: ${error}`, 'dictionary-admin');
     res.status(500).json({ error: 'Failed to count characters' });
   }
 });
@@ -180,11 +180,11 @@ router.post('/admin/dictionary/import', (req, res) => {
     });
     
     res.json({ success: true, message: 'Import started' });
-  } catch (err) {
-    log(`Error starting import: ${err}`, 'dictionary-admin');
+  } catch (error: any) {
+    log(`Error starting import: ${error}`, 'dictionary-admin');
     importStatus.isRunning = false;
-    importStatus.error = err.toString();
-    res.status(500).json({ error: err.toString() });
+    importStatus.error = error.toString();
+    res.status(500).json({ error: error.toString() });
   }
 });
 
