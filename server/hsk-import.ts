@@ -77,10 +77,10 @@ async function addOrUpdateCharacter(character: string, pinyin: string, hskLevel:
     if (existingResult.length > 0) {
       // Character exists, update HSK level if needed
       const existingChar = existingResult[0];
-      if (!existingChar.hsk_level || (hskLevel !== null && hskLevel < (existingChar.hsk_level || 99))) {
+      if (!existingChar.hskLevel || (hskLevel !== null && hskLevel < (existingChar.hskLevel || 99))) {
         // Update with the lower HSK level (lower is more common/basic)
         await db.update(characters)
-          .set({ hsk_level: hskLevel })
+          .set({ hskLevel: hskLevel })
           .where(eq(characters.id, existingChar.id));
         console.log(`Updated HSK level for ${character} to ${hskLevel}`);
       }
@@ -91,7 +91,7 @@ async function addOrUpdateCharacter(character: string, pinyin: string, hskLevel:
         .values({
           character: character,
           pinyin: pinyin,
-          hsk_level: hskLevel,
+          hskLevel: hskLevel,
         })
         .returning();
       console.log(`Added new character: ${character} (HSK ${hskLevel})`);

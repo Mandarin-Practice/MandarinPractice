@@ -319,14 +319,33 @@ export class DatabaseStorage implements IStorage {
     const chineseCharRegex = /^[\u4e00-\u9fff]+$/;
     
     if (!query || query.length === 0) {
-      // Return only proper Chinese characters sorted by frequency for an empty search
-      const results = await db.select()
+      // First get HSK vocabulary sorted by HSK level
+      const hskResults = await db.select()
         .from(characters)
-        .where(sql`characters.character ~ '^[\u4e00-\u9fff]+$' AND characters.character !~ '[龥-鿋]+'`)
+        .where(
+          and(
+            sql`characters.character ~ '^[\u4e00-\u9fff]+$' AND characters.character !~ '[龥-鿋]+'`,
+            sql`characters."hsk_level" IS NOT NULL`
+          )
+        )
+        .orderBy(asc(characters.hskLevel));
+      
+      // Then get other characters sorted by frequency
+      const otherResults = await db.select()
+        .from(characters)
+        .where(
+          and(
+            sql`characters.character ~ '^[\u4e00-\u9fff]+$' AND characters.character !~ '[龥-鿋]+'`,
+            sql`characters."hsk_level" IS NULL`
+          )
+        )
         .orderBy(asc(characters.frequency));
       
+      // Combine results with HSK vocabulary first
+      const combinedResults = [...hskResults, ...otherResults];
+      
       // Convert numeric pinyin to tonal pinyin for display
-      return this.formatPinyinForCharacters(results);
+      return this.formatPinyinForCharacters(combinedResults);
     }
     
     // If the query is exactly a Chinese character, prioritize exact matches
@@ -595,12 +614,32 @@ export class DatabaseStorage implements IStorage {
     // Extract the characterIds into an array
     const characterIds = charactersWithMatchingDefinitions.map(result => result.characterId);
     
-    // Search by character, pinyin or get characters with matching definitions
-    const results = await db.select()
+    // Get HSK characters first that match the query
+    const hskResults = await db.select()
       .from(characters)
       .where(
         and(
           sql`characters.character ~ '^[\u4e00-\u9fff]+$' AND characters.character !~ '[龥-鿋]+'`, // Only return simplified Chinese characters
+          sql`characters."hsk_level" IS NOT NULL`,
+          or(
+            like(characters.character, `%${query}%`),
+            like(characters.pinyin, `%${query}%`),
+            characterIds.length > 0 ? 
+              inArray(characters.id, characterIds) :
+              // If no matching definitions, this condition should be false but won't break the query
+              eq(sql`1`, sql`0`)
+          )
+        )
+      )
+      .orderBy(asc(characters.hskLevel));
+    
+    // Get non-HSK characters next
+    const otherResults = await db.select()
+      .from(characters)
+      .where(
+        and(
+          sql`characters.character ~ '^[\u4e00-\u9fff]+$' AND characters.character !~ '[龥-鿋]+'`, // Only return simplified Chinese characters
+          sql`characters."hsk_level" IS NULL`,
           or(
             like(characters.character, `%${query}%`),
             like(characters.pinyin, `%${query}%`),
@@ -613,8 +652,11 @@ export class DatabaseStorage implements IStorage {
       )
       .orderBy(asc(characters.frequency));
     
+    // Combine results with HSK vocabulary first
+    const combinedResults = [...hskResults, ...otherResults];
+    
     // Convert numeric pinyin to tonal pinyin for display
-    return this.formatPinyinForCharacters(results);
+    return this.formatPinyinForCharacters(combinedResults);
   }
   
   /**
