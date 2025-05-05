@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500">
+  <defs>
+    <linearGradient id="redGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#e53e3e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#c53030;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fbbf24;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#d97706;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="bambooGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#34d399;stop-opacity:0.9" />
+      <stop offset="100%" style="stop-color:#059669;stop-opacity:0.9" />
+    </linearGradient>
+    <pattern id="pattern1" patternUnits="userSpaceOnUse" width="50" height="50">
+      <circle cx="25" cy="25" r="12" fill="none" stroke="#fbbf24" stroke-width="1" stroke-opacity="0.3"/>
+    </pattern>
+    <pattern id="bambooPattern" patternUnits="userSpaceOnUse" width="100" height="100">
+      <rect x="45" width="10" height="100" fill="url(#bambooGradient)"/>
+      <ellipse cx="50" cy="20" rx="8" ry="2" fill="#047857"/>
+      <ellipse cx="50" cy="50" rx="8" ry="2" fill="#047857"/>
+      <ellipse cx="50" cy="80" rx="8" ry="2" fill="#047857"/>
+      <path d="M55 15C75 5 85 10 80 20C70 30 55 25 55 15Z" fill="#10b981" fill-opacity="0.8"/>
+      <path d="M55 45C75 35 85 40 80 50C70 60 55 55 55 45Z" fill="#10b981" fill-opacity="0.8"/>
+      <path d="M55 75C75 65 85 70 80 80C70 90 55 85 55 75Z" fill="#10b981" fill-opacity="0.8"/>
+      <path d="M45 30C25 20 15 25 20 35C30 45 45 40 45 30Z" fill="#10b981" fill-opacity="0.8"/>
+      <path d="M45 60C25 50 15 55 20 65C30 75 45 70 45 60Z" fill="#10b981" fill-opacity="0.8"/>
+    </pattern>
+  </defs>
+
+  <!-- Background with gradient -->
+  <rect width="800" height="500" fill="#fef2f2"/>
+  
+  <!-- Pattern overlay -->
+  <rect width="800" height="500" fill="url(#pattern1)"/>
+  
+  <!-- Red circle (like Japanese flag) with golden border -->
+  <circle cx="400" cy="250" r="120" fill="url(#redGradient)" stroke="url(#goldGradient)" stroke-width="8"/>
+  
+  <!-- Chinese characters in the middle -->
+  <text x="400" y="270" font-family="'Noto Sans SC', sans-serif" font-size="90" font-weight="bold" fill="white" text-anchor="middle">汉字</text>
+  
+  <!-- Bamboo decorations on sides -->
+  <rect x="30" y="50" width="70" height="400" fill="url(#bambooPattern)" opacity="0.7"/>
+  <rect x="700" y="50" width="70" height="400" fill="url(#bambooPattern)" opacity="0.7" transform="scale(-1,1) translate(-1400,0)"/>
+  
+  <!-- Small decorative elements -->
+  <circle cx="160" cy="80" r="30" fill="url(#goldGradient)" opacity="0.5"/>
+  <circle cx="640" cy="80" r="30" fill="url(#goldGradient)" opacity="0.5"/>
+  <circle cx="160" cy="420" r="30" fill="url(#goldGradient)" opacity="0.5"/>
+  <circle cx="640" cy="420" r="30" fill="url(#goldGradient)" opacity="0.5"/>
+  
+  <!-- Decorative calligraphy/brush strokes -->
+  <path d="M220,140 C280,160 300,200 240,220 C180,240 160,280 220,300" stroke="#111827" stroke-width="12" stroke-linecap="round" fill="none" opacity="0.7"/>
+  <path d="M580,140 C520,160 500,200 560,220 C620,240 640,280 580,300" stroke="#111827" stroke-width="12" stroke-linecap="round" fill="none" opacity="0.7"/>
+</svg>

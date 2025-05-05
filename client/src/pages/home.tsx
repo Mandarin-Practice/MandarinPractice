@@ -1,73 +1,71 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import bambooSimple from "@/assets/bamboo-simple.svg";
-import panda from "@/assets/panda.svg";
+import pandaDetailed from "@/assets/panda-detailed.svg";
+import chineseBg from "@/assets/chinese-bg.svg";
 
 export default function Home() {
   return (
     <div className="py-6">
       <div 
-        className="max-w-3xl mx-auto text-center mb-12 relative overflow-hidden"
+        className="max-w-4xl mx-auto text-center mb-12 relative overflow-hidden rounded-xl"
         style={{
-          background: "linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)",
-          borderRadius: '1rem',
-          padding: '2rem',
-          boxShadow: '0 10px 25px rgba(0,0,0,0.08)'
+          backgroundImage: `url(${chineseBg})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
         }}
       >
-        {/* Background patterns */}
-        <div className="absolute inset-0 z-0 opacity-5">
-          <div className="absolute top-0 left-0 w-full h-full" 
-               style={{
-                 backgroundImage: "radial-gradient(circle, #4CAF50 1px, transparent 1px)",
-                 backgroundSize: "20px 20px"
-               }} />
-        </div>
+        {/* Semi-transparent overlay to improve text readability */}
+        <div className="absolute inset-0 bg-white/30 dark:bg-black/30 backdrop-blur-[2px] z-10"></div>
         
-        {/* Bamboo decorations on left and right sides */}
-        <div className="hidden md:block absolute left-0 top-0 h-full z-10 opacity-70" style={{ transform: 'translateX(-40%)' }}>
-          <img src={bambooSimple} alt="Bamboo decoration" className="h-full" style={{ maxWidth: '100px' }} />
-        </div>
-        
-        <div className="hidden md:block absolute right-0 top-0 h-full z-10 opacity-70" style={{ transform: 'translateX(40%)' }}>
-          <img src={bambooSimple} alt="Bamboo decoration" className="h-full" style={{ maxWidth: '100px' }} />
-        </div>
-        
-        {/* Main content */}
-        <div className="relative z-20 bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
-          {/* Panda at the top */}
-          <div className="mx-auto w-fit mb-6">
-            <img src={panda} alt="Panda" className="h-32 transform -translate-y-16 mb-[-3rem]" />
-          </div>
-          
-          <h1 className="text-5xl font-extrabold mb-6 text-primary relative">
-            Mandarin Practice
-            <span className="absolute -top-3 -right-3 text-xs bg-red-500 text-white px-2 py-1 rounded-full transform rotate-12">中文</span>
-          </h1>
-          
-          <p className="text-xl text-gray-700 dark:text-gray-300 mb-8 font-medium">
-            Improve your Mandarin comprehension one sentence at a time
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-4">
-            <Button asChild size="lg" className="bg-primary hover:bg-blue-600 text-white font-bold shadow-md">
-              <Link href="/practice">
-                Start Practicing
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="lg" className="border-primary hover:bg-primary/10 font-bold">
-              <Link href="/word-list">
-                Manage Word List
-              </Link>
-            </Button>
-          </div>
-          
-          {/* Chinese characters for decoration */}
-          <div className="flex justify-center space-x-4 mt-6 text-2xl text-gray-400 dark:text-gray-600 font-bold">
-            <span>学习</span>
-            <span>练习</span>
-            <span>掌握</span>
+        {/* Content Container */}
+        <div className="relative z-20 py-12 px-8">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-10 max-w-2xl mx-auto transform translate-y-4 border border-gray-100 dark:border-gray-700">
+            {/* Panda image at top */}
+            <div className="mx-auto w-fit -mt-24 mb-6">
+              <img 
+                src={pandaDetailed} 
+                alt="Panda with Bamboo" 
+                className="h-40 drop-shadow-xl"
+                style={{ filter: 'drop-shadow(0px 10px 8px rgba(0, 0, 0, 0.2))' }}
+              />
+            </div>
+            
+            {/* Title with Chinese Label */}
+            <div className="relative inline-block">
+              <h1 className="text-5xl font-extrabold mb-8 text-primary">
+                Mandarin Practice
+              </h1>
+              <span className="absolute -top-3 -right-6 text-sm bg-red-600 text-white px-3 py-1 rounded-full transform rotate-12 font-bold shadow-md">
+                中文
+              </span>
+            </div>
+            
+            <p className="text-xl text-gray-700 dark:text-gray-300 mb-10 font-medium max-w-xl mx-auto">
+              Improve your Mandarin Chinese comprehension and vocabulary one sentence at a time
+            </p>
+            
+            {/* Buttons with improved styling */}
+            <div className="flex flex-col sm:flex-row gap-5 justify-center mb-8">
+              <Button asChild size="lg" className="bg-red-600 hover:bg-red-700 text-white font-bold shadow-lg rounded-full px-8 py-6 text-lg">
+                <Link href="/practice">
+                  Start Practicing
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="lg" className="border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 font-bold rounded-full px-8 py-6 text-lg">
+                <Link href="/word-list">
+                  Manage Word List
+                </Link>
+              </Button>
+            </div>
+            
+            {/* Chinese characters for decoration */}
+            <div className="flex justify-center space-x-8 mt-4 text-2xl text-red-400 dark:text-red-300 font-bold">
+              <span className="transform hover:scale-110 transition-transform cursor-default" title="Study">学习</span>
+              <span className="transform hover:scale-110 transition-transform cursor-default" title="Practice">练习</span>
+              <span className="transform hover:scale-110 transition-transform cursor-default" title="Master">掌握</span>
+            </div>
           </div>
         </div>
       </div>
