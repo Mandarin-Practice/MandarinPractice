@@ -19,7 +19,7 @@ import {
   wordProficiency
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, like, desc, asc, and, or, sql, inArray } from "drizzle-orm";
+import { eq, like, desc, asc, and, or, sql, inArray, not } from "drizzle-orm";
 import { convertNumericPinyinToTonal, isNumericPinyin } from './utils/pinyin-converter';
 
 // Interface for CRUD operations on vocabulary
@@ -342,8 +342,94 @@ export class DatabaseStorage implements IStorage {
       }
     }
     
-    // Search by English definition
-    // This requires a more complex query joining characters and their definitions
+    // Special handling for common searches
+    const commonSearchTerms: Record<string, string[]> = {
+      "water": ["水"],
+      "fire": ["火"],
+      "earth": ["土"],
+      "wood": ["木"],
+      "metal": ["金"],
+      "person": ["人"],
+      "mouth": ["口"],
+      "heart": ["心"],
+      "sun": ["日"],
+      "moon": ["月"],
+      "mountain": ["山"],
+      "river": ["河"],
+      "tree": ["树"],
+      "door": ["门"],
+      "hand": ["手"],
+      "eye": ["眼"],
+      "ear": ["耳"],
+      "nose": ["鼻"],
+      "tongue": ["舌"],
+      "foot": ["脚"],
+      "head": ["头"]
+    };
+    
+    // Check if this is a search for a common word
+    const lowercaseQuery = query.toLowerCase();
+    const priorityChars = commonSearchTerms[lowercaseQuery];
+    
+    // If this is a common search term, find those characters first
+    if (priorityChars && priorityChars.length > 0) {
+      const priorityResults = await db.select()
+        .from(characters)
+        .where(
+          inArray(characters.character, priorityChars)
+        );
+        
+      if (priorityResults.length > 0) {
+        // Get the rest of the results to append after the priority ones
+        const charactersWithMatchingDefinitions = await db.select({
+          characterId: characterDefinitions.characterId
+        })
+        .from(characterDefinitions)
+        .where(like(characterDefinitions.definition, `%${query}%`))
+        .groupBy(characterDefinitions.characterId);
+        
+        // Extract the characterIds into an array but exclude the priority ones
+        const priorityIds = priorityResults.map(char => char.id);
+        const characterIds = charactersWithMatchingDefinitions
+          .map(result => result.characterId)
+          .filter(id => !priorityIds.includes(id));
+        
+        // Get the rest of the results
+        const otherResults = await db.select()
+          .from(characters)
+          .where(
+            and(
+              sql`characters.character ~ '^[\u4e00-\u9fff]+$'`, // Only return Chinese characters
+              or(
+                and(
+                  like(characters.character, `%${query}%`),
+                  // Exclude the priority characters we already have
+                  not(inArray(characters.character, priorityChars))
+                ),
+                and(
+                  like(characters.pinyin, `%${query}%`),
+                  // Exclude the priority characters we already have
+                  not(inArray(characters.character, priorityChars))
+                ),
+                characterIds.length > 0 ? 
+                  inArray(characters.id, characterIds) :
+                  // If no matching definitions, this condition should be false but won't break the query
+                  eq(sql`1`, sql`0`)
+              )
+            )
+          )
+          .orderBy(asc(characters.frequency))
+          .limit(1000 - priorityResults.length);
+          
+        // Combine priority results with the rest
+        const combinedResults = [...priorityResults, ...otherResults];
+        
+        // Convert numeric pinyin to tonal pinyin for display
+        return this.formatPinyinForCharacters(combinedResults);
+      }
+    }
+    
+    // Regular search by definition if not a priority term or no priority matches
     const charactersWithMatchingDefinitions = await db.select({
       characterId: characterDefinitions.characterId
     })
@@ -353,9 +439,6 @@ export class DatabaseStorage implements IStorage {
     
     // Extract the characterIds into an array
     const characterIds = charactersWithMatchingDefinitions.map(result => result.characterId);
-    
-    // If we have matches by definition, add them to the search conditions
-    let searchResults: Character[] = [];
     
     // Search by character, pinyin or get characters with matching definitions
     const results = await db.select()
@@ -368,8 +451,7 @@ export class DatabaseStorage implements IStorage {
             like(characters.pinyin, `%${query}%`),
             characterIds.length > 0 ? 
               inArray(characters.id, characterIds) :
-              // If no matching definitions, this condition should be false but not break the query
-              // Use a condition that will never match but won't cause SQL errors
+              // If no matching definitions, this condition should be false but won't break the query
               eq(sql`1`, sql`0`)
           )
         )
