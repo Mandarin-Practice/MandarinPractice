@@ -1,6 +1,7 @@
-import { pgTable, text, serial } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { relations } from "drizzle-orm";
 
 // User schema from original template
 export const users = pgTable("users", {
@@ -81,3 +82,93 @@ export const wordProficiencySchema = createInsertSchema(wordProficiency).pick({
 
 export type InsertWordProficiency = z.infer<typeof wordProficiencySchema>;
 export type WordProficiency = typeof wordProficiency.$inferSelect;
+
+// Chinese Characters schema - for the character dictionary
+export const characters = pgTable("characters", {
+  id: serial("id").primaryKey(),
+  character: varchar("character", { length: 10 }).notNull().unique(), // The actual Chinese character
+  pinyin: text("pinyin").notNull(), // Pronunciation in pinyin, could have multiple comma-separated values
+  strokes: integer("strokes"), // Number of strokes
+  radical: varchar("radical", { length: 10 }), // Base radical
+  hskLevel: integer("hsk_level"), // HSK proficiency level (1-6)
+  frequency: integer("frequency"), // How common the character is (lower = more common)
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const characterSchema = createInsertSchema(characters).pick({
+  character: true,
+  pinyin: true,
+  strokes: true,
+  radical: true,
+  hskLevel: true,
+  frequency: true,
+});
+
+export type InsertCharacter = z.infer<typeof characterSchema>;
+export type Character = typeof characters.$inferSelect;
+
+// Character Definitions schema - since each character can have multiple meanings
+export const characterDefinitions = pgTable("character_definitions", {
+  id: serial("id").primaryKey(),
+  characterId: integer("character_id").notNull().references(() => characters.id),
+  definition: text("definition").notNull(), // Single definition/meaning
+  partOfSpeech: varchar("part_of_speech", { length: 50 }), // noun, verb, adjective, etc.
+  example: text("example"), // Example usage
+  order: integer("order").default(1).notNull(), // Order of definitions (primary, secondary)
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const characterDefinitionSchema = createInsertSchema(characterDefinitions).pick({
+  characterId: true,
+  definition: true,
+  partOfSpeech: true,
+  example: true,
+  order: true,
+});
+
+export type InsertCharacterDefinition = z.infer<typeof characterDefinitionSchema>;
+export type CharacterDefinition = typeof characterDefinitions.$inferSelect;
+
+// User's learned character definitions - for tracking which definitions a user has learned
+export const learnedDefinitions = pgTable("learned_definitions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  definitionId: integer("definition_id").notNull().references(() => characterDefinitions.id),
+  isLearned: boolean("is_learned").default(true).notNull(), // Whether user has learned this definition
+  notes: text("notes"), // Optional user notes on this definition
+  lastReviewed: timestamp("last_reviewed").defaultNow(),
+});
+
+export const learnedDefinitionSchema = createInsertSchema(learnedDefinitions).pick({
+  userId: true,
+  definitionId: true,
+  isLearned: true,
+  notes: true,
+});
+
+export type InsertLearnedDefinition = z.infer<typeof learnedDefinitionSchema>;
+export type LearnedDefinition = typeof learnedDefinitions.$inferSelect;
+
+// Set up relations
+export const charactersRelations = relations(characters, ({ many }) => ({
+  definitions: many(characterDefinitions),
+}));
+
+export const characterDefinitionsRelations = relations(characterDefinitions, ({ one, many }) => ({
+  character: one(characters, {
+    fields: [characterDefinitions.characterId],
+    references: [characters.id]
+  }),
+  learnedBy: many(learnedDefinitions),
+}));
+
+export const learnedDefinitionsRelations = relations(learnedDefinitions, ({ one }) => ({
+  definition: one(characterDefinitions, {
+    fields: [learnedDefinitions.definitionId],
+    references: [characterDefinitions.id]
+  }),
+  user: one(users, {
+    fields: [learnedDefinitions.userId],
+    references: [users.id]
+  }),
+}));
