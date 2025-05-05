@@ -162,7 +162,7 @@ async function fixVariantDefinitions() {
                 
                 await pool.query(
                   `UPDATE character_definitions
-                   SET definition = $1, updated_at = NOW()
+                   SET definition = $1
                    WHERE id = $2`,
                   [fallbackDef, def.id]
                 );
