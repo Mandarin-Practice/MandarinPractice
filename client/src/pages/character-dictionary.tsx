@@ -52,12 +52,37 @@ export default function CharacterDictionary() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
   const { toast } = useToast();
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
+  
+  // Add keyboard shortcut (Ctrl+K or Cmd+K) to focus search
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
-  // Query for searching characters
+  // Query for searching characters with debounce
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
+  
+  // Debounce search term to reduce API calls
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300); // 300ms delay
+    
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+  
   const charactersQuery = useQuery({
-    queryKey: ['/api/characters/search', searchTerm],
+    queryKey: ['/api/characters/search', debouncedSearchTerm],
     queryFn: async () => {
-      const response = await fetch(`/api/characters/search?q=${encodeURIComponent(searchTerm)}`);
+      const response = await fetch(`/api/characters/search?q=${encodeURIComponent(debouncedSearchTerm)}`);
       if (!response.ok) throw new Error('Failed to search characters');
       return response.json() as Promise<Character[]>;
     },
@@ -99,7 +124,8 @@ export default function CharacterDictionary() {
           <div className="space-y-4">
             <div className="flex gap-2">
               <Input
-                placeholder="Search for a character or pinyin..."
+                ref={searchInputRef}
+                placeholder="Search for a character or pinyin... (Ctrl+K)"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="flex-1"
@@ -113,36 +139,55 @@ export default function CharacterDictionary() {
               </Button>
             </div>
             
-            <div className="h-[calc(100vh-300px)] overflow-y-auto border rounded-md p-4">
-              {charactersQuery.isLoading ? (
-                <div className="flex justify-center items-center h-40">
-                  <Spinner />
-                </div>
-              ) : charactersQuery.isError ? (
-                <div className="text-center text-red-500 p-4">
-                  Error loading characters: {charactersQuery.error.message}
-                </div>
-              ) : charactersQuery.data && charactersQuery.data.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {charactersQuery.data.map((char) => (
-                    <Button
-                      key={char.id}
-                      variant={selectedCharacter?.id === char.id ? "default" : "outline"}
-                      className="h-16 text-xl"
-                      onClick={() => handleSelectCharacter(char)}
-                    >
-                      <div className="flex flex-col items-center">
-                        <span>{char.character}</span>
-                        <span className="text-xs">{char.pinyin}</span>
-                      </div>
-                    </Button>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center text-muted-foreground p-4">
-                  No characters found. Try a different search term.
+            <div>
+              {!charactersQuery.isLoading && !charactersQuery.isError && charactersQuery.data && (
+                <div className="text-sm text-muted-foreground mb-2 flex justify-between items-center">
+                  <span>
+                    {charactersQuery.data.length > 0 ? (
+                      <>Found {charactersQuery.data.length} character{charactersQuery.data.length !== 1 ? 's' : ''}</>
+                    ) : (
+                      <>No characters found</>
+                    )}
+                  </span>
+                  {debouncedSearchTerm && (
+                    <Badge variant="outline">
+                      Search: "{debouncedSearchTerm}"
+                    </Badge>
+                  )}
                 </div>
               )}
+              
+              <div className="h-[calc(100vh-300px)] overflow-y-auto border rounded-md p-4">
+                {charactersQuery.isLoading ? (
+                  <div className="flex justify-center items-center h-40">
+                    <Spinner />
+                  </div>
+                ) : charactersQuery.isError ? (
+                  <div className="text-center text-red-500 p-4">
+                    Error loading characters: {charactersQuery.error.message}
+                  </div>
+                ) : charactersQuery.data && charactersQuery.data.length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {charactersQuery.data.map((char) => (
+                      <Button
+                        key={char.id}
+                        variant={selectedCharacter?.id === char.id ? "default" : "outline"}
+                        className={`h-16 text-xl ${selectedCharacter?.id === char.id ? 'ring-2 ring-primary' : ''}`}
+                        onClick={() => handleSelectCharacter(char)}
+                      >
+                        <div className="flex flex-col items-center">
+                          <span className="text-2xl mb-1">{char.character}</span>
+                          <span className="text-xs">{char.pinyin}</span>
+                        </div>
+                      </Button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center text-muted-foreground p-4">
+                    No characters found. Try a different search term.
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -193,31 +238,46 @@ export default function CharacterDictionary() {
                       </div>
                     ) : definitionsQuery.data && definitionsQuery.data.length > 0 ? (
                       <div className="space-y-4">
+                        <div className="text-sm text-muted-foreground mb-2">
+                          {definitionsQuery.data.length} definition{definitionsQuery.data.length !== 1 ? 's' : ''} available
+                        </div>
+                        
                         {definitionsQuery.data
                           .sort((a, b) => a.order - b.order)
-                          .map((def) => (
-                            <div key={def.id} className="border rounded-md p-4">
-                              <div className="flex justify-between">
-                                <div>
-                                  <div className="font-semibold text-lg">{def.definition}</div>
-                                  {def.partOfSpeech && (
-                                    <Badge variant="outline" className="mb-2">
-                                      {def.partOfSpeech}
-                                    </Badge>
-                                  )}
+                          .map((def, index) => (
+                            <div key={def.id} className="border rounded-md p-4 hover:border-primary transition-colors">
+                              <div className="flex justify-between items-start">
+                                <div className="flex-1">
+                                  <div className="font-semibold text-lg flex items-center gap-2">
+                                    <span>{index + 1}.</span>
+                                    <span>{def.definition}</span>
+                                  </div>
+                                  <div className="mt-1">
+                                    {def.partOfSpeech && (
+                                      <Badge variant="outline" className="mb-2">
+                                        {def.partOfSpeech}
+                                      </Badge>
+                                    )}
+                                  </div>
                                 </div>
                                 <Button
                                   size="sm"
                                   variant="outline"
                                   onClick={() => handleToggleLearned(def.id)}
+                                  className="ml-2 whitespace-nowrap"
                                 >
-                                  Mark as Learned
+                                  <span className="flex items-center gap-1">
+                                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                      <path d="M7.49991 0.876892C3.84222 0.876892 0.877075 3.84204 0.877075 7.49972C0.877075 11.1574 3.84222 14.1226 7.49991 14.1226C11.1576 14.1226 14.1227 11.1574 14.1227 7.49972C14.1227 3.84204 11.1576 0.876892 7.49991 0.876892ZM1.82707 7.49972C1.82707 4.36671 4.36689 1.82689 7.49991 1.82689C10.6329 1.82689 13.1727 4.36671 13.1727 7.49972C13.1727 10.6327 10.6329 13.1726 7.49991 13.1726C4.36689 13.1726 1.82707 10.6327 1.82707 7.49972ZM10.1589 5.53774C10.3178 5.31191 10.2636 5.00001 10.0378 4.84109C9.81194 4.68217 9.50004 4.73642 9.34112 4.96225L6.51977 8.97154L5.35681 7.78706C5.16334 7.59002 4.84677 7.58711 4.64973 7.78058C4.45268 7.97404 4.44978 8.29061 4.64325 8.48765L6.22658 10.1003C6.33054 10.2062 6.47617 10.2604 6.62407 10.2483C6.77197 10.2363 6.90686 10.1591 6.99226 10.0377L10.1589 5.53774Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path>
+                                    </svg>
+                                    <span>Mark as Learned</span>
+                                  </span>
                                 </Button>
                               </div>
                               {def.example && (
-                                <div className="mt-2 text-muted-foreground">
-                                  <Label>Example:</Label>
-                                  <div>{def.example}</div>
+                                <div className="mt-3 text-muted-foreground bg-muted/50 p-2 rounded-md">
+                                  <Label className="text-xs font-medium">Example:</Label>
+                                  <div className="mt-1">{def.example}</div>
                                 </div>
                               )}
                             </div>
