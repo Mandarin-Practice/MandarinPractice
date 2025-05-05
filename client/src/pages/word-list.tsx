@@ -1093,7 +1093,7 @@ export default function WordList() {
       
       let description = "The word list has been added to your vocabulary.";
       if (duplicateCount > 0) {
-        description = `${savedCount} words imported. ${duplicateCount} duplicate ${duplicateCount === 1 ? 'word was' : 'words were'} skipped.`;
+        description = `All ${originalCount} words now in your vocabulary. ${duplicateCount} ${duplicateCount === 1 ? 'word was' : 'words were'} already present and updated.`;
       }
       
       toast({

@@ -51,7 +51,12 @@ export class MemStorage implements IStorage {
     
     // If exact duplicate found, return it without adding a new one
     if (exactDuplicate) {
-      console.log(`Skipping exact duplicate: ${word.chinese} (${word.pinyin}) - ${word.english}`);
+      console.log(`Found exact duplicate: ${word.chinese} (${word.pinyin}) - ${word.english}`);
+      // Set the active status to "true" if it wasn't already
+      if (exactDuplicate.active !== "true") {
+        exactDuplicate.active = "true";
+        this.vocabulary.set(exactDuplicate.id, exactDuplicate);
+      }
       return exactDuplicate;
     }
     
@@ -60,10 +65,24 @@ export class MemStorage implements IStorage {
       existing => existing.chinese === word.chinese
     );
     
-    // If Chinese character duplicate found, return it without adding a new one
+    // If Chinese character duplicate found, update it with merged information
     if (chineseDuplicate) {
-      console.log(`Skipping Chinese character duplicate: ${word.chinese}`);
-      return chineseDuplicate;
+      console.log(`Merging Chinese character duplicate: ${word.chinese}`);
+      
+      // Only update fields if the new word has better data
+      // For example, if the existing word has empty pinyin or english, use the new word's values
+      const updatedWord: Vocabulary = { 
+        ...chineseDuplicate,
+        // Use new pinyin if existing is empty
+        pinyin: chineseDuplicate.pinyin || word.pinyin,
+        // Use new english if existing is empty
+        english: chineseDuplicate.english || word.english,
+        // Always set active to true for merged words
+        active: "true"
+      };
+      
+      this.vocabulary.set(chineseDuplicate.id, updatedWord);
+      return updatedWord;
     }
     
     // Otherwise, add as a new word
