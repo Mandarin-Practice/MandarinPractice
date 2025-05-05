@@ -147,36 +147,74 @@ export async function seedDatabaseWithBasicDictionary(): Promise<boolean> {
 }
 
 /**
- * Run the full dictionary import script for comprehensive data
- * Used for admin-triggered full imports
+ * Run a script with the given path and return a promise
+ * @param scriptPath Path to the script to run
+ * @param scriptName Name of the script for logging
  */
-export async function runFullDictionaryImport(): Promise<boolean> {
+async function runScript(scriptPath: string, scriptName: string): Promise<boolean> {
   return new Promise((resolve) => {
-    log('Starting full dictionary import process...', 'db-seed');
+    log(`Starting ${scriptName} process...`, 'db-seed');
     
-    // Execute the import script
-    const scriptPath = path.join(process.cwd(), 'scripts', 'import-all-data.js');
-    
-    const importProcess = exec(`node ${scriptPath}`, {
+    const process = exec(`node ${scriptPath}`, {
       env: { ...process.env }
     });
     
-    importProcess.stdout?.on('data', (data) => {
-      log(`Import process: ${data.toString().trim()}`, 'db-seed');
+    process.stdout?.on('data', (data) => {
+      log(`${scriptName}: ${data.toString().trim()}`, 'db-seed');
     });
     
-    importProcess.stderr?.on('data', (data) => {
-      log(`Import process error: ${data.toString().trim()}`, 'db-seed');
+    process.stderr?.on('data', (data) => {
+      log(`${scriptName} error: ${data.toString().trim()}`, 'db-seed');
     });
     
-    importProcess.on('close', (code) => {
+    process.on('close', (code) => {
       if (code === 0) {
-        log('Full dictionary import completed successfully!', 'db-seed');
+        log(`${scriptName} completed successfully!`, 'db-seed');
         resolve(true);
       } else {
-        log(`Full dictionary import failed with code ${code}`, 'db-seed');
+        log(`${scriptName} failed with code ${code}`, 'db-seed');
         resolve(false);
       }
     });
   });
+}
+
+/**
+ * Run the full dictionary import script for comprehensive data
+ * Used for admin-triggered full imports
+ */
+export async function runFullDictionaryImport(): Promise<boolean> {
+  try {
+    log('Starting full dictionary import process...', 'db-seed');
+    
+    // Execute the main import script
+    const importAllPath = path.join(process.cwd(), 'scripts', 'import-all-data.js');
+    const importResult = await runScript(importAllPath, 'Dictionary import');
+    
+    if (!importResult) {
+      log('Main dictionary import failed, not continuing with additional scripts', 'db-seed');
+      return false;
+    }
+    
+    // Add missing characters
+    const missingCharsPath = path.join(process.cwd(), 'scripts', 'add-missing-characters.js');
+    const missingCharsResult = await runScript(missingCharsPath, 'Missing characters import');
+    
+    if (!missingCharsResult) {
+      log('Missing characters import failed, will still try to create relationships', 'db-seed');
+    }
+    
+    // Create character relationships
+    const relationshipsPath = path.join(process.cwd(), 'scripts', 'create-character-relationships.js');
+    const relationshipsResult = await runScript(relationshipsPath, 'Character relationships');
+    
+    if (!relationshipsResult) {
+      log('Character relationships creation failed', 'db-seed');
+    }
+    
+    return importResult && missingCharsResult && relationshipsResult;
+  } catch (error) {
+    log(`Error in dictionary import process: ${error}`, 'db-seed');
+    return false;
+  }
 }
