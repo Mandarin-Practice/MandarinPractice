@@ -639,19 +639,66 @@ export default function CharacterDictionary() {
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold">Your Word List</h2>
-            {savedWords.length > 0 && (
+            {!vocabularyQuery.isLoading && vocabularyQuery.data && vocabularyQuery.data.length > 0 && (
               <Button 
                 variant="outline" 
                 size="sm"
                 onClick={handleClearAllWords}
                 className="text-muted-foreground hover:text-destructive"
+                disabled={deleteVocabularyMutation.isPending}
               >
-                Clear All
+                {deleteVocabularyMutation.isPending ? (
+                  <span className="flex items-center gap-1">
+                    <Spinner size="sm" />
+                    <span>Clearing...</span>
+                  </span>
+                ) : (
+                  "Clear All"
+                )}
               </Button>
             )}
           </div>
           
-          {savedWords.length === 0 ? (
+          {vocabularyQuery.isLoading ? (
+            <div className="flex justify-center items-center h-40">
+              <Spinner />
+            </div>
+          ) : vocabularyQuery.isError ? (
+            <div className="text-center text-red-500 p-4">
+              Error loading vocabulary: {vocabularyQuery.error.message}
+            </div>
+          ) : vocabularyQuery.data && vocabularyQuery.data.length > 0 ? (
+            <div className="space-y-2">
+              {vocabularyQuery.data
+                .filter(word => word.active === "true")
+                .map((word) => (
+                  <Card key={word.id} className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3">
+                          <div className="text-3xl">{word.chinese}</div>
+                          <div>
+                            <div className="text-sm font-medium">{word.pinyin}</div>
+                            <div className="text-base">{word.english}</div>
+                          </div>
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveWord(word.id)}
+                        disabled={deleteVocabularyMutation.isPending}
+                        className="text-muted-foreground hover:text-destructive"
+                      >
+                        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M12.8536 2.85355C13.0488 2.65829 13.0488 2.34171 12.8536 2.14645C12.6583 1.95118 12.3417 1.95118 12.1464 2.14645L7.5 6.79289L2.85355 2.14645C2.65829 1.95118 2.34171 1.95118 2.14645 2.14645C1.95118 2.34171 1.95118 2.65829 2.14645 2.85355L6.79289 7.5L2.14645 12.1464C1.95118 12.3417 1.95118 12.6583 2.14645 12.8536C2.34171 13.0488 2.65829 13.0488 2.85355 12.8536L7.5 8.20711L12.1464 12.8536C12.3417 13.0488 12.6583 13.0488 12.8536 12.8536C13.0488 12.6583 13.0488 12.3417 12.8536 12.1464L8.20711 7.5L12.8536 2.85355Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path>
+                        </svg>
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+            </div>
+          ) : (
             <Card className="p-8 text-center">
               <div className="max-w-md mx-auto">
                 <div className="text-xl mb-2">Your word list is empty</div>
@@ -674,36 +721,6 @@ export default function CharacterDictionary() {
                 </Button>
               </div>
             </Card>
-          ) : (
-            <div className="space-y-2">
-              {savedWords
-                .sort((a, b) => b.timestamp - a.timestamp) // Sort by newest first
-                .map((word) => (
-                  <Card key={word.id} className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3">
-                          <div className="text-3xl">{word.character}</div>
-                          <div>
-                            <div className="text-sm font-medium">{word.pinyin}</div>
-                            <div className="text-base">{word.definition}</div>
-                          </div>
-                        </div>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleRemoveWord(word.id)}
-                        className="text-muted-foreground hover:text-destructive"
-                      >
-                        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M12.8536 2.85355C13.0488 2.65829 13.0488 2.34171 12.8536 2.14645C12.6583 1.95118 12.3417 1.95118 12.1464 2.14645L7.5 6.79289L2.85355 2.14645C2.65829 1.95118 2.34171 1.95118 2.14645 2.14645C1.95118 2.34171 1.95118 2.65829 2.14645 2.85355L6.79289 7.5L2.14645 12.1464C1.95118 12.3417 1.95118 12.6583 2.14645 12.8536C2.34171 13.0488 2.65829 13.0488 2.85355 12.8536L7.5 8.20711L12.1464 12.8536C12.3417 13.0488 12.6583 13.0488 12.8536 12.8536C13.0488 12.6583 13.0488 12.3417 12.8536 12.1464L8.20711 7.5L12.8536 2.85355Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path>
-                        </svg>
-                      </Button>
-                    </div>
-                  </Card>
-                ))}
-            </div>
           )}
         </div>
       </TabsContent>
