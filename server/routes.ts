@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { vocabularySchema } from "@shared/schema";
+import { vocabularySchema, characterSchema, characterDefinitionSchema, learnedDefinitionSchema } from "@shared/schema";
 import { ZodError } from "zod";
 import { generateSentence, generateSentenceWithWord, checkSynonyms } from "./openai";
 
@@ -320,6 +320,226 @@ export async function registerRoutes(app: Express): Promise<Server> {
         areSynonyms: false,
         confidence: 0
       });
+    }
+  });
+
+  // ============= CHARACTER DICTIONARY API ENDPOINTS =============
+
+  // Search for characters by query (character or pinyin)
+  app.get("/api/characters/search", async (req, res) => {
+    try {
+      const { q = "" } = req.query;
+      const query = typeof q === 'string' ? q : '';
+      
+      const characters = await storage.searchCharacters(query);
+      res.json(characters);
+    } catch (error) {
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to search characters" });
+    }
+  });
+
+  // Get a specific character by ID
+  app.get("/api/characters/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      const character = await storage.getCharacter(id);
+      
+      if (!character) {
+        return res.status(404).json({ message: "Character not found" });
+      }
+      
+      res.json(character);
+    } catch (error) {
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to fetch character" });
+    }
+  });
+
+  // Get a character by its value (the actual Chinese character)
+  app.get("/api/characters/value/:char", async (req, res) => {
+    try {
+      const charValue = req.params.char;
+      
+      if (!charValue) {
+        return res.status(400).json({ message: "Character value is required" });
+      }
+      
+      const character = await storage.getCharacterByValue(charValue);
+      
+      if (!character) {
+        return res.status(404).json({ message: "Character not found" });
+      }
+      
+      res.json(character);
+    } catch (error) {
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to fetch character" });
+    }
+  });
+
+  // Add a new character
+  app.post("/api/characters", async (req, res) => {
+    try {
+      const character = req.body;
+      
+      // Validate character
+      const validatedCharacter = characterSchema.parse(character);
+      
+      const savedCharacter = await storage.addCharacter(validatedCharacter);
+      res.status(201).json(savedCharacter);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ 
+          message: `Invalid character format: ${error.errors.map(e => e.message).join(', ')}` 
+        });
+      }
+      res.status(400).json({ message: error instanceof Error ? error.message : "Failed to add character" });
+    }
+  });
+
+  // Get all definitions for a character
+  app.get("/api/characters/:id/definitions", async (req, res) => {
+    try {
+      const characterId = parseInt(req.params.id);
+      
+      if (isNaN(characterId)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      const definitions = await storage.getCharacterDefinitions(characterId);
+      res.json(definitions);
+    } catch (error) {
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to fetch definitions" });
+    }
+  });
+
+  // Add a new definition to a character
+  app.post("/api/characters/:id/definitions", async (req, res) => {
+    try {
+      const characterId = parseInt(req.params.id);
+      
+      if (isNaN(characterId)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      // Check if character exists
+      const character = await storage.getCharacter(characterId);
+      
+      if (!character) {
+        return res.status(404).json({ message: "Character not found" });
+      }
+      
+      const definition = { ...req.body, characterId };
+      
+      // Validate definition
+      const validatedDefinition = characterDefinitionSchema.parse(definition);
+      
+      const savedDefinition = await storage.addCharacterDefinition(validatedDefinition);
+      res.status(201).json(savedDefinition);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ 
+          message: `Invalid definition format: ${error.errors.map(e => e.message).join(', ')}` 
+        });
+      }
+      res.status(400).json({ message: error instanceof Error ? error.message : "Failed to add definition" });
+    }
+  });
+
+  // Update a character definition
+  app.patch("/api/character-definitions/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      const updates = req.body;
+      const updatedDefinition = await storage.updateCharacterDefinition(id, updates);
+      res.json(updatedDefinition);
+    } catch (error) {
+      res.status(404).json({ message: error instanceof Error ? error.message : "Definition not found" });
+    }
+  });
+
+  // Delete a character definition
+  app.delete("/api/character-definitions/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      await storage.deleteCharacterDefinition(id);
+      res.json({ message: "Definition deleted successfully" });
+    } catch (error) {
+      res.status(404).json({ message: error instanceof Error ? error.message : "Definition not found" });
+    }
+  });
+
+  // Get all learned definitions for a user
+  app.get("/api/users/:userId/learned-definitions", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID format" });
+      }
+      
+      const learnedDefinitions = await storage.getLearnedDefinitions(userId);
+      res.json(learnedDefinitions);
+    } catch (error) {
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to fetch learned definitions" });
+    }
+  });
+
+  // Toggle a definition as learned/unlearned for a user
+  app.post("/api/users/:userId/learned-definitions/:definitionId", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const definitionId = parseInt(req.params.definitionId);
+      
+      if (isNaN(userId) || isNaN(definitionId)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      const { isLearned = true } = req.body;
+      
+      if (typeof isLearned !== 'boolean') {
+        return res.status(400).json({ message: "isLearned must be a boolean" });
+      }
+      
+      const result = await storage.toggleLearnedDefinition(userId, definitionId, isLearned);
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to update learned status" });
+    }
+  });
+
+  // Update notes for a learned definition
+  app.patch("/api/learned-definitions/:id/notes", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      const { notes } = req.body;
+      
+      if (typeof notes !== 'string') {
+        return res.status(400).json({ message: "Notes must be a string" });
+      }
+      
+      const updatedDefinition = await storage.updateLearnedDefinitionNotes(id, notes);
+      res.json(updatedDefinition);
+    } catch (error) {
+      res.status(404).json({ message: error instanceof Error ? error.message : "Learned definition not found" });
     }
   });
 
