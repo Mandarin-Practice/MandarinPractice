@@ -35,41 +35,41 @@ export default function ScoreCard({
       <CardContent className="p-6 flex-grow">
         {/* Current Score */}
         <div className="text-center mb-8">
-          <div className="text-4xl font-bold text-primary dark:text-blue-400 mb-2">{score}</div>
-          <p className="text-gray-600 dark:text-gray-400">Current Score</p>
+          <div className="text-4xl font-bold text-primary mb-2">{score}</div>
+          <p className="text-foreground/70">Current Score</p>
         </div>
         
         {/* Stats */}
         <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <span className="text-gray-700 dark:text-gray-300">Sentences Completed</span>
-            <span className="font-semibold">{stats.completed}</span>
+            <span className="text-foreground/80">Sentences Completed</span>
+            <span className="font-semibold text-primary">{stats.completed}</span>
           </div>
           
           <div className="flex justify-between items-center">
-            <span className="text-gray-700 dark:text-gray-300">Accuracy Rate</span>
-            <span className="font-semibold">{stats.accuracy}</span>
+            <span className="text-foreground/80">Accuracy Rate</span>
+            <span className="font-semibold text-primary">{stats.accuracy}</span>
           </div>
           
           <div className="flex justify-between items-center">
-            <span className="text-gray-700 dark:text-gray-300">Avg. Response Time</span>
-            <span className="font-semibold">{stats.avgTime}</span>
+            <span className="text-foreground/80">Avg. Response Time</span>
+            <span className="font-semibold text-primary">{stats.avgTime}</span>
           </div>
         </div>
         
         {/* Mastery Level */}
         <div className="mt-8">
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Vocabulary Mastery</p>
+          <p className="text-sm text-foreground/70 mb-2 font-medium">Vocabulary Mastery</p>
           <Progress value={stats.masteryPercent} className="h-2.5" />
-          <p className="text-xs text-right mt-1 text-gray-500 dark:text-gray-400">
-            {stats.masteredWords}/{stats.totalWords} words
+          <p className="text-xs text-right mt-1 text-foreground/60">
+            <span className="font-medium text-primary">{stats.masteredWords}</span>/{stats.totalWords} words
           </p>
         </div>
       </CardContent>
       
       {/* Display Controls */}
-      <div className="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
-        <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">Display Options</p>
+      <div className="px-6 py-4 bg-accent/30 border-t border-border">
+        <p className="text-sm text-foreground/80 font-medium mb-3">Display Options</p>
         
         <ToggleSwitch
           label="Show Chinese Characters"
