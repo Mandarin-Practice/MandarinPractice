@@ -141,7 +141,7 @@ export default function SentenceCard({
   return (
     <div className="md:col-span-2">
       <Card className="h-full flex flex-col">
-        <CardHeader className="bg-accent/20 border-b border-border flex-row justify-between items-center py-4">
+        <CardHeader className="bg-accent/30 border-b border-border flex-row justify-between items-center py-4">
           <h2 className="font-bold text-primary text-lg">Current Sentence</h2>
           <div className="flex items-center space-x-3">
             <Button
@@ -272,7 +272,7 @@ export default function SentenceCard({
           )}
         </CardContent>
         
-        <CardFooter className="py-4 bg-accent/20 border-t border-border justify-between">
+        <CardFooter className="py-4 bg-accent/30 border-t border-border justify-between">
           {feedbackStatus && (
             <p className="text-sm bg-background px-3 py-1.5 rounded-md border border-border">
               {sentence && sentence.chinese.length > 0 ? (

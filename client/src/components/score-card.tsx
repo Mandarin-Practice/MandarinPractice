@@ -28,8 +28,8 @@ export default function ScoreCard({
 }: ScoreCardProps) {
   return (
     <Card className="h-full flex flex-col">
-      <CardHeader className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 py-4">
-        <h2 className="font-semibold">Your Progress</h2>
+      <CardHeader className="bg-accent/30 border-b border-border py-4">
+        <h2 className="font-bold text-primary text-lg">Your Progress</h2>
       </CardHeader>
       
       <CardContent className="p-6 flex-grow">
