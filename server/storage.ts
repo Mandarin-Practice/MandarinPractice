@@ -20,6 +20,7 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, like, desc, asc, and, or, sql } from "drizzle-orm";
+import { convertNumericPinyinToTonal, isNumericPinyin } from './utils/pinyin-converter';
 
 // Interface for CRUD operations on vocabulary
 export interface IStorage {
@@ -366,9 +367,6 @@ export class DatabaseStorage implements IStorage {
    * This doesn't modify the database, only formats the results for the client
    */
   private formatPinyinForCharacters(chars: Character[]): Character[] {
-    // Import here to avoid circular dependency
-    const { convertNumericPinyinToTonal, isNumericPinyin } = require('./utils/pinyin-converter');
-    
     return chars.map(char => {
       // Only try to convert if the pinyin looks like it has numeric tones
       if (char.pinyin && isNumericPinyin(char.pinyin)) {

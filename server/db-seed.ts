@@ -4,7 +4,7 @@ import { exec } from 'child_process';
 import { db } from './db';
 import { log } from './vite';
 import { characters } from '@shared/schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 // Common Chinese characters with their information
 // This is a small initial dataset to ensure the dictionary works out of the box
@@ -98,14 +98,13 @@ export async function seedDatabaseWithBasicDictionary(): Promise<boolean> {
       if (charResult.length > 0) {
         const characterId = charResult[0].id;
         
-        // Add definition using direct SQL for consistency with import script
-        await db.execute({
-          text: `INSERT INTO character_definitions 
-           (character_id, definition, "order")
-           VALUES ($1, $2, $3)
-           ON CONFLICT (character_id, definition) DO NOTHING`,
-          values: [characterId, char.definition, 1]
-        });
+        // Add definition using SQL query
+        await db.execute(sql`
+          INSERT INTO character_definitions 
+          (character_id, definition, "order")
+          VALUES (${characterId}, ${char.definition}, 1)
+          ON CONFLICT (character_id, definition) DO NOTHING
+        `);
         
         log(`Added definition for character: ${char.character}`, 'db-seed');
       }
@@ -127,12 +126,11 @@ export async function seedDatabaseWithBasicDictionary(): Promise<boolean> {
             const componentId = componentResult[0].id;
             
             // Add relationship
-            await db.execute({
-              text: `INSERT INTO character_compounds (compound_id, component_id, position)
-               VALUES ($1, $2, $3)
-               ON CONFLICT (compound_id, component_id, position) DO NOTHING`,
-              values: [compoundId, componentId, i]
-            });
+            await db.execute(sql`
+              INSERT INTO character_compounds (compound_id, component_id, position)
+              VALUES (${compoundId}, ${componentId}, ${i})
+              ON CONFLICT (compound_id, component_id, position) DO NOTHING
+            `);
             
             log(`Added relationship: ${rel.compound} includes ${rel.components[i]} at position ${i}`, 'db-seed');
           }
