@@ -322,9 +322,8 @@ export class DatabaseStorage implements IStorage {
       // Return only proper Chinese characters sorted by frequency for an empty search
       const results = await db.select()
         .from(characters)
-        .where(sql`characters.character ~ '^[\u4e00-\u9fff]+$'`)
-        .orderBy(asc(characters.frequency))
-        .limit(1000); // Increased from 50 to 1000 to show more characters
+        .where(sql`characters.character ~ '^[\u4e00-\u9fff]+$' AND characters.character !~ '[龥-鿋]+'`)
+        .orderBy(asc(characters.frequency));
       
       // Convert numeric pinyin to tonal pinyin for display
       return this.formatPinyinForCharacters(results);
