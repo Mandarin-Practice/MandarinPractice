@@ -99,13 +99,13 @@ export async function seedDatabaseWithBasicDictionary(): Promise<boolean> {
         const characterId = charResult[0].id;
         
         // Add definition using direct SQL for consistency with import script
-        await db.execute(
-          `INSERT INTO character_definitions 
+        await db.execute({
+          text: `INSERT INTO character_definitions 
            (character_id, definition, "order")
            VALUES ($1, $2, $3)
            ON CONFLICT (character_id, definition) DO NOTHING`,
-          [characterId, char.definition, 1]
-        );
+          values: [characterId, char.definition, 1]
+        });
         
         log(`Added definition for character: ${char.character}`, 'db-seed');
       }
@@ -127,12 +127,12 @@ export async function seedDatabaseWithBasicDictionary(): Promise<boolean> {
             const componentId = componentResult[0].id;
             
             // Add relationship
-            await db.execute(
-              `INSERT INTO character_compounds (compound_id, component_id, position)
+            await db.execute({
+              text: `INSERT INTO character_compounds (compound_id, component_id, position)
                VALUES ($1, $2, $3)
                ON CONFLICT (compound_id, component_id, position) DO NOTHING`,
-              [compoundId, componentId, i]
-            );
+              values: [compoundId, componentId, i]
+            });
             
             log(`Added relationship: ${rel.compound} includes ${rel.components[i]} at position ${i}`, 'db-seed');
           }

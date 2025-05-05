@@ -319,11 +319,14 @@ export class DatabaseStorage implements IStorage {
     
     if (!query || query.length === 0) {
       // Return only proper Chinese characters sorted by frequency for an empty search
-      return await db.select()
+      const results = await db.select()
         .from(characters)
         .where(sql`characters.character ~ '^[\u4e00-\u9fff]+$'`)
         .orderBy(asc(characters.frequency))
         .limit(50);
+      
+      // Convert numeric pinyin to tonal pinyin for display
+      return this.formatPinyinForCharacters(results);
     }
     
     // If the query is exactly a Chinese character, prioritize exact matches
@@ -334,13 +337,13 @@ export class DatabaseStorage implements IStorage {
       
       if (exactMatches.length > 0) {
         // Return the exact match only for a direct character search
-        return exactMatches;
+        return this.formatPinyinForCharacters(exactMatches);
       }
     }
     
     // Otherwise, search by character or pinyin
     // but still only return proper Chinese characters
-    return await db.select()
+    const results = await db.select()
       .from(characters)
       .where(
         and(
@@ -353,15 +356,44 @@ export class DatabaseStorage implements IStorage {
       )
       .orderBy(asc(characters.frequency))
       .limit(100);
+    
+    // Convert numeric pinyin to tonal pinyin for display
+    return this.formatPinyinForCharacters(results);
+  }
+  
+  /**
+   * Helper method to convert numeric pinyin to tonal pinyin for display
+   * This doesn't modify the database, only formats the results for the client
+   */
+  private formatPinyinForCharacters(chars: Character[]): Character[] {
+    // Import here to avoid circular dependency
+    const { convertNumericPinyinToTonal, isNumericPinyin } = require('./utils/pinyin-converter');
+    
+    return chars.map(char => {
+      // Only try to convert if the pinyin looks like it has numeric tones
+      if (char.pinyin && isNumericPinyin(char.pinyin)) {
+        return {
+          ...char,
+          pinyin: convertNumericPinyinToTonal(char.pinyin)
+        };
+      }
+      return char;
+    });
   }
   
   async getCharacter(id: number): Promise<Character | undefined> {
     const [char] = await db.select().from(characters).where(eq(characters.id, id));
+    if (char) {
+      return this.formatPinyinForCharacters([char])[0];
+    }
     return char;
   }
   
   async getCharacterByValue(char: string): Promise<Character | undefined> {
     const [result] = await db.select().from(characters).where(eq(characters.character, char));
+    if (result) {
+      return this.formatPinyinForCharacters([result])[0];
+    }
     return result;
   }
   
@@ -488,7 +520,9 @@ export class DatabaseStorage implements IStorage {
           .where(eq(characters.id, compound_id));
           
         if (compound) {
-          compoundData.push({ compound, position });
+          // Format pinyin before adding to result
+          const formattedCompound = this.formatPinyinForCharacters([compound])[0];
+          compoundData.push({ compound: formattedCompound, position });
         }
       }
       
@@ -521,7 +555,9 @@ export class DatabaseStorage implements IStorage {
           .where(eq(characters.id, component_id));
           
         if (component) {
-          componentData.push({ component, position });
+          // Format pinyin before adding to result
+          const formattedComponent = this.formatPinyinForCharacters([component])[0];
+          componentData.push({ component: formattedComponent, position });
         }
       }
       
