@@ -407,6 +407,9 @@ export class DatabaseStorage implements IStorage {
       "fast": ["快"],
       "early": ["早"],
       "late": ["晚"],
+      "sleep": ["睡觉", "睡"],
+      "ask": ["请"],
+      "please": ["请"],
       
       // Common nouns and other vocabulary
       "paper": ["纸"],
@@ -419,7 +422,20 @@ export class DatabaseStorage implements IStorage {
       "homework": ["功课"],
       "handsome": ["帅"],
       "cool": ["酷"],
-      "text": ["课文"]
+      "text": ["课文"],
+      "work": ["工作"],
+      "job": ["工作"],
+      "teacher": ["老师"],
+      "friend": ["朋友"],
+      "home": ["家"],
+      "school": ["学校"],
+      "computer": ["电脑"],
+      "phone": ["手机"],
+      "time": ["时间"],
+      "today": ["今天"],
+      "tomorrow": ["明天"],
+      "yesterday": ["昨天"],
+      "student": ["学生"]
     };
     
     // Check if this is a search for a common word
