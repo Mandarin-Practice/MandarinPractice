@@ -8,12 +8,9 @@ import https from 'https';
 import readline from 'readline';
 import csvParser from 'csv-parser';
 import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import { eq, like, or } from 'drizzle-orm';
 import ws from 'ws';
 import { exec } from 'child_process';
 import path from 'path';
-import * as schema from '../shared/schema.js';
 
 // Configure neonConfig for WebSockets
 neonConfig.webSocketConstructor = ws;
@@ -25,7 +22,6 @@ if (!process.env.DATABASE_URL) {
 }
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const db = drizzle(pool, { schema });
 
 // Define the URLs for source data
 const CEDICT_URL = 'https://www.mdbg.net/chinese/export/cedict/cedict_1_0_ts_utf-8_mdbg.txt.gz';
@@ -88,7 +84,7 @@ async function processHanziData() {
   
   return new Promise((resolve, reject) => {
     fs.createReadStream(HANZIDB_TEMP_PATH)
-      .pipe(csv())
+      .pipe(csvParser())
       .on('data', (data) => {
         hanziMap.set(data.character, {
           character: data.character,
@@ -174,46 +170,58 @@ async function processCedictData(hanziMap) {
 // Function to add or update a character in the database
 async function addOrUpdateCharacter(character, pinyin, hanziData) {
   try {
-    // Use Drizzle's API with the schema
-    const { characters } = schema;
+    // Check if character already exists using direct SQL
+    const existingQuery = await pool.query(
+      'SELECT id FROM characters WHERE character = $1',
+      [character]
+    );
     
-    // Check if character already exists
-    const existingChars = await db.select().from(characters).where(eq(characters.character, character));
-    const existingChar = existingChars[0];
-    
-    if (existingChar) {
+    if (existingQuery.rows.length > 0) {
+      const existingChar = existingQuery.rows[0];
+      
       // Update with HanziDB data if available
       if (hanziData) {
-        await db.update(characters)
-          .set({
-            pinyin: pinyin,
-            strokes: hanziData.strokes,
-            radical: hanziData.radical,
-            hskLevel: hanziData.hskLevel,
-            frequency: hanziData.frequency
-          })
-          .where(eq(characters.id, existingChar.id))
-          .execute();
+        await pool.query(
+          `UPDATE characters 
+           SET pinyin = $1, 
+               strokes = $2, 
+               radical = $3, 
+               hsk_level = $4, 
+               frequency = $5
+           WHERE id = $6`,
+          [
+            pinyin,
+            hanziData.strokes,
+            hanziData.radical,
+            hanziData.hskLevel,
+            hanziData.frequency,
+            existingChar.id
+          ]
+        );
         
         stats.charactersUpdated++;
       }
       return existingChar.id;
     }
     
-    // Add new character
-    const newChars = await db.insert(characters)
-      .values({
-        character: character,
-        pinyin: pinyin,
-        strokes: hanziData ? hanziData.strokes : null,
-        radical: hanziData ? hanziData.radical : null,
-        hskLevel: hanziData ? hanziData.hskLevel : null,
-        frequency: hanziData ? hanziData.frequency : null
-      })
-      .returning();
+    // Add new character with direct SQL
+    const newCharQuery = await pool.query(
+      `INSERT INTO characters 
+       (character, pinyin, strokes, radical, hsk_level, frequency)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING id`,
+      [
+        character,
+        pinyin,
+        hanziData ? hanziData.strokes : null,
+        hanziData ? hanziData.radical : null,
+        hanziData ? hanziData.hskLevel : null,
+        hanziData ? hanziData.frequency : null
+      ]
+    );
     
     stats.charactersAdded++;
-    return newChars[0].id;
+    return newCharQuery.rows[0].id;
   } catch (err) {
     console.error(`Error adding/updating character ${character}:`, err);
     stats.errors++;
@@ -224,9 +232,6 @@ async function addOrUpdateCharacter(character, pinyin, hanziData) {
 // Function to add a definition to the database
 async function addDefinition(characterId, definition, order) {
   try {
-    // Use schema
-    const { characterDefinitions } = schema;
-    
     // Extract part of speech if present (usually in parentheses at start of definition)
     let pos = null;
     const posMatch = definition.match(/^\(([a-zA-Z,\s]+)\)/);
@@ -235,15 +240,24 @@ async function addDefinition(characterId, definition, order) {
       definition = definition.substring(posMatch[0].length).trim();
     }
     
-    // Add definition using Drizzle
-    await db.insert(characterDefinitions)
-      .values({
-        characterId: characterId,
-        definition: definition,
-        partOfSpeech: pos,
-        order: order
-      })
-      .execute();
+    // Check for existing definition with same text to avoid duplicates
+    const existingDefQuery = await pool.query(
+      'SELECT id FROM character_definitions WHERE character_id = $1 AND definition = $2 AND COALESCE(part_of_speech, \'\') = COALESCE($3, \'\')',
+      [characterId, definition, pos]
+    );
+    
+    if (existingDefQuery.rows.length > 0) {
+      // Definition already exists, skip
+      return true;
+    }
+    
+    // Add definition using direct SQL
+    await pool.query(
+      `INSERT INTO character_definitions 
+       (character_id, definition, part_of_speech, "order")
+       VALUES ($1, $2, $3, $4)`,
+      [characterId, definition, pos, order]
+    );
     
     stats.definitionsAdded++;
     return true;
@@ -281,6 +295,10 @@ async function main() {
     
     // Process CC-CEDICT data with HanziDB enrichment
     await processCedictData(hanziMap);
+    
+    // Create relationships between characters and multi-character compounds
+    console.log('Creating relationships between characters and compound words...');
+    await createCharacterRelationships();
     
     // Clean up temporary files
     cleanup();

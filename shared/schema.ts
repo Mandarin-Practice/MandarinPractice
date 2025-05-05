@@ -172,3 +172,33 @@ export const learnedDefinitionsRelations = relations(learnedDefinitions, ({ one 
     references: [users.id]
   }),
 }));
+
+// Character compounds table for relationships between characters and compound words
+export const characterCompounds = pgTable("character_compounds", {
+  id: serial("id").primaryKey(),
+  compoundId: integer("compound_id").notNull().references(() => characters.id), // The multi-character word/phrase
+  componentId: integer("component_id").notNull().references(() => characters.id), // The individual character that makes up the compound
+  position: integer("position").notNull(), // Position of the character in the compound (0-based)
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const characterCompoundSchema = createInsertSchema(characterCompounds).pick({
+  compoundId: true,
+  componentId: true,
+  position: true,
+});
+
+export type InsertCharacterCompound = z.infer<typeof characterCompoundSchema>;
+export type CharacterCompound = typeof characterCompounds.$inferSelect;
+
+// Add compound relations to the existing character relations
+export const characterCompoundsRelations = relations(characterCompounds, ({ one }) => ({
+  compound: one(characters, {
+    fields: [characterCompounds.compoundId],
+    references: [characters.id]
+  }),
+  component: one(characters, {
+    fields: [characterCompounds.componentId],
+    references: [characters.id]
+  }),
+}));
