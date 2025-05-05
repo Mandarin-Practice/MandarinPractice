@@ -1,57 +1,73 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import bambooSvg from "@/assets/bamboo.svg";
-import bambooBackground from "@/assets/bamboo-background.svg";
+import bambooSimple from "@/assets/bamboo-simple.svg";
+import panda from "@/assets/panda.svg";
 
 export default function Home() {
   return (
     <div className="py-6">
       <div 
-        className="max-w-3xl mx-auto text-center mb-12 relative"
+        className="max-w-3xl mx-auto text-center mb-12 relative overflow-hidden"
         style={{
-          backgroundImage: `url(${bambooBackground})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          backgroundBlendMode: 'soft-light',
+          background: "linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)",
           borderRadius: '1rem',
           padding: '2rem',
-          boxShadow: '0 10px 25px rgba(0,0,0,0.05)'
+          boxShadow: '0 10px 25px rgba(0,0,0,0.08)'
         }}
       >
+        {/* Background patterns */}
+        <div className="absolute inset-0 z-0 opacity-5">
+          <div className="absolute top-0 left-0 w-full h-full" 
+               style={{
+                 backgroundImage: "radial-gradient(circle, #4CAF50 1px, transparent 1px)",
+                 backgroundSize: "20px 20px"
+               }} />
+        </div>
+        
         {/* Bamboo decorations on left and right sides */}
-        <div className="hidden md:block absolute left-0 top-0 h-full" style={{ transform: 'translateX(-80%)' }}>
-          <img src={bambooSvg} alt="Bamboo decoration" className="h-full" style={{ maxWidth: '120px' }} />
+        <div className="hidden md:block absolute left-0 top-0 h-full z-10 opacity-70" style={{ transform: 'translateX(-40%)' }}>
+          <img src={bambooSimple} alt="Bamboo decoration" className="h-full" style={{ maxWidth: '100px' }} />
         </div>
         
-        <div className="hidden md:block absolute right-0 top-0 h-full" style={{ transform: 'translateX(80%) scaleX(-1)' }}>
-          <img src={bambooSvg} alt="Bamboo decoration" className="h-full" style={{ maxWidth: '120px' }} />
+        <div className="hidden md:block absolute right-0 top-0 h-full z-10 opacity-70" style={{ transform: 'translateX(40%)' }}>
+          <img src={bambooSimple} alt="Bamboo decoration" className="h-full" style={{ maxWidth: '100px' }} />
         </div>
         
-        {/* Main content with bamboo-themed background */}
-        <div className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 p-6 rounded-xl">
+        {/* Main content */}
+        <div className="relative z-20 bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
+          {/* Panda at the top */}
           <div className="mx-auto w-fit mb-6">
-            <img src={bambooSvg} alt="Bamboo" className="h-16 opacity-90" />
+            <img src={panda} alt="Panda" className="h-32 transform -translate-y-16 mb-[-3rem]" />
           </div>
           
-          <h1 className="text-5xl font-extrabold mb-6 text-primary">
+          <h1 className="text-5xl font-extrabold mb-6 text-primary relative">
             Mandarin Practice
+            <span className="absolute -top-3 -right-3 text-xs bg-red-500 text-white px-2 py-1 rounded-full transform rotate-12">中文</span>
           </h1>
-          <p className="text-xl text-gray-800 dark:text-gray-200 mb-8 font-medium">
+          
+          <p className="text-xl text-gray-700 dark:text-gray-300 mb-8 font-medium">
             Improve your Mandarin comprehension one sentence at a time
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" className="bg-primary hover:bg-blue-600">
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-4">
+            <Button asChild size="lg" className="bg-primary hover:bg-blue-600 text-white font-bold shadow-md">
               <Link href="/practice">
                 Start Practicing
               </Link>
             </Button>
-            <Button asChild variant="outline" size="lg">
+            <Button asChild variant="outline" size="lg" className="border-primary hover:bg-primary/10 font-bold">
               <Link href="/word-list">
                 Manage Word List
               </Link>
             </Button>
+          </div>
+          
+          {/* Chinese characters for decoration */}
+          <div className="flex justify-center space-x-4 mt-6 text-2xl text-gray-400 dark:text-gray-600 font-bold">
+            <span>学习</span>
+            <span>练习</span>
+            <span>掌握</span>
           </div>
         </div>
       </div>

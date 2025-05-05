@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Panda face -->
+  <g>
+    <!-- White body -->
+    <ellipse cx="256" cy="256" rx="180" ry="190" fill="white" />
+    
+    <!-- Black ears -->
+    <circle cx="140" cy="120" r="50" fill="black" />
+    <circle cx="372" cy="120" r="50" fill="black" />
+    
+    <!-- Black eye patches -->
+    <ellipse cx="180" cy="220" rx="55" ry="65" fill="black" />
+    <ellipse cx="332" cy="220" rx="55" ry="65" fill="black" />
+    
+    <!-- White eyes -->
+    <circle cx="180" cy="210" r="18" fill="white" />
+    <circle cx="332" cy="210" r="18" fill="white" />
+    
+    <!-- Black pupils -->
+    <circle cx="180" cy="210" r="8" fill="black" />
+    <circle cx="332" cy="210" r="8" fill="black" />
+    
+    <!-- White highlight in eyes -->
+    <circle cx="177" cy="207" r="3" fill="white" />
+    <circle cx="329" cy="207" r="3" fill="white" />
+    
+    <!-- Black nose -->
+    <ellipse cx="256" cy="270" rx="25" ry="18" fill="black" />
+    
+    <!-- Black mouth -->
+    <path d="M256 270 Q256 320 216 320" stroke="black" stroke-width="6" fill="none" />
+    <path d="M256 270 Q256 320 296 320" stroke="black" stroke-width="6" fill="none" />
+    
+    <!-- Black limbs (peeking from below) -->
+    <ellipse cx="180" cy="400" rx="30" ry="25" fill="black" />
+    <ellipse cx="332" cy="400" rx="30" ry="25" fill="black" />
+  </g>
+</svg>

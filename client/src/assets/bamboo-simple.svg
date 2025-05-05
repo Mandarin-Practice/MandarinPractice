@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 600">
+  <defs>
+    <linearGradient id="bambooGreen" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#388E3C;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4CAF50;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="leafGreen" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#66BB6A;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#388E3C;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Bamboo stalk -->
+  <rect x="90" y="0" width="20" height="600" fill="url(#bambooGreen)" />
+  
+  <!-- Bamboo nodes -->
+  <ellipse cx="100" cy="50" rx="15" ry="4" fill="#2E7D32" />
+  <ellipse cx="100" cy="150" rx="15" ry="4" fill="#2E7D32" />
+  <ellipse cx="100" cy="250" rx="15" ry="4" fill="#2E7D32" />
+  <ellipse cx="100" cy="350" rx="15" ry="4" fill="#2E7D32" />
+  <ellipse cx="100" cy="450" rx="15" ry="4" fill="#2E7D32" />
+  <ellipse cx="100" cy="550" rx="15" ry="4" fill="#2E7D32" />
+  
+  <!-- Bamboo leaves -->
+  <path d="M110 40C150 10 180 30 160 60C140 80 110 70 110 40Z" fill="url(#leafGreen)" />
+  <path d="M110 140C150 110 180 130 160 160C140 180 110 170 110 140Z" fill="url(#leafGreen)" />
+  <path d="M110 240C150 210 180 230 160 260C140 280 110 270 110 240Z" fill="url(#leafGreen)" />
+  <path d="M110 340C150 310 180 330 160 360C140 380 110 370 110 340Z" fill="url(#leafGreen)" />
+  <path d="M110 440C150 410 180 430 160 460C140 480 110 470 110 440Z" fill="url(#leafGreen)" />
+  
+  <path d="M90 100C50 70 20 90 40 120C60 140 90 130 90 100Z" fill="url(#leafGreen)" />
+  <path d="M90 200C50 170 20 190 40 220C60 240 90 230 90 200Z" fill="url(#leafGreen)" />
+  <path d="M90 300C50 270 20 290 40 320C60 340 90 330 90 300Z" fill="url(#leafGreen)" />
+  <path d="M90 400C50 370 20 390 40 420C60 440 90 430 90 400Z" fill="url(#leafGreen)" />
+  <path d="M90 500C50 470 20 490 40 520C60 540 90 530 90 500Z" fill="url(#leafGreen)" />
+</svg>
