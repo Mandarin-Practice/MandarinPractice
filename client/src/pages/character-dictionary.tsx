@@ -201,17 +201,17 @@ export default function CharacterDictionary() {
                     Error loading characters: {charactersQuery.error.message}
                   </div>
                 ) : charactersQuery.data && charactersQuery.data.length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     {charactersQuery.data.map((char) => (
                       <Button
                         key={char.id}
                         variant={selectedCharacter?.id === char.id ? "default" : "outline"}
-                        className={`h-16 text-xl ${selectedCharacter?.id === char.id ? 'ring-2 ring-primary' : ''}`}
+                        className={`h-20 text-xl ${selectedCharacter?.id === char.id ? 'ring-2 ring-primary' : ''}`}
                         onClick={() => handleSelectCharacter(char)}
                       >
-                        <div className="flex flex-col items-center">
-                          <span className="text-2xl mb-1">{char.character}</span>
-                          <span className="text-xs">{char.pinyin}</span>
+                        <div className="flex flex-col items-center w-full">
+                          <span className="text-2xl mb-1 truncate max-w-full">{char.character}</span>
+                          <span className="text-xs truncate max-w-full">{char.pinyin}</span>
                         </div>
                       </Button>
                     ))}
@@ -342,19 +342,19 @@ export default function CharacterDictionary() {
                           <div className="text-sm text-muted-foreground mb-1">
                             {selectedCharacter?.character} is composed of the following characters:
                           </div>
-                          <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                             {componentsQuery.data
                               .sort((a, b) => a.position - b.position)
                               .map((item) => (
                                 <Button
                                   key={`${item.component.id}-${item.position}`}
                                   variant="outline"
-                                  className="h-16 text-xl"
+                                  className="h-20 text-xl"
                                   onClick={() => handleSelectCharacter(item.component)}
                                 >
-                                  <div className="flex flex-col items-center">
-                                    <span className="text-2xl mb-1">{item.component.character}</span>
-                                    <span className="text-xs">{item.component.pinyin}</span>
+                                  <div className="flex flex-col items-center w-full">
+                                    <span className="text-2xl mb-1 truncate max-w-full">{item.component.character}</span>
+                                    <span className="text-xs truncate max-w-full">{item.component.pinyin}</span>
                                   </div>
                                 </Button>
                               ))}
@@ -385,17 +385,17 @@ export default function CharacterDictionary() {
                           <div className="text-sm text-muted-foreground mb-1">
                             {selectedCharacter?.character} is used in the following words:
                           </div>
-                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                          <div className="grid grid-cols-2 gap-2">
                             {compoundsQuery.data.map((item) => (
                               <Button
                                 key={item.compound.id}
                                 variant="outline"
-                                className="h-16 text-xl"
+                                className="h-20 text-xl"
                                 onClick={() => handleSelectCharacter(item.compound)}
                               >
-                                <div className="flex flex-col items-center">
-                                  <span className="text-2xl mb-1">{item.compound.character}</span>
-                                  <span className="text-xs">{item.compound.pinyin}</span>
+                                <div className="flex flex-col items-center w-full">
+                                  <span className="text-2xl mb-1 truncate max-w-full">{item.compound.character}</span>
+                                  <span className="text-xs truncate max-w-full">{item.compound.pinyin}</span>
                                 </div>
                               </Button>
                             ))}
