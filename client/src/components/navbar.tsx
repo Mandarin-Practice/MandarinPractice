@@ -24,7 +24,7 @@ export default function Navbar({ theme, toggleTheme }: NavbarProps) {
   ];
 
   return (
-    <header className="bg-background/95 border-b border-border shadow-md sticky top-0 z-10 opaque-header">
+    <header className="border-b border-border shadow-md sticky top-0 z-10 opaque-header">
       <div className="container mx-auto px-4 py-4 max-w-5xl">
         <div className="flex justify-between items-center">
           <Link href="/" className="flex items-center">
@@ -67,7 +67,7 @@ export default function Navbar({ theme, toggleTheme }: NavbarProps) {
 
         {/* Mobile navigation */}
         {mobileMenuOpen && (
-          <nav className="md:hidden mt-4 bg-background/95 border-t border-border pt-2 opaque-header">
+          <nav className="md:hidden mt-4 border-t border-border pt-2 opaque-header">
             {navItems.map((item) => (
               <Link 
                 key={item.path} 

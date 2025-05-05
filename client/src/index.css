@@ -158,17 +158,19 @@
   position: relative;
   z-index: 10;
   isolation: isolate;
-  background-color: hsl(var(--background)/0.95) !important;
+  background-color: hsl(var(--primary)/0.15) !important;
   backdrop-filter: none !important;
   border-bottom: 1px solid hsl(var(--border));
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .opaque-footer {
   position: relative;
   z-index: 10;
   isolation: isolate;
-  background-color: hsl(var(--background)/0.95) !important;
+  background-color: hsl(var(--primary)/0.15) !important;
   backdrop-filter: none !important;
   border-top: 1px solid hsl(var(--border));
+  box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.05);
 }
 
