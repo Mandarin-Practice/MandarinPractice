@@ -1,73 +1,73 @@
-/* Import more playful fonts for Chinese characters and clean modern font for UI */
-@import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=ZCOOL+KuaiLe&family=ZCOOL+QingKe+HuangYou&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+/* Import elegant fonts for Chinese characters and complementary UI font */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  /* Clean, Modern Learning Theme */
-  --background: 0 0% 100%; /* White background */
-  --foreground: 222 47% 11%; /* Dark blue-gray for text */
-  --muted: 210 40% 96.1%; /* Light gray for muted areas */
-  --muted-foreground: 215.4 16.3% 46.9%; /* Medium gray for muted text */
+  /* Refined Chinese Cultural Theme */
+  --background: 40 70% 96%; /* Light warm beige #FAF5E9 */
+  --foreground: 25 60% 25%; /* Rich brown text #7D4B2B */
+  --muted: 40 30% 92%; /* Lighter beige for muted areas */
+  --muted-foreground: 25 40% 40%; /* Softer brown for muted text */
   
-  --popover: 0 0% 100%; /* White for popovers */
-  --popover-foreground: 222 47% 11%; /* Same as main text */
+  --popover: 40 70% 98%; /* Slightly lighter beige for popovers */
+  --popover-foreground: 25 60% 25%; /* Same as main text */
   
-  --card: 0 0% 100%; /* White for cards */
-  --card-foreground: 222 47% 11%; /* Same as main text */
+  --card: 40 70% 98%; /* Slightly lighter beige for cards */
+  --card-foreground: 25 60% 25%; /* Same as main text */
   
-  --border: 214.3 31.8% 91.4%; /* Light gray for borders */
-  --input: 214.3 31.8% 91.4%; /* Same light gray for inputs */
+  --border: 30 30% 85%; /* Soft beige-brown for borders */
+  --input: 30 30% 85%; /* Same for inputs */
   
-  --primary: 222.2 47.4% 15%; /* Deep navy blue as primary */
-  --primary-foreground: 210 40% 98%; /* White text on primary buttons */
+  --primary: 0 68% 42%; /* Rich traditional Chinese red #C42E1B */
+  --primary-foreground: 40 70% 98%; /* Light beige text on primary buttons */
   
-  --secondary: 210 40% 96.1%; /* Light gray as secondary */
-  --secondary-foreground: 222.2 47.4% 11.2%; /* Dark text on secondary */
+  --secondary: 40 30% 92%; /* Light beige as secondary */
+  --secondary-foreground: 25 60% 25%; /* Brown text on secondary */
   
-  --accent: 210 40% 96.1%; /* Light blue accent */
-  --accent-foreground: 222.2 47.4% 11.2%; /* Dark text on accent */
+  --accent: 35 80% 90%; /* Warm accent color */
+  --accent-foreground: 0 68% 42%; /* Red text on accent backgrounds */
   
   --destructive: 0 84.2% 60.2%; /* Keep destructive red */
-  --destructive-foreground: 210 40% 98%; /* Light text on destructive */
+  --destructive-foreground: 40 70% 98%; /* Light text on destructive */
   
-  --ring: 215 20.2% 65.1%; /* Blue-gray for focus rings */
+  --ring: 0 68% 42%; /* Red for focus rings */
   --radius: 0.5rem; /* Rounded corners */
 }
 
 .dark {
-  /* Dark mode - clean, modern */
-  --background: 222.2 84% 4.9%; /* Very dark blue-gray */
-  --foreground: 210 40% 98%; /* Almost white text */
+  /* Dark mode with rich Chinese cultural tones */
+  --background: 25 30% 15%; /* Dark brown background #362A21 */
+  --foreground: 40 30% 90%; /* Light beige text */
   
-  --muted: 217.2 32.6% 17.5%; /* Dark muted areas */
-  --muted-foreground: 215 20.2% 65.1%; /* Light gray for muted text */
+  --muted: 25 20% 22%; /* Darker muted areas */
+  --muted-foreground: 40 15% 70%; /* Light beige for muted text */
   
-  --popover: 222.2 84% 4.9%; /* Same as background */
-  --popover-foreground: 210 40% 98%; /* Same as foreground */
+  --popover: 25 30% 15%; /* Same as background */
+  --popover-foreground: 40 30% 90%; /* Same as foreground */
   
-  --card: 222.2 84% 4.9%; /* Same as background */
-  --card-foreground: 210 40% 98%; /* Same as foreground */
+  --card: 25 30% 18%; /* Slightly lighter than background */
+  --card-foreground: 40 30% 90%; /* Same as foreground */
   
-  --border: 217.2 32.6% 17.5%; /* Dark border */
-  --input: 217.2 32.6% 17.5%; /* Same as border */
+  --border: 30 15% 25%; /* Dark border */
+  --input: 30 15% 25%; /* Same as border */
   
-  --primary: 210 40% 98%; /* Bright white as primary */
-  --primary-foreground: 222.2 47.4% 11.2%; /* Dark text on primary */
+  --primary: 0 68% 48%; /* Brighter red in dark mode */
+  --primary-foreground: 40 30% 95%; /* Light beige text */
   
-  --secondary: 217.2 32.6% 17.5%; /* Dark gray as secondary */
-  --secondary-foreground: 210 40% 98%; /* Light text on secondary */
+  --secondary: 25 20% 22%; /* Dark beige-brown as secondary */
+  --secondary-foreground: 40 30% 90%; /* Light beige text on secondary */
   
-  --accent: 217.2 32.6% 17.5%; /* Dark accent */
-  --accent-foreground: 210 40% 98%; /* Light text on accent */
+  --accent: 25 15% 28%; /* Dark accent */
+  --accent-foreground: 0 68% 55%; /* Brighter red text on accent */
   
-  --destructive: 0 62.8% 30.6%; /* Darker destructive red */
-  --destructive-foreground: 0 0% 98%; /* Light text on destructive */
+  --destructive: 0 62.8% 50.6%; /* Brighter destructive red */
+  --destructive-foreground: 0 0% 98%; /* Light text */
   
-  --ring: 212.7 26.8% 83.9; /* Light ring for dark mode */
+  --ring: 0 68% 48%; /* Red for focus rings */
 }
 
 @layer base {
@@ -77,32 +77,29 @@
 
   body {
     @apply antialiased bg-background text-foreground;
-    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
-    background-image: 
-      radial-gradient(hsl(var(--primary)/0.03) 1px, transparent 0),
-      radial-gradient(hsl(var(--primary)/0.03) 1px, transparent 0);
-    background-size: 20px 20px;
-    background-position: 0 0, 10px 10px;
+    font-family: 'Crimson Pro', serif;
+    /* Subtle traditional pattern background */
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23c42e1b' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
     background-attachment: fixed;
   }
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-medium text-foreground;
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Crimson Pro', serif;
     letter-spacing: -0.01em;
   }
 
-  /* Chinese text styling - more playful */
+  /* Chinese text styling - elegant */
   .chinese-text {
-    font-family: 'ZCOOL QingKe HuangYou', sans-serif;
-    @apply text-primary font-normal;
+    font-family: 'Noto Serif SC', serif;
+    @apply text-primary font-normal tracking-wide;
   }
   
-  /* Modern textarea styling */
+  /* Chinese textarea styling with rice paper texture */
   .chinese-textarea {
-    font-family: 'ZCOOL QingKe HuangYou', 'Poppins', sans-serif;
-    @apply text-base leading-relaxed rounded-md;
-    background-image: linear-gradient(transparent, transparent calc(1.5em - 1px), hsl(var(--border)/0.15) calc(1.5em - 1px), hsl(var(--border)/0.15) 1.5em, transparent 1.5em);
+    font-family: 'Noto Serif SC', serif;
+    @apply text-base leading-relaxed rounded-md border-primary/20;
+    background-image: linear-gradient(transparent, transparent calc(1.5em - 1px), hsl(var(--primary)/0.1) calc(1.5em - 1px), hsl(var(--primary)/0.1) 1.5em, transparent 1.5em);
     background-size: 100% 1.5em;
   }
   
@@ -118,7 +115,7 @@
     background: linear-gradient(
       90deg,
       transparent 0%,
-      hsl(var(--primary)/0.05) 50%,
+      hsl(var(--primary)/0.1) 50%,
       transparent 100%
     );
     transform: translateX(-100%);
@@ -130,21 +127,23 @@
     }
   }
   
-  /* Clean badge for Chinese characters */
+  /* Chinese badge styling */
   .chinese-badge {
-    @apply inline-block text-xs px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium;
+    @apply inline-block text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium border border-primary/20;
+    font-family: 'Noto Serif SC', serif;
   }
 
-  /* Playful Chinese characters - for display/headers */
+  /* Chinese display text for headers */
   .chinese-display {
-    font-family: 'Ma Shan Zheng', sans-serif;
-    @apply text-primary text-lg;
+    font-family: 'Noto Serif SC', serif;
+    @apply text-primary text-lg font-medium tracking-wide;
   }
   
-  /* Card custom styling */
+  /* Card custom styling with chinese elements */
   .card-custom {
-    @apply bg-card border-border shadow-sm;
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    @apply bg-card border-border rounded-md overflow-hidden;
+    box-shadow: 0 4px 12px rgba(125, 75, 43, 0.1);
+    border-top: 3px solid hsl(var(--primary));
   }
 }
 

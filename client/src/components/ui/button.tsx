@@ -9,17 +9,17 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm border border-primary/10",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm",
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm border border-destructive/10",
         outline:
-          "border border-input bg-background hover:bg-accent hover:text-accent-foreground shadow-sm",
+          "border border-primary/30 bg-background text-primary hover:bg-primary/10 hover:border-primary/50 shadow-sm",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm border border-border",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        // Modern playful Chinese button
-        chinese: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md font-medium rounded-lg transition-all duration-200",
+        // Traditional Chinese-style button
+        chinese: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md border border-primary/50 font-medium relative overflow-hidden transition-all duration-200 after:absolute after:inset-0 after:z-0 after:bg-primary/0 hover:after:bg-white/10 after:transition-colors",
       },
       size: {
         default: "h-10 px-4 py-2",
