@@ -19,7 +19,7 @@ import {
   wordProficiency
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, like, desc, asc, and, or, sql } from "drizzle-orm";
+import { eq, like, desc, asc, and, or, sql, inArray } from "drizzle-orm";
 import { convertNumericPinyinToTonal, isNumericPinyin } from './utils/pinyin-converter';
 
 // Interface for CRUD operations on vocabulary
@@ -342,8 +342,22 @@ export class DatabaseStorage implements IStorage {
       }
     }
     
-    // Otherwise, search by character or pinyin
-    // but still only return proper Chinese characters
+    // Search by English definition
+    // This requires a more complex query joining characters and their definitions
+    const charactersWithMatchingDefinitions = await db.select({
+      characterId: characterDefinitions.characterId
+    })
+    .from(characterDefinitions)
+    .where(like(characterDefinitions.definition, `%${query}%`))
+    .groupBy(characterDefinitions.characterId);
+    
+    // Extract the characterIds into an array
+    const characterIds = charactersWithMatchingDefinitions.map(result => result.characterId);
+    
+    // If we have matches by definition, add them to the search conditions
+    let searchResults: Character[] = [];
+    
+    // Search by character, pinyin or get characters with matching definitions
     const results = await db.select()
       .from(characters)
       .where(
@@ -351,12 +365,17 @@ export class DatabaseStorage implements IStorage {
           sql`characters.character ~ '^[\u4e00-\u9fff]+$'`, // Only return Chinese characters
           or(
             like(characters.character, `%${query}%`),
-            like(characters.pinyin, `%${query}%`)
+            like(characters.pinyin, `%${query}%`),
+            characterIds.length > 0 ? 
+              inArray(characters.id, characterIds) :
+              // If no matching definitions, this condition should be false but not break the query
+              // Use a condition that will never match but won't cause SQL errors
+              eq(sql`1`, sql`0`)
           )
         )
       )
       .orderBy(asc(characters.frequency))
-      .limit(1000); // Increased from 100 to 1000 to show more search results
+      .limit(1000);
     
     // Convert numeric pinyin to tonal pinyin for display
     return this.formatPinyinForCharacters(results);
