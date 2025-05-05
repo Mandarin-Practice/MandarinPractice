@@ -1,5 +1,7 @@
 import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { Link } from "wouter";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -7,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
+import WordChip from "@/components/word-chip";
 
 // Create inline spinner component since the external one isn't working
 const Spinner = ({ className = "", size = "md" }: { className?: string, size?: "sm" | "md" | "lg" }) => {
@@ -70,31 +73,40 @@ interface SavedWord {
 // See if the document object is available (client-side only)
 const isClient = typeof window !== 'undefined';
 
+// Interface for Vocabulary from database
+interface Vocabulary {
+  id: number;
+  chinese: string;
+  pinyin: string;
+  english: string;
+  active: string;
+}
+
+// Interface for word proficiency
+interface WordProficiency {
+  id: number;
+  wordId: number;
+  correctCount: number;
+  incorrectCount: number;
+  lastPracticed?: string;
+}
+
 export default function CharacterDictionary() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
-  const [savedWords, setSavedWords] = useState<SavedWord[]>([]);
   const { toast } = useToast();
   const searchInputRef = React.useRef<HTMLInputElement>(null);
+  const queryClient = useQueryClient();
   
-  // Load saved words from localStorage when component mounts
-  React.useEffect(() => {
-    const loadSavedWords = () => {
-      const savedWordsJson = localStorage.getItem("savedWords");
-      if (savedWordsJson) {
-        try {
-          const words = JSON.parse(savedWordsJson);
-          setSavedWords(words);
-        } catch (e) {
-          console.error("Failed to parse saved words:", e);
-          // In case of error, clear the localStorage
-          localStorage.removeItem("savedWords");
-        }
-      }
-    };
-    
-    loadSavedWords();
-  }, []);
+  // Query for vocabulary words
+  const vocabularyQuery = useQuery({
+    queryKey: ['/api/vocabulary'],
+    queryFn: async () => {
+      const response = await fetch('/api/vocabulary');
+      if (!response.ok) throw new Error('Failed to fetch vocabulary');
+      return response.json() as Promise<Vocabulary[]>;
+    },
+  });
   
   // Add keyboard shortcut (Ctrl+K or Cmd+K) to focus search
   React.useEffect(() => {
@@ -172,74 +184,119 @@ export default function CharacterDictionary() {
     setSelectedCharacter(character);
   };
 
-  // Add a definition to the user's word list
+  // Add word mutation
+  const addVocabularyMutation = useMutation({
+    mutationFn: async (word: { chinese: string, pinyin: string, english: string }) => {
+      const response = await apiRequest('POST', '/api/vocabulary', { words: [word] });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to add word');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/vocabulary'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Delete word mutation
+  const deleteVocabularyMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest('DELETE', `/api/vocabulary/${id}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete word');
+      }
+      return id;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/vocabulary'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Add a definition to the user's word list (vocabulary database)
   const handleToggleLearned = async (definitionId: number) => {
     if (!selectedCharacter) return;
     
     const definition = definitionsQuery.data?.find(def => def.id === definitionId);
     if (!definition) return;
     
-    // Create a new saved word
-    const newWord: SavedWord = {
-      id: Date.now(), // Use timestamp as unique ID
-      character: selectedCharacter.character,
-      definition: definition.definition,
+    // Create a new vocabulary word
+    const newWord = {
+      chinese: selectedCharacter.character,
       pinyin: selectedCharacter.pinyin,
-      timestamp: Date.now()
+      english: definition.definition,
+      active: "true"
     };
     
-    // Check if word is already in the list (by character and definition)
-    const isAlreadySaved = savedWords.some(word => 
-      word.character === newWord.character && word.definition === newWord.definition
+    // Check if word is already in the vocabulary list
+    const isAlreadyInVocabulary = vocabularyQuery.data?.some(word => 
+      word.chinese === newWord.chinese && word.english === newWord.english
     );
     
-    if (isAlreadySaved) {
+    if (isAlreadyInVocabulary) {
       toast({
         title: "Already Added",
-        description: `"${newWord.character}: ${newWord.definition}" is already in your word list`,
+        description: `"${newWord.chinese}: ${newWord.english}" is already in your vocabulary list`,
         variant: "default",
       });
       return;
     }
     
-    // Add the new word to the list
-    const updatedSavedWords = [...savedWords, newWord];
-    
-    // Update state and localStorage
-    setSavedWords(updatedSavedWords);
-    localStorage.setItem("savedWords", JSON.stringify(updatedSavedWords));
-    
-    // Show success message
-    toast({
-      title: "Word Added to List",
-      description: `"${newWord.character}: ${newWord.definition}" has been added to your word list`,
-      variant: "default",
-    });
+    // Add to vocabulary database
+    try {
+      await addVocabularyMutation.mutateAsync(newWord);
+      toast({
+        title: "Word Added to List",
+        description: `"${newWord.chinese}: ${newWord.english}" has been added to your vocabulary list`,
+        variant: "default",
+      });
+    } catch (error) {
+      // Error is handled by the mutation
+    }
   };
 
-  // Function to remove a word from the saved list
+  // Function to remove a word from the vocabulary list
   const handleRemoveWord = (wordId: number) => {
-    const updatedWords = savedWords.filter(word => word.id !== wordId);
-    setSavedWords(updatedWords);
-    localStorage.setItem("savedWords", JSON.stringify(updatedWords));
-    
-    toast({
-      title: "Word Removed",
-      description: "The word has been removed from your list",
-      variant: "default",
-    });
+    deleteVocabularyMutation.mutate(wordId);
   };
   
-  // Function to clear all saved words
-  const handleClearAllWords = () => {
-    setSavedWords([]);
-    localStorage.removeItem("savedWords");
-    
-    toast({
-      title: "Word List Cleared",
-      description: "All words have been removed from your list",
-      variant: "default",
-    });
+  // Function to clear all vocabulary words
+  const handleClearAllWords = async () => {
+    try {
+      const response = await apiRequest('DELETE', '/api/vocabulary');
+      if (!response.ok) {
+        throw new Error('Failed to clear vocabulary');
+      }
+      
+      queryClient.invalidateQueries({ queryKey: ['/api/vocabulary'] });
+      
+      toast({
+        title: "Word List Cleared",
+        description: "All words have been removed from your vocabulary list",
+        variant: "default",
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'An error occurred',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
@@ -270,8 +327,8 @@ export default function CharacterDictionary() {
           <TabsTrigger value="dictionary">Dictionary</TabsTrigger>
           <TabsTrigger value="saved" className="flex items-center gap-1">
             Word List
-            {savedWords.length > 0 && (
-              <Badge className="ml-1">{savedWords.length}</Badge>
+            {!vocabularyQuery.isLoading && vocabularyQuery.data && vocabularyQuery.data.length > 0 && (
+              <Badge className="ml-1">{vocabularyQuery.data.length}</Badge>
             )}
           </TabsTrigger>
         </TabsList>
