@@ -29,13 +29,14 @@ export default function WordChip({ word, proficiency, onRemove, onToggleActive }
   };
   
   return (
-    <div className={`inline-flex items-center px-3 py-1.5 rounded-md border ${
+    <div className={`inline-flex items-center px-3 py-2 rounded-md border-2 shadow-sm ${
       isActive 
-        ? "bg-accent/30 border-primary/30 text-foreground" 
-        : "bg-background border-border text-foreground/70"
+        ? "bg-accent/40 border-primary/40 text-foreground" 
+        : "bg-accent/10 border-border text-foreground"
     }`}>
-      <span className="chinese-text mr-1.5 font-medium">{word.chinese}</span>
-      <span className="text-xs text-foreground/60 italic">({word.pinyin})</span>
+      <span className="chinese-text mr-1.5 font-bold text-primary">{word.chinese}</span>
+      <span className="text-xs text-foreground/70 italic font-medium">({word.pinyin})</span>
+      <span className="mx-1.5 font-semibold text-foreground">{word.english}</span>
       
       {/* Proficiency indicator */}
       {proficiency && Number(proficiency.attemptCount) > 0 && (

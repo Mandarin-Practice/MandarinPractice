@@ -1721,7 +1721,7 @@ export default function WordList() {
                 <div className="space-y-4 mb-4">
                   {/* Display homophone groups */}
                   {getHomophoneGroups(filterVocabulary(vocabulary)).map((group, index) => (
-                    <div key={index} className="border border-border rounded-md p-4 bg-accent/10">
+                    <div key={index} className="border-2 border-border rounded-md p-4 bg-accent/10 shadow-md">
                       <h4 className="text-sm font-medium mb-3 text-primary flex items-center">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
                           <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
@@ -1761,7 +1761,7 @@ export default function WordList() {
                     );
                     
                     return singleWords.length > 0 ? (
-                      <div className="border border-border rounded-md p-4 bg-background">
+                      <div className="border-2 border-border rounded-md p-4 bg-accent/10 shadow-md">
                         <h4 className="text-sm font-medium mb-3 text-primary flex items-center">
                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
                             <path d="M7 20h10"></path>
@@ -1788,7 +1788,7 @@ export default function WordList() {
                 </div>
               ) : (
                 // Normal list mode
-                <div className="border border-border rounded-md p-4 mb-4 bg-background">
+                <div className="border-2 border-border rounded-md p-4 mb-4 bg-accent/10 shadow-md">
                   <h4 className="text-sm font-medium mb-3 text-primary flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
                       <path d="M3 5v14"></path>
