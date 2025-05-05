@@ -2,20 +2,20 @@
 // Master script to import all character and dictionary data
 // Combines CC-CEDICT and HanziDB data to create a comprehensive Chinese dictionary
 
-// Use CommonJS modules for compatibility
-const fs = require('fs');
-const https = require('https');
-const readline = require('readline');
-const csv = require('csv-parser');
-const { Pool } = require('@neondatabase/serverless');
-const { drizzle } = require('drizzle-orm/neon-serverless');
-const { eq, like, or } = require('drizzle-orm');
-const ws = require('ws');
-const { exec } = require('child_process');
-const path = require('path');
+// Use ES Modules
+import fs from 'fs';
+import https from 'https';
+import readline from 'readline';
+import csvParser from 'csv-parser';
+import { Pool, neonConfig } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-serverless';
+import { eq, like, or } from 'drizzle-orm';
+import ws from 'ws';
+import { exec } from 'child_process';
+import path from 'path';
+import * as schema from '../shared/schema.js';
 
 // Configure neonConfig for WebSockets
-const { neonConfig } = require('@neondatabase/serverless');
 neonConfig.webSocketConstructor = ws;
 
 // Configure database connection
@@ -23,9 +23,6 @@ if (!process.env.DATABASE_URL) {
   console.error('DATABASE_URL environment variable not set');
   process.exit(1);
 }
-
-// Require schema
-const schema = require('../shared/schema');
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const db = drizzle(pool, { schema });

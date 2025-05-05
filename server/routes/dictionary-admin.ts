@@ -136,14 +136,27 @@ function setupImportProcessHandlers(process: any, res: any) {
 // GET character count
 router.get('/characters/count', async (req, res) => {
   try {
-    // Get character count directly using a simpler query
-    const result = await db.execute(`SELECT COUNT(*) as count FROM characters`);
+    // Get character and definition counts using Drizzle
+    const { characters, characterDefinitions } = schema;
     
-    // Get the first row of the result
-    const rows = result as any;
-    const count = rows[0]?.count || 0;
+    // Count characters
+    const characterCountResult = await db.select({
+      count: sql`count(*)`.mapWith(Number)
+    }).from(characters);
     
-    res.json({ count: parseInt(count) });
+    // Count definitions
+    const definitionCountResult = await db.select({
+      count: sql`count(*)`.mapWith(Number)
+    }).from(characterDefinitions);
+    
+    // Extract counts
+    const characterCount = characterCountResult[0]?.count || 0;
+    const definitionCount = definitionCountResult[0]?.count || 0;
+    
+    res.json({ 
+      count: characterCount,
+      definitionCount: definitionCount 
+    });
   } catch (error: any) {
     log(`Error counting characters: ${error}`, 'dictionary-admin');
     res.status(500).json({ error: 'Failed to count characters' });
@@ -174,8 +187,8 @@ router.post('/admin/dictionary/import-sample', (req, res) => {
     const scriptPath = path.resolve(process.cwd(), 'scripts/import-sample.js');
     log(`Starting sample import process: ${scriptPath}`, 'dictionary-admin');
     
-    // Start the import process
-    importProcess = spawn('node', [scriptPath], {
+    // Start the import process (run as ES module)
+    importProcess = spawn('node', ['--experimental-specifier-resolution=node', scriptPath], {
       env: { ...process.env },
       shell: true
     });
@@ -214,8 +227,8 @@ router.post('/admin/dictionary/import', (req, res) => {
     const scriptPath = path.resolve(process.cwd(), 'scripts/import-all-data.js');
     log(`Starting full import process: ${scriptPath}`, 'dictionary-admin');
     
-    // Start the import process
-    importProcess = spawn('node', [scriptPath], {
+    // Start the import process (run as ES module)
+    importProcess = spawn('node', ['--experimental-specifier-resolution=node', scriptPath], {
       env: { ...process.env },
       shell: true
     });

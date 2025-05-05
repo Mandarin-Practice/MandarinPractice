@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 // Import a small sample of common Chinese characters for testing
 
-// Use CommonJS modules for compatibility
-const { Pool } = require('@neondatabase/serverless');
-const { drizzle } = require('drizzle-orm/neon-serverless');
-const { eq } = require('drizzle-orm');
-const ws = require('ws');
+// Use ES modules 
+import { Pool, neonConfig } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-serverless';
+import { eq } from 'drizzle-orm';
+import ws from 'ws';
+import * as schema from '../shared/schema.js';
 
 // Configure neonConfig for WebSockets
-const { neonConfig } = require('@neondatabase/serverless');
 neonConfig.webSocketConstructor = ws;
 
 // Configure database connection
@@ -16,9 +16,6 @@ if (!process.env.DATABASE_URL) {
   console.error('DATABASE_URL environment variable not set');
   process.exit(1);
 }
-
-// Require schema
-const schema = require('../shared/schema');
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const db = drizzle(pool, { schema });
