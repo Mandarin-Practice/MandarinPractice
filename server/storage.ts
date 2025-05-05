@@ -314,16 +314,20 @@ export class DatabaseStorage implements IStorage {
   
   // Chinese character dictionary methods
   async searchCharacters(query: string): Promise<Character[]> {
+    // Regular expression for valid Chinese characters
+    const chineseCharRegex = /^[\u4e00-\u9fff]+$/;
+    
     if (!query || query.length === 0) {
-      // Return characters sorted by frequency for an empty search
+      // Return only proper Chinese characters sorted by frequency for an empty search
       return await db.select()
         .from(characters)
+        .where(sql`characters.character ~ '^[\u4e00-\u9fff]+$'`)
         .orderBy(asc(characters.frequency))
         .limit(50);
     }
     
     // If the query is exactly a Chinese character, prioritize exact matches
-    if (query.length === 1 && /[\u4e00-\u9fff]/.test(query)) {
+    if (query.length === 1 && chineseCharRegex.test(query)) {
       const exactMatches = await db.select()
         .from(characters)
         .where(eq(characters.character, query));
@@ -335,12 +339,16 @@ export class DatabaseStorage implements IStorage {
     }
     
     // Otherwise, search by character or pinyin
+    // but still only return proper Chinese characters
     return await db.select()
       .from(characters)
       .where(
-        or(
-          like(characters.character, `%${query}%`),
-          like(characters.pinyin, `%${query}%`)
+        and(
+          sql`characters.character ~ '^[\u4e00-\u9fff]+$'`, // Only return Chinese characters
+          or(
+            like(characters.character, `%${query}%`),
+            like(characters.pinyin, `%${query}%`)
+          )
         )
       )
       .orderBy(asc(characters.frequency))
