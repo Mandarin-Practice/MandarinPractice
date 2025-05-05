@@ -1829,7 +1829,7 @@ export default function WordList() {
           </div>
         </CardContent>
         
-        <CardFooter className="flex justify-between bg-accent border-t border-border">
+        <CardFooter className="flex justify-between bg-accent border-t border-border opaque-footer">
           <Button
             variant="outline"
             onClick={handleClearWords}
@@ -1861,7 +1861,7 @@ export default function WordList() {
       </Card>
       
       <Card className="border-border overflow-hidden">
-        <CardHeader className="bg-accent border-b border-border pb-4">
+        <CardHeader className="bg-accent border-b border-border pb-4 opaque-header">
           <div className="flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary mr-2">
               <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
