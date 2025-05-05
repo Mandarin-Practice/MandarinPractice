@@ -5,21 +5,21 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-bold ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:translate-y-0.5 active:shadow-none",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm border border-primary/10",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm border-none",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm border border-destructive/10",
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm border-none",
         outline:
-          "border border-primary/30 bg-background text-primary hover:bg-primary/10 hover:border-primary/50 shadow-sm",
+          "border-2 border-primary bg-background text-primary hover:bg-primary/10 shadow-sm",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm border border-border",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm border-none",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        // Traditional Chinese-style button
-        chinese: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md border border-primary/50 font-medium relative overflow-hidden transition-all duration-200 after:absolute after:inset-0 after:z-0 after:bg-primary/0 hover:after:bg-white/10 after:transition-colors",
+        // Duolingo-inspired button
+        chinese: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_6px_0_0] shadow-primary/50 border-none font-bold relative overflow-hidden transition-all duration-200 active:shadow-none active:translate-y-1.5",
       },
       size: {
         default: "h-10 px-4 py-2",

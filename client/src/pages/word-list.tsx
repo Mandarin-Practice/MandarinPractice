@@ -1604,21 +1604,15 @@ export default function WordList() {
     
       <Card className="mb-6 border-border overflow-hidden">
         <CardHeader>
-          <div className="flex items-center">
-            <div className="chinese-badge mr-2 text-sm">词汇表</div>
-            <CardTitle>Your Vocabulary Words</CardTitle>
-          </div>
+          <CardTitle>Your Vocabulary Words</CardTitle>
           <CardDescription>Add the Mandarin words you want to practice</CardDescription>
         </CardHeader>
         
         <CardContent>
           <div className="mb-6">
-            <div className="flex items-center mb-2">
-              <div className="chinese-badge mr-2">添加词汇</div>
-              <label htmlFor="word-input" className="block text-sm font-medium">
-                Add Words (one per line)
-              </label>
-            </div>
+            <label htmlFor="word-input" className="block text-sm font-bold mb-2">
+              Add Words (one per line)
+            </label>
             <div className="relative">
               <Textarea
                 id="word-input"
@@ -1644,17 +1638,16 @@ export default function WordList() {
           
           <div>
             <div className="flex justify-between items-center mb-4 border-b border-border pb-3">
-              <h3 className="text-lg font-medium flex items-center gap-2">
-                <div className="chinese-badge">当前词库</div>
-                <span>Current Word List</span>
+              <h3 className="text-lg font-bold">
+                Current Word List
               </h3>
-              <div className="flex items-center rounded-md px-3 py-1.5">
+              <div className="flex items-center px-3 py-1.5">
                 <span className="text-sm flex items-center mr-2">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1 text-primary">
                     <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
                     <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
                   </svg>
-                  <div className="chinese-badge mr-1">同音词</div> Group
+                  Group Homophones
                 </span>
                 <button 
                   type="button"
@@ -1676,9 +1669,8 @@ export default function WordList() {
             {/* Search input */}
             {vocabulary && Array.isArray(vocabulary) && vocabulary.length > 0 ? (
               <div className="relative mb-5 mt-2">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="chinese-badge text-xs">搜索</div>
-                  <div className="text-xs font-medium uppercase tracking-wider">Search Words</div>
+                <div className="text-sm font-bold mb-1">
+                  Search Words
                 </div>
                 <input
                   type="text"
@@ -1777,7 +1769,7 @@ export default function WordList() {
                             <path d="M9.5 9.4c1.1.8 1.8 1.7 2.3 3.7"></path>
                             <path d="M14.1 6a7 7 0 0 0-4.2 0"></path>
                           </svg>
-                          <span className="chinese-text mr-1">独特词汇</span> Words without homophones
+                          Words without homophones
                         </h4>
                         <div className="flex flex-wrap gap-2.5 ml-1">
                           {singleWords.map((word) => (
@@ -1805,7 +1797,7 @@ export default function WordList() {
                       <path d="M17 5v14"></path>
                       <path d="M21 5v14"></path>
                     </svg>
-                    <span className="chinese-text mr-1">所有词汇</span> All Vocabulary Words
+                    All Vocabulary Words
                   </h4>
                   <div className="flex flex-wrap gap-2.5 ml-1">
                     {filterVocabulary(vocabulary).map((word) => (
