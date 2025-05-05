@@ -373,6 +373,46 @@ router.post('/admin/dictionary/add-missing-characters', (req, res) => {
   }
 });
 
+// POST add missing definitions
+router.post('/admin/dictionary/add-missing-definitions', (req, res) => {
+  if (importStatus.isRunning) {
+    return res.status(409).json({ error: 'Import already in progress' });
+  }
+  
+  try {
+    // Reset status
+    importStatus = {
+      isRunning: true,
+      progress: 0,
+      logs: ['Starting missing definition addition...'],
+      error: null,
+      stats: {
+        charactersAdded: 0,
+        charactersUpdated: 0,
+        definitionsAdded: 0,
+        errors: 0
+      }
+    };
+    
+    const scriptPath = path.resolve(process.cwd(), 'scripts/add-missing-definitions.js');
+    log(`Starting missing definition addition process: ${scriptPath}`, 'dictionary-admin');
+    
+    // Start the process
+    importProcess = spawn('node', ['--experimental-specifier-resolution=node', scriptPath], {
+      env: { ...process.env },
+      shell: true
+    });
+    
+    // Set up process output handlers
+    setupImportProcessHandlers(importProcess, res);
+  } catch (error: any) {
+    log(`Error starting missing definition addition: ${error}`, 'dictionary-admin');
+    importStatus.isRunning = false;
+    importStatus.error = error.toString();
+    res.status(500).json({ error: error.toString() });
+  }
+});
+
 // GET import status as Server-Sent Events (SSE)
 router.get('/admin/dictionary/import-status', (req, res) => {
   // Set up SSE response headers

@@ -155,19 +155,19 @@ async function runScript(scriptPath: string, scriptName: string): Promise<boolea
   return new Promise((resolve) => {
     log(`Starting ${scriptName} process...`, 'db-seed');
     
-    const process = exec(`node ${scriptPath}`, {
+    const scriptProcess = exec(`node ${scriptPath}`, {
       env: { ...process.env }
     });
     
-    process.stdout?.on('data', (data) => {
+    scriptProcess.stdout?.on('data', (data: Buffer | string) => {
       log(`${scriptName}: ${data.toString().trim()}`, 'db-seed');
     });
     
-    process.stderr?.on('data', (data) => {
+    scriptProcess.stderr?.on('data', (data: Buffer | string) => {
       log(`${scriptName} error: ${data.toString().trim()}`, 'db-seed');
     });
     
-    process.on('close', (code) => {
+    scriptProcess.on('close', (code: number | null) => {
       if (code === 0) {
         log(`${scriptName} completed successfully!`, 'db-seed');
         resolve(true);
