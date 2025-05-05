@@ -249,18 +249,55 @@ const traditionalToSimplified = {
 function containsTraditionalCharacters(text) {
   if (!text) return false;
   
+  // Additional traditional character detection
+  const traditionalIndicators = [
+    '為', '個', '來', '這', '們', '時', '點', '後',
+    '學', '說', '還', '開', '頭', '過', '進', '發',
+    '響', '產', '電', '實', '現', '間', '語', '對',
+    '錯', '關', '經', '專', '處', '萬', '國', '華',
+    '務', '體', '總', '動', '獲', '書', '師', '買',
+    '長', '門', '問', '義', '東', '類', '書', '網',
+    '會', '車', '當', '從', '單', '鐵', '資', '業',
+    '讓', '論', '響', '應', '營', '權', '條', '難',
+    '親', '頭', '齊', '廳', '樹', '練', '務', '機',
+    '視', '識', '誰', '題', '雜', '導', '燈', '續',
+    '證', '輸', '織', '責', '職', '聯', '隱', '誤', 
+    '藝', '億', '議', '誘', '優', '願', '園', '轎',
+    '獄', '預', '閱', '躍', '員', '運', '藥', '載',
+    '壯', '準', '隨', '總', '鑽', '虛', '飄', '憐',
+    '樂', '廠', '禮', '廢', '齒', '衛', '圍'
+  ];
+  
+  // Check for exact matches of common traditional multi-character words/phrases
+  const traditionalPhrases = [
+    '這個', '個人', '時間', '學生', '學習', '開始', '電話',
+    '電腦', '發現', '還有', '裡面', '對話', '關於', '經濟',
+    '華語', '漢語', '雙語', '認為', '體育', '體操', '歷史',
+    '網絡', '網路', '單詞', '書籍', '學校', '語言', '義務',
+    '動物', '書店', '車站', '問題', '東西', '報紙', '報錶',
+    '見面', '見證', '課餘', '課間', '課本', '點心', '後面'
+  ];
+  
+  // Check for exact multi-character phrases first
+  if (traditionalPhrases.includes(text)) {
+    return true;
+  }
+  
+  // Check for individual traditional characters
   for (let i = 0; i < text.length; i++) {
     const char = text[i];
     // If the character is in our map as a key, it's traditional
-    if (Object.keys(traditionalToSimplified).includes(char)) {
+    if (Object.keys(traditionalToSimplified).includes(char) || 
+        traditionalIndicators.includes(char)) {
       return true;
     }
   }
+  
   return false;
 }
 
 // Find and log traditional characters in the database
-async function findTraditionalCharacters(limit = 100) {
+async function findTraditionalCharacters(limit = 200) {
   const client = await pool.connect();
   
   try {
