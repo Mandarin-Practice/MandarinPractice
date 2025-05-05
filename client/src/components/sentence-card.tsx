@@ -258,8 +258,8 @@ export default function SentenceCard({
                 {/* When feedback exists, show the correct answer with visual highlighting */}
                 {feedbackStatus && sentence?.english && (
                   <div className="mt-4 p-4 border border-border rounded-md bg-accent/10">
-                    <p className="text-sm font-medium mb-2 text-primary flex items-center">
-                      <span className="chinese-text mr-2">正确翻译</span> Correct translation:
+                    <p className="text-sm font-medium mb-2 text-primary">
+                      Correct translation:
                     </p>
                     <HighlightedComparison 
                       correctSentence={sentence.english} 
@@ -287,12 +287,12 @@ export default function SentenceCard({
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  variant="chinese"
+                  variant="default"
                   onClick={onNextSentence}
                   disabled={isLoading}
-                  className="border-primary"
+                  className="border-primary font-medium"
                 >
-                  <span className="chinese-text mr-1">下一句</span> Next Sentence <SkipForward className="ml-1 h-4 w-4" />
+                  Next Sentence <SkipForward className="ml-1 h-4 w-4" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>

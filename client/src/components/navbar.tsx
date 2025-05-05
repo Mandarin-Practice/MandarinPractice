@@ -45,14 +45,12 @@ export default function Navbar({ theme, toggleTheme }: NavbarProps) {
           {/* Desktop navigation */}
           <nav className="hidden md:flex space-x-4 items-center">
             {navItems.map((item) => (
-              <Link key={item.path} href={item.path}>
-                <a className={`py-2 px-4 rounded-md text-sm font-medium transition-colors border ${
-                  location === item.path
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-background text-primary border-primary hover:bg-primary hover:text-primary-foreground"
-                }`}>
-                  {item.label}
-                </a>
+              <Link key={item.path} href={item.path} className={`py-2 px-4 rounded-md text-sm font-medium transition-colors border ${
+                location === item.path
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-background text-primary border-primary hover:bg-primary hover:text-primary-foreground"
+              }`}>
+                {item.label}
               </Link>
             ))}
             
@@ -71,17 +69,17 @@ export default function Navbar({ theme, toggleTheme }: NavbarProps) {
         {mobileMenuOpen && (
           <nav className="md:hidden mt-4 bg-card border-t border-border pt-2">
             {navItems.map((item) => (
-              <Link key={item.path} href={item.path}>
-                <a
-                  className={`block py-2 px-4 my-2 rounded-md text-sm font-medium transition-colors border ${
-                    location === item.path
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-background text-primary border-primary"
-                  }`}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {item.label}
-                </a>
+              <Link 
+                key={item.path} 
+                href={item.path}
+                onClick={() => setMobileMenuOpen(false)}
+                className={`block py-2 px-4 my-2 rounded-md text-sm font-medium transition-colors border ${
+                  location === item.path
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-background text-primary border-primary"
+                }`}
+              >
+                {item.label}
               </Link>
             ))}
             
