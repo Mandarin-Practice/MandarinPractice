@@ -58,11 +58,40 @@ interface CharacterComponent {
   position: number;
 }
 
+// Type for saved word list
+interface SavedWord {
+  id: number;
+  character: string;
+  definition: string;
+  pinyin: string;
+  timestamp: number;
+}
+
 export default function CharacterDictionary() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
+  const [savedWords, setSavedWords] = useState<SavedWord[]>([]);
   const { toast } = useToast();
   const searchInputRef = React.useRef<HTMLInputElement>(null);
+  
+  // Load saved words from localStorage when component mounts
+  React.useEffect(() => {
+    const loadSavedWords = () => {
+      const savedWordsJson = localStorage.getItem("savedWords");
+      if (savedWordsJson) {
+        try {
+          const words = JSON.parse(savedWordsJson);
+          setSavedWords(words);
+        } catch (e) {
+          console.error("Failed to parse saved words:", e);
+          // In case of error, clear the localStorage
+          localStorage.removeItem("savedWords");
+        }
+      }
+    };
+    
+    loadSavedWords();
+  }, []);
   
   // Add keyboard shortcut (Ctrl+K or Cmd+K) to focus search
   React.useEffect(() => {
@@ -142,13 +171,70 @@ export default function CharacterDictionary() {
 
   // Add a definition to the user's word list
   const handleToggleLearned = async (definitionId: number) => {
-    // For now, just show a success message since login functionality isn't implemented yet
-    const definitionText = definitionsQuery.data?.find(def => def.id === definitionId)?.definition || "";
-    const characterText = selectedCharacter?.character || "";
+    if (!selectedCharacter) return;
     
+    const definition = definitionsQuery.data?.find(def => def.id === definitionId);
+    if (!definition) return;
+    
+    // Create a new saved word
+    const newWord: SavedWord = {
+      id: Date.now(), // Use timestamp as unique ID
+      character: selectedCharacter.character,
+      definition: definition.definition,
+      pinyin: selectedCharacter.pinyin,
+      timestamp: Date.now()
+    };
+    
+    // Check if word is already in the list (by character and definition)
+    const isAlreadySaved = savedWords.some(word => 
+      word.character === newWord.character && word.definition === newWord.definition
+    );
+    
+    if (isAlreadySaved) {
+      toast({
+        title: "Already Added",
+        description: `"${newWord.character}: ${newWord.definition}" is already in your word list`,
+        variant: "default",
+      });
+      return;
+    }
+    
+    // Add the new word to the list
+    const updatedSavedWords = [...savedWords, newWord];
+    
+    // Update state and localStorage
+    setSavedWords(updatedSavedWords);
+    localStorage.setItem("savedWords", JSON.stringify(updatedSavedWords));
+    
+    // Show success message
     toast({
       title: "Word Added to List",
-      description: `"${characterText}: ${definitionText}" has been added to your word list`,
+      description: `"${newWord.character}: ${newWord.definition}" has been added to your word list`,
+      variant: "default",
+    });
+  };
+
+  // Function to remove a word from the saved list
+  const handleRemoveWord = (wordId: number) => {
+    const updatedWords = savedWords.filter(word => word.id !== wordId);
+    setSavedWords(updatedWords);
+    localStorage.setItem("savedWords", JSON.stringify(updatedWords));
+    
+    toast({
+      title: "Word Removed",
+      description: "The word has been removed from your list",
+      variant: "default",
+    });
+  };
+  
+  // Function to clear all saved words
+  const handleClearAllWords = () => {
+    setSavedWords([]);
+    localStorage.removeItem("savedWords");
+    
+    toast({
+      title: "Word List Cleared",
+      description: "All words have been removed from your list",
       variant: "default",
     });
   };
@@ -175,7 +261,20 @@ export default function CharacterDictionary() {
         </div>
       </div>
       
-      <div className="flex flex-wrap gap-4 mb-6">
+      {/* Top-level tabs */}
+      <Tabs defaultValue="dictionary" className="w-full mb-6">
+        <TabsList className="mb-4">
+          <TabsTrigger value="dictionary">Dictionary</TabsTrigger>
+          <TabsTrigger value="saved" className="flex items-center gap-1">
+            Word List
+            {savedWords.length > 0 && (
+              <Badge className="ml-1">{savedWords.length}</Badge>
+            )}
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="dictionary">
+          <div className="flex flex-wrap gap-4 mb-6">
         <div className="w-full md:w-1/3">
           <div className="space-y-4">
             <div className="flex gap-2">
@@ -474,6 +573,77 @@ export default function CharacterDictionary() {
           )}
         </div>
       </div>
+      </TabsContent>
+      
+      <TabsContent value="saved">
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold">Your Word List</h2>
+            {savedWords.length > 0 && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleClearAllWords}
+                className="text-muted-foreground hover:text-destructive"
+              >
+                Clear All
+              </Button>
+            )}
+          </div>
+          
+          {savedWords.length === 0 ? (
+            <Card className="p-8 text-center">
+              <div className="max-w-md mx-auto">
+                <div className="text-xl mb-2">Your word list is empty</div>
+                <p className="text-muted-foreground mb-4">
+                  When browsing the dictionary, use the "Add to Word List" button to save words for later study.
+                </p>
+                
+                <Button 
+                  onClick={() => {
+                    const button = document.querySelector('button[value="dictionary"]') as HTMLButtonElement;
+                    button?.click();
+                  }} 
+                  variant="default"
+                >
+                  Browse Dictionary
+                </Button>
+              </div>
+            </Card>
+          ) : (
+            <div className="space-y-2">
+              {savedWords
+                .sort((a, b) => b.timestamp - a.timestamp) // Sort by newest first
+                .map((word) => (
+                  <Card key={word.id} className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3">
+                          <div className="text-3xl">{word.character}</div>
+                          <div>
+                            <div className="text-sm font-medium">{word.pinyin}</div>
+                            <div className="text-base">{word.definition}</div>
+                          </div>
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveWord(word.id)}
+                        className="text-muted-foreground hover:text-destructive"
+                      >
+                        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M12.8536 2.85355C13.0488 2.65829 13.0488 2.34171 12.8536 2.14645C12.6583 1.95118 12.3417 1.95118 12.1464 2.14645L7.5 6.79289L2.85355 2.14645C2.65829 1.95118 2.34171 1.95118 2.14645 2.14645C1.95118 2.34171 1.95118 2.65829 2.14645 2.85355L6.79289 7.5L2.14645 12.1464C1.95118 12.3417 1.95118 12.6583 2.14645 12.8536C2.34171 13.0488 2.65829 13.0488 2.85355 12.8536L7.5 8.20711L12.1464 12.8536C12.3417 13.0488 12.6583 13.0488 12.8536 12.8536C13.0488 12.6583 13.0488 12.3417 12.8536 12.1464L8.20711 7.5L12.8536 2.85355Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path>
+                        </svg>
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+            </div>
+          )}
+        </div>
+      </TabsContent>
+      </Tabs>
     </div>
   );
 }
