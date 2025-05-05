@@ -4,6 +4,8 @@ import { spawn } from 'child_process';
 import { log } from '../vite';
 import path from 'path';
 import { db } from '../db';
+import * as schema from '../../shared/schema';
+import { sql } from 'drizzle-orm';
 
 const router = Router();
 
