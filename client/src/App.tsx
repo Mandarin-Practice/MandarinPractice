@@ -4,6 +4,7 @@ import Practice from "@/pages/practice";
 import WordList from "@/pages/word-list";
 import WordDetail from "@/pages/word-detail";
 import Settings from "@/pages/settings";
+import CharacterDictionary from "@/pages/character-dictionary";
 import Navbar from "@/components/navbar";
 import NotFound from "@/pages/not-found";
 import { useEffect, useState } from "react";
@@ -43,6 +44,7 @@ function App() {
           <Route path="/practice" component={Practice} />
           <Route path="/word-list" component={WordList} />
           <Route path="/word/:id" component={WordDetail} />
+          <Route path="/dictionary" component={CharacterDictionary} />
           <Route path="/settings" component={Settings} />
           <Route component={NotFound} />
         </Switch>

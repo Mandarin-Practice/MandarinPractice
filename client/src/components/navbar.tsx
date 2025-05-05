@@ -20,6 +20,7 @@ export default function Navbar({ theme, toggleTheme }: NavbarProps) {
   const navItems = [
     { path: "/practice", label: "Practice", icon: "headphones" },
     { path: "/word-list", label: "Words", icon: "list" },
+    { path: "/dictionary", label: "Dictionary", icon: "book" },
     { path: "/settings", label: "Settings", icon: "cog" }
   ];
 
