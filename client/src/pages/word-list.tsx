@@ -1722,13 +1722,13 @@ export default function WordList() {
                   {/* Display homophone groups */}
                   {getHomophoneGroups(filterVocabulary(vocabulary)).map((group, index) => (
                     <div key={index} className="border-2 border-border rounded-md p-4 bg-accent/10 shadow-md">
-                      <h4 className="text-sm font-medium mb-3 text-primary flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
+                      <h4 className="text-md font-bold mb-3 text-primary flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
                           <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
                         </svg>
                         {group.type === 'pronoun' 
-                          ? <span><span className="font-semibold">tā</span> - Pronoun Homophones (他/她/它)</span> 
-                          : <span><span className="font-semibold">{normalizePinyin(group.words[0].pinyin)}</span> - Homophones</span>}
+                          ? <span><span className="font-bold">tā</span> - Pronoun Homophones (他/她/它)</span> 
+                          : <span><span className="font-bold">{normalizePinyin(group.words[0].pinyin)}</span> - Homophones</span>}
                       </h4>
                       <div className="flex flex-wrap gap-2.5 ml-1">
                         {group.words.map((word) => (
@@ -1762,8 +1762,8 @@ export default function WordList() {
                     
                     return singleWords.length > 0 ? (
                       <div className="border-2 border-border rounded-md p-4 bg-accent/10 shadow-md">
-                        <h4 className="text-sm font-medium mb-3 text-primary flex items-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
+                        <h4 className="text-md font-bold mb-3 text-primary flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
                             <path d="M7 20h10"></path>
                             <path d="M10 20c5.5-2.5.8-6.4 3-10"></path>
                             <path d="M9.5 9.4c1.1.8 1.8 1.7 2.3 3.7"></path>
@@ -1789,8 +1789,8 @@ export default function WordList() {
               ) : (
                 // Normal list mode
                 <div className="border-2 border-border rounded-md p-4 mb-4 bg-accent/10 shadow-md">
-                  <h4 className="text-sm font-medium mb-3 text-primary flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
+                  <h4 className="text-md font-bold mb-3 text-primary flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
                       <path d="M3 5v14"></path>
                       <path d="M8 5v14"></path>
                       <path d="M12 5v14"></path>
