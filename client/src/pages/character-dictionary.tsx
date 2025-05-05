@@ -48,6 +48,16 @@ interface CharacterDefinition {
   createdAt: string;
 }
 
+interface CharacterCompound {
+  compound: Character;
+  position: number;
+}
+
+interface CharacterComponent {
+  component: Character;
+  position: number;
+}
+
 export default function CharacterDictionary() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
@@ -97,6 +107,30 @@ export default function CharacterDictionary() {
       const response = await fetch(`/api/characters/${selectedCharacter.id}/definitions`);
       if (!response.ok) throw new Error('Failed to fetch definitions');
       return response.json() as Promise<CharacterDefinition[]>;
+    },
+    enabled: !!selectedCharacter,
+  });
+
+  // Query for fetching compounds where the selected character is a component
+  const compoundsQuery = useQuery({
+    queryKey: ['/api/characters', selectedCharacter?.id, 'compounds'],
+    queryFn: async () => {
+      if (!selectedCharacter) return [] as CharacterCompound[];
+      const response = await fetch(`/api/characters/${selectedCharacter.id}/compounds`);
+      if (!response.ok) throw new Error('Failed to fetch compounds');
+      return response.json() as Promise<CharacterCompound[]>;
+    },
+    enabled: !!selectedCharacter,
+  });
+
+  // Query for fetching components of the selected character (if it's a compound)
+  const componentsQuery = useQuery({
+    queryKey: ['/api/characters', selectedCharacter?.id, 'components'],
+    queryFn: async () => {
+      if (!selectedCharacter) return [] as CharacterComponent[];
+      const response = await fetch(`/api/characters/${selectedCharacter.id}/components`);
+      if (!response.ok) throw new Error('Failed to fetch components');
+      return response.json() as Promise<CharacterComponent[]>;
     },
     enabled: !!selectedCharacter,
   });
@@ -224,6 +258,7 @@ export default function CharacterDictionary() {
                 <Tabs defaultValue="definitions" className="w-full">
                   <TabsList className="mb-4">
                     <TabsTrigger value="definitions">Definitions</TabsTrigger>
+                    <TabsTrigger value="related">Related</TabsTrigger>
                     <TabsTrigger value="examples">Examples</TabsTrigger>
                   </TabsList>
                   
@@ -288,6 +323,90 @@ export default function CharacterDictionary() {
                         No definitions found for this character.
                       </div>
                     )}
+                  </TabsContent>
+                  
+                  <TabsContent value="related" className="space-y-6">
+                    {/* Components section (for compound characters) */}
+                    <div className="space-y-3">
+                      <h3 className="text-lg font-semibold">Components</h3>
+                      {componentsQuery.isLoading ? (
+                        <div className="flex justify-center items-center h-20">
+                          <Spinner size="sm" />
+                        </div>
+                      ) : componentsQuery.isError ? (
+                        <div className="text-center text-red-500 p-2">
+                          Error loading components: {componentsQuery.error.message}
+                        </div>
+                      ) : componentsQuery.data && componentsQuery.data.length > 0 ? (
+                        <div className="space-y-2">
+                          <div className="text-sm text-muted-foreground mb-1">
+                            {selectedCharacter?.character} is composed of the following characters:
+                          </div>
+                          <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                            {componentsQuery.data
+                              .sort((a, b) => a.position - b.position)
+                              .map((item) => (
+                                <Button
+                                  key={`${item.component.id}-${item.position}`}
+                                  variant="outline"
+                                  className="h-16 text-xl"
+                                  onClick={() => handleSelectCharacter(item.component)}
+                                >
+                                  <div className="flex flex-col items-center">
+                                    <span className="text-2xl mb-1">{item.component.character}</span>
+                                    <span className="text-xs">{item.component.pinyin}</span>
+                                  </div>
+                                </Button>
+                              ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-sm text-muted-foreground p-2 border rounded-md">
+                          {selectedCharacter?.character.length === 1 
+                            ? "This is a single character with no further components." 
+                            : "No component data available for this character."}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Compounds section (where this character is used) */}
+                    <div className="space-y-3">
+                      <h3 className="text-lg font-semibold">Compound Words</h3>
+                      {compoundsQuery.isLoading ? (
+                        <div className="flex justify-center items-center h-20">
+                          <Spinner size="sm" />
+                        </div>
+                      ) : compoundsQuery.isError ? (
+                        <div className="text-center text-red-500 p-2">
+                          Error loading compounds: {compoundsQuery.error.message}
+                        </div>
+                      ) : compoundsQuery.data && compoundsQuery.data.length > 0 ? (
+                        <div className="space-y-2">
+                          <div className="text-sm text-muted-foreground mb-1">
+                            {selectedCharacter?.character} is used in the following words:
+                          </div>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            {compoundsQuery.data.map((item) => (
+                              <Button
+                                key={item.compound.id}
+                                variant="outline"
+                                className="h-16 text-xl"
+                                onClick={() => handleSelectCharacter(item.compound)}
+                              >
+                                <div className="flex flex-col items-center">
+                                  <span className="text-2xl mb-1">{item.compound.character}</span>
+                                  <span className="text-xs">{item.compound.pinyin}</span>
+                                </div>
+                              </Button>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-sm text-muted-foreground p-2 border rounded-md">
+                          No compounds found that use this character.
+                        </div>
+                      )}
+                    </div>
                   </TabsContent>
                   
                   <TabsContent value="examples">
