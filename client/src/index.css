@@ -1,73 +1,73 @@
-/* Import Noto Sans SC for Chinese characters */
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+/* Import more playful fonts for Chinese characters and clean modern font for UI */
+@import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=ZCOOL+KuaiLe&family=ZCOOL+QingKe+HuangYou&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  /* New Warm Chinese Learning Theme */
-  --background: 43 77% 84%; /* #F5E2B8 warm beige */
-  --foreground: 0 0% 31%; /* #4E4E4E dark gray for text */
-  --muted: 38 24% 72%; /* Lighter beige for muted areas */
-  --muted-foreground: 0 0% 40%; /* Muted text color */
+  /* Clean, Modern Learning Theme */
+  --background: 0 0% 100%; /* White background */
+  --foreground: 222 47% 11%; /* Dark blue-gray for text */
+  --muted: 210 40% 96.1%; /* Light gray for muted areas */
+  --muted-foreground: 215.4 16.3% 46.9%; /* Medium gray for muted text */
   
-  --popover: 43 77% 87%; /* Slightly lighter beige for popovers */
-  --popover-foreground: 0 0% 31%; /* Same as main text */
+  --popover: 0 0% 100%; /* White for popovers */
+  --popover-foreground: 222 47% 11%; /* Same as main text */
   
-  --card: 43 77% 95%; /* Even lighter beige for cards */
-  --card-foreground: 0 0% 31%; /* Same as main text */
+  --card: 0 0% 100%; /* White for cards */
+  --card-foreground: 222 47% 11%; /* Same as main text */
   
-  --border: 79 15% 63%; /* #A3B18A soft olive green for borders */
-  --input: 79 15% 63%; /* Same olive green for inputs */
+  --border: 214.3 31.8% 91.4%; /* Light gray for borders */
+  --input: 214.3 31.8% 91.4%; /* Same light gray for inputs */
   
-  --primary: 6 60% 40%; /* #A23429 deep red as primary accent */
-  --primary-foreground: 43 77% 98%; /* Nearly white text on primary buttons */
+  --primary: 222.2 47.4% 15%; /* Deep navy blue as primary */
+  --primary-foreground: 210 40% 98%; /* White text on primary buttons */
   
-  --secondary: 79 15% 63%; /* #A3B18A soft olive green */
-  --secondary-foreground: 0 0% 98%; /* Light text on secondary buttons */
+  --secondary: 210 40% 96.1%; /* Light gray as secondary */
+  --secondary-foreground: 222.2 47.4% 11.2%; /* Dark text on secondary */
   
-  --accent: 81 25% 82%; /* #CAD2C5 light green for accents */
-  --accent-foreground: 6 60% 40%; /* Red text on accent backgrounds */
+  --accent: 210 40% 96.1%; /* Light blue accent */
+  --accent-foreground: 222.2 47.4% 11.2%; /* Dark text on accent */
   
   --destructive: 0 84.2% 60.2%; /* Keep destructive red */
-  --destructive-foreground: 60 9.1% 97.8%; /* Light text on destructive */
+  --destructive-foreground: 210 40% 98%; /* Light text on destructive */
   
-  --ring: 6 60% 40%; /* Deep red for focus rings */
+  --ring: 215 20.2% 65.1%; /* Blue-gray for focus rings */
   --radius: 0.5rem; /* Rounded corners */
 }
 
 .dark {
-  /* Dark mode adaptation of the Chinese theme */
-  --background: 38 30% 15%; /* Dark brown background */
-  --foreground: 43 50% 90%; /* Light beige text */
+  /* Dark mode - clean, modern */
+  --background: 222.2 84% 4.9%; /* Very dark blue-gray */
+  --foreground: 210 40% 98%; /* Almost white text */
   
-  --muted: 38 25% 25%; /* Darker muted areas */
-  --muted-foreground: 43 30% 70%; /* Lighter text for muted areas */
+  --muted: 217.2 32.6% 17.5%; /* Dark muted areas */
+  --muted-foreground: 215 20.2% 65.1%; /* Light gray for muted text */
   
-  --popover: 38 30% 15%; /* Same as background */
-  --popover-foreground: 43 50% 90%; /* Same as foreground */
+  --popover: 222.2 84% 4.9%; /* Same as background */
+  --popover-foreground: 210 40% 98%; /* Same as foreground */
   
-  --card: 38 30% 20%; /* Slightly lighter than background */
-  --card-foreground: 43 50% 90%; /* Same as foreground */
+  --card: 222.2 84% 4.9%; /* Same as background */
+  --card-foreground: 210 40% 98%; /* Same as foreground */
   
-  --border: 79 15% 30%; /* Darker olive green */
-  --input: 79 15% 30%; /* Same darker olive */
+  --border: 217.2 32.6% 17.5%; /* Dark border */
+  --input: 217.2 32.6% 17.5%; /* Same as border */
   
-  --primary: 6 60% 50%; /* Brighter red in dark mode */
-  --primary-foreground: 43 77% 98%; /* Light text */
+  --primary: 210 40% 98%; /* Bright white as primary */
+  --primary-foreground: 222.2 47.4% 11.2%; /* Dark text on primary */
   
-  --secondary: 79 15% 40%; /* Darker olive green */
-  --secondary-foreground: 43 77% 95%; /* Light text */
+  --secondary: 217.2 32.6% 17.5%; /* Dark gray as secondary */
+  --secondary-foreground: 210 40% 98%; /* Light text on secondary */
   
-  --accent: 81 15% 30%; /* Darker accent */
-  --accent-foreground: 6 60% 60%; /* Brighter red text */
+  --accent: 217.2 32.6% 17.5%; /* Dark accent */
+  --accent-foreground: 210 40% 98%; /* Light text on accent */
   
-  --destructive: 0 62.8% 50.6%; /* Brighter destructive red */
-  --destructive-foreground: 0 0% 98%; /* Light text */
+  --destructive: 0 62.8% 30.6%; /* Darker destructive red */
+  --destructive-foreground: 0 0% 98%; /* Light text on destructive */
   
-  --ring: 6 60% 50%; /* Red for focus rings */
+  --ring: 212.7 26.8% 83.9; /* Light ring for dark mode */
 }
 
 @layer base {
@@ -77,30 +77,32 @@
 
   body {
     @apply antialiased bg-background text-foreground;
-    font-family: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='600' viewBox='0 0 100 600'%3E%3Cg fill='%23CAD2C5' opacity='0.15'%3E%3Cpath d='M20 0C15 100 10 200 12 300 14 400 16 500 20 600'  stroke='%23A3B18A' stroke-width='3' fill='none'/%3E%3Ccircle cx='20' cy='60' r='5'/%3E%3Ccircle cx='20' cy='120' r='5'/%3E%3Ccircle cx='20' cy='180' r='5'/%3E%3Ccircle cx='20' cy='240' r='5'/%3E%3Ccircle cx='20' cy='300' r='5'/%3E%3Ccircle cx='20' cy='360' r='5'/%3E%3Ccircle cx='20' cy='420' r='5'/%3E%3Ccircle cx='20' cy='480' r='5'/%3E%3Ccircle cx='20' cy='540' r='5'/%3E%3Cpath d='M60 0C56 100 52 200 54 300 55 400 58 500 60 600' stroke='%23A3B18A' stroke-width='2' fill='none'/%3E%3Ccircle cx='60' cy='80' r='4'/%3E%3Ccircle cx='60' cy='160' r='4'/%3E%3Ccircle cx='60' cy='240' r='4'/%3E%3Ccircle cx='60' cy='320' r='4'/%3E%3Ccircle cx='60' cy='400' r='4'/%3E%3Ccircle cx='60' cy='480' r='4'/%3E%3Ccircle cx='60' cy='560' r='4'/%3E%3C/g%3E%3C/svg%3E"),
-                  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='600' viewBox='0 0 100 600'%3E%3Cg fill='%23CAD2C5' opacity='0.15'%3E%3Cpath d='M20 0C15 100 10 200 12 300 14 400 16 500 20 600'  stroke='%23A3B18A' stroke-width='3' fill='none'/%3E%3Ccircle cx='20' cy='60' r='5'/%3E%3Ccircle cx='20' cy='120' r='5'/%3E%3Ccircle cx='20' cy='180' r='5'/%3E%3Ccircle cx='20' cy='240' r='5'/%3E%3Ccircle cx='20' cy='300' r='5'/%3E%3Ccircle cx='20' cy='360' r='5'/%3E%3Ccircle cx='20' cy='420' r='5'/%3E%3Ccircle cx='20' cy='480' r='5'/%3E%3Ccircle cx='20' cy='540' r='5'/%3E%3Cpath d='M60 0C56 100 52 200 54 300 55 400 58 500 60 600' stroke='%23A3B18A' stroke-width='2' fill='none'/%3E%3Ccircle cx='60' cy='80' r='4'/%3E%3Ccircle cx='60' cy='160' r='4'/%3E%3Ccircle cx='60' cy='240' r='4'/%3E%3Ccircle cx='60' cy='320' r='4'/%3E%3Ccircle cx='60' cy='400' r='4'/%3E%3Ccircle cx='60' cy='480' r='4'/%3E%3Ccircle cx='60' cy='560' r='4'/%3E%3C/g%3E%3C/svg%3E");
-    background-position: left top, right top;
-    background-repeat: repeat-y;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-image: 
+      radial-gradient(hsl(var(--primary)/0.03) 1px, transparent 0),
+      radial-gradient(hsl(var(--primary)/0.03) 1px, transparent 0);
+    background-size: 20px 20px;
+    background-position: 0 0, 10px 10px;
     background-attachment: fixed;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-medium text-primary;
-    font-family: 'Noto Sans SC', 'Inter', sans-serif;
+    @apply font-medium text-foreground;
+    font-family: 'Poppins', sans-serif;
+    letter-spacing: -0.01em;
   }
 
-  /* Chinese text special styling */
+  /* Chinese text styling - more playful */
   .chinese-text {
-    font-family: 'Noto Sans SC', sans-serif;
-    @apply tracking-wide;
+    font-family: 'ZCOOL QingKe HuangYou', sans-serif;
+    @apply text-primary font-normal;
   }
   
-  /* Textarea with Chinese styling */
+  /* Modern textarea styling */
   .chinese-textarea {
-    font-family: 'Noto Sans SC', 'Inter', sans-serif;
-    @apply text-base leading-relaxed;
-    background-image: linear-gradient(transparent, transparent calc(1.5em - 1px), hsl(var(--border)/0.2) calc(1.5em - 1px), hsl(var(--border)/0.2) 1.5em, transparent 1.5em);
+    font-family: 'ZCOOL QingKe HuangYou', 'Poppins', sans-serif;
+    @apply text-base leading-relaxed rounded-md;
+    background-image: linear-gradient(transparent, transparent calc(1.5em - 1px), hsl(var(--border)/0.15) calc(1.5em - 1px), hsl(var(--border)/0.15) 1.5em, transparent 1.5em);
     background-size: 100% 1.5em;
   }
   
@@ -127,17 +129,22 @@
       transform: translateX(100%);
     }
   }
-
-  /* Custom Button Styling */
-  .btn-custom {
-    @apply bg-background text-primary border border-primary hover:bg-primary hover:text-primary-foreground transition-colors;
-    border-width: 1px;
+  
+  /* Clean badge for Chinese characters */
+  .chinese-badge {
+    @apply inline-block text-xs px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium;
   }
 
+  /* Playful Chinese characters - for display/headers */
+  .chinese-display {
+    font-family: 'Ma Shan Zheng', sans-serif;
+    @apply text-primary text-lg;
+  }
+  
   /* Card custom styling */
   .card-custom {
-    @apply bg-card border-border shadow-md;
-    box-shadow: 0 4px 6px -1px rgba(162, 52, 41, 0.1), 0 2px 4px -1px rgba(162, 52, 41, 0.06);
+    @apply bg-card border-border shadow-sm;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   }
 }
 

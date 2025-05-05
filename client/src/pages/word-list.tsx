@@ -1603,32 +1603,22 @@ export default function WordList() {
       )}
     
       <Card className="mb-6 border-border overflow-hidden">
-        <CardHeader className="bg-accent/20 border-b border-border pb-4">
+        <CardHeader>
           <div className="flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary mr-2">
-              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"></path>
-              <path d="M12 7H7"></path>
-              <path d="M12 17H7"></path>
-              <path d="M7 12h10"></path>
-            </svg>
-            <div>
-              <CardTitle className="text-primary flex items-center">
-                <span className="chinese-text mr-2">词汇表</span> Your Vocabulary Words
-              </CardTitle>
-              <CardDescription className="text-foreground/70">Add the Mandarin words you want to practice</CardDescription>
-            </div>
+            <div className="chinese-badge mr-2 text-sm">词汇表</div>
+            <CardTitle>Your Vocabulary Words</CardTitle>
           </div>
+          <CardDescription>Add the Mandarin words you want to practice</CardDescription>
         </CardHeader>
         
         <CardContent>
           <div className="mb-6">
-            <label htmlFor="word-input" className="block text-sm font-medium text-primary mb-2 flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
-                <path d="M10 21v-6.5a3.5 3.5 0 0 0-7 0V21h18v-6a4 4 0 0 0-4-4h-1a4 4 0 0 0-4 4v.5"></path>
-                <path d="M4 14.5a22 22 0 0 1 16-4"></path>
-              </svg>
-              <span className="chinese-text mr-1">添加词汇</span> Add Words (one per line)
-            </label>
+            <div className="flex items-center mb-2">
+              <div className="chinese-badge mr-2">添加词汇</div>
+              <label htmlFor="word-input" className="block text-sm font-medium">
+                Add Words (one per line)
+              </label>
+            </div>
             <div className="relative">
               <Textarea
                 id="word-input"
@@ -1654,22 +1644,17 @@ export default function WordList() {
           
           <div>
             <div className="flex justify-between items-center mb-4 border-b border-border pb-3">
-              <h3 className="text-lg font-medium flex items-center text-foreground">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5 text-primary">
-                  <path d="M8 3v3a2 2 0 0 1-2 2H3"></path>
-                  <path d="M21 8h-3a2 2 0 0 1-2-2V3"></path>
-                  <path d="M3 16h3a2 2 0 0 1 2 2v3"></path>
-                  <path d="M16 21v-3a2 2 0 0 1 2-2h3"></path>
-                </svg>
-                <span className="chinese-text mr-1.5">当前词库</span> Current Word List
+              <h3 className="text-lg font-medium flex items-center gap-2">
+                <div className="chinese-badge">当前词库</div>
+                <span>Current Word List</span>
               </h3>
-              <div className="flex items-center bg-accent/20 rounded-md px-3 py-1.5 border border-border">
+              <div className="flex items-center rounded-md px-3 py-1.5">
                 <span className="text-sm flex items-center mr-2">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1 text-primary">
                     <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
                     <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
                   </svg>
-                  <span className="chinese-text mr-1">同音词</span> Group homophones
+                  <div className="chinese-badge mr-1">同音词</div> Group
                 </span>
                 <button 
                   type="button"
@@ -1691,8 +1676,9 @@ export default function WordList() {
             {/* Search input */}
             {vocabulary && Array.isArray(vocabulary) && vocabulary.length > 0 ? (
               <div className="relative mb-5 mt-2">
-                <div className="text-xs text-primary font-medium uppercase tracking-wider mb-1 flex items-center">
-                  <span className="chinese-text mr-1">搜索</span> Search Words
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="chinese-badge text-xs">搜索</div>
+                  <div className="text-xs font-medium uppercase tracking-wider">Search Words</div>
                 </div>
                 <input
                   type="text"
