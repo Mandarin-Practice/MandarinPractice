@@ -136,7 +136,7 @@ function setupImportProcessHandlers(process: any, res: any) {
 }
 
 // GET character count
-router.get('/characters/count', async (req, res) => {
+router.get('/dictionary/stats', async (req, res) => {
   try {
     // Use a simple raw query to get the counts
     const characterQuery = await db.execute('SELECT COUNT(*) as count FROM characters');
@@ -186,7 +186,7 @@ router.post('/admin/dictionary/import-sample', (req, res) => {
       }
     };
     
-    const scriptPath = path.resolve(process.cwd(), 'scripts/import-sample.js');
+    const scriptPath = path.resolve(process.cwd(), 'scripts/import-sample-enhanced.js');
     log(`Starting sample import process: ${scriptPath}`, 'dictionary-admin');
     
     // Start the import process (run as ES module)

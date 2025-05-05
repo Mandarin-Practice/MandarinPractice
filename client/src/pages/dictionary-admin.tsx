@@ -79,14 +79,15 @@ export default function DictionaryAdmin() {
 
   const checkStatus = async () => {
     try {
-      const response = await fetch('/api/characters/count');
+      const response = await fetch('/api/dictionary/stats');
       const data = await response.json();
       
       toast({
         title: "Dictionary Status",
-        description: `Currently contains ${data.count} characters with definitions.`,
+        description: `Currently contains ${data.count} characters with ${data.definitionCount} definitions.`,
       });
     } catch (error: any) {
+      console.error("Error checking dictionary status:", error);
       toast({
         title: "Error",
         description: "Failed to check dictionary status.",
