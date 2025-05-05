@@ -299,16 +299,36 @@ export class DatabaseStorage implements IStorage {
   // Chinese character dictionary methods
   async searchCharacters(query: string): Promise<Character[]> {
     if (!query || query.length === 0) {
-      return await db.select().from(characters).limit(50);
+      // Return characters sorted by frequency for an empty search
+      return await db.select()
+        .from(characters)
+        .orderBy(asc(characters.frequency))
+        .limit(50);
     }
     
-    // Search by character or pinyin
-    return await db.select().from(characters).where(
-      or(
-        like(characters.character, `%${query}%`),
-        like(characters.pinyin, `%${query}%`)
+    // If the query is exactly a Chinese character, prioritize exact matches
+    if (query.length === 1 && /[\u4e00-\u9fff]/.test(query)) {
+      const exactMatches = await db.select()
+        .from(characters)
+        .where(eq(characters.character, query));
+      
+      if (exactMatches.length > 0) {
+        // Return the exact match only for a direct character search
+        return exactMatches;
+      }
+    }
+    
+    // Otherwise, search by character or pinyin
+    return await db.select()
+      .from(characters)
+      .where(
+        or(
+          like(characters.character, `%${query}%`),
+          like(characters.pinyin, `%${query}%`)
+        )
       )
-    ).limit(100);
+      .orderBy(asc(characters.frequency))
+      .limit(100);
   }
   
   async getCharacter(id: number): Promise<Character | undefined> {

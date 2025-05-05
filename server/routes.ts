@@ -329,12 +329,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Search for characters by query (character or pinyin)
   app.get("/api/characters/search", async (req, res) => {
     try {
-      const { q = "" } = req.query;
-      const query = typeof q === 'string' ? q : '';
+      const { q = "", query = "" } = req.query;
+      // Allow both q and query parameters for flexibility
+      const searchTerm = typeof query === 'string' && query.length > 0 
+        ? query 
+        : (typeof q === 'string' ? q : '');
       
-      const characters = await storage.searchCharacters(query);
+      console.log(`Searching characters with term: "${searchTerm}"`);
+      const characters = await storage.searchCharacters(searchTerm);
       res.json(characters);
     } catch (error) {
+      console.error("Error searching characters:", error);
       res.status(500).json({ message: error instanceof Error ? error.message : "Failed to search characters" });
     }
   });
