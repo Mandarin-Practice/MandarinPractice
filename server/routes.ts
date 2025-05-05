@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { vocabularySchema } from "@shared/schema";
 import { ZodError } from "zod";
-import { generateSentence, generateSentenceWithWord } from "./openai";
+import { generateSentence, generateSentenceWithWord, checkSynonyms } from "./openai";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Get all vocabulary words
@@ -289,6 +289,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "Word proficiency reset successfully" });
     } catch (error) {
       res.status(500).json({ message: error instanceof Error ? error.message : "Failed to reset word proficiency" });
+    }
+  });
+
+  // Check if two words are synonyms
+  app.post("/api/synonym-check", async (req, res) => {
+    try {
+      const { word1, word2 } = req.body;
+      
+      if (!word1 || !word2) {
+        return res.status(400).json({ 
+          message: "Both word1 and word2 are required",
+          areSynonyms: false,
+          confidence: 0
+        });
+      }
+      
+      console.log(`Checking if "${word1}" and "${word2}" are synonyms`);
+      
+      // Use OpenAI to check if words are synonyms
+      const result = await checkSynonyms(word1, word2);
+      
+      console.log(`Synonym check result: ${JSON.stringify(result)}`);
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Error checking synonyms:", error);
+      res.status(500).json({ 
+        message: error instanceof Error ? error.message : "Failed to check synonyms",
+        areSynonyms: false,
+        confidence: 0
+      });
     }
   });
 

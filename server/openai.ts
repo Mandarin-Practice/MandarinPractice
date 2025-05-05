@@ -4,6 +4,96 @@ import OpenAI from "openai";
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "your-api-key" });
 
 /**
+ * Check if two English words or phrases are synonyms
+ * @param word1 First word or phrase
+ * @param word2 Second word or phrase
+ * @returns Object with boolean indicating if they are synonyms
+ */
+export async function checkSynonyms(word1: string, word2: string): Promise<{ areSynonyms: boolean; confidence: number }> {
+  if (!word1 || !word2) {
+    throw new Error("Both words are required for synonym check");
+  }
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: `You are a language learning assistant helping students check if two English words or phrases are synonyms or have equivalent meanings in the context of language translation.
+          
+          For example:
+          - "pretty" and "beautiful" are synonyms
+          - "big" and "large" are synonyms
+          - "eat" and "have a meal" are equivalent expressions
+          - "apple" and "banana" are NOT synonyms
+          
+          Provide your assessment as a JSON object with 'areSynonyms' (boolean) and 'confidence' (number between 0 and 1) properties.`
+        },
+        {
+          role: "user",
+          content: `Are these two words/phrases synonyms or equivalent in meaning: "${word1}" and "${word2}"?`
+        }
+      ],
+      response_format: { type: "json_object" }
+    });
+
+    const generatedContent = response.choices[0].message.content;
+    if (!generatedContent) {
+      throw new Error("No content generated");
+    }
+
+    const parsedContent = JSON.parse(generatedContent);
+    return {
+      areSynonyms: parsedContent.areSynonyms,
+      confidence: parsedContent.confidence
+    };
+  } catch (error) {
+    console.error("Error checking synonyms:", error);
+    // Fallback to basic string similarity if the API call fails
+    const similarity = 1 - (levenshteinDistance(word1.toLowerCase(), word2.toLowerCase()) / 
+                         Math.max(word1.length, word2.length));
+    return { 
+      areSynonyms: similarity > 0.8,
+      confidence: similarity
+    };
+  }
+}
+
+/**
+ * Calculate Levenshtein distance between two strings
+ * (Helper function for synonym fallback)
+ */
+function levenshteinDistance(a: string, b: string): number {
+  const matrix: number[][] = [];
+
+  // Initialize the matrix
+  for (let i = 0; i <= b.length; i++) {
+    matrix[i] = [i];
+  }
+  for (let j = 0; j <= a.length; j++) {
+    matrix[0][j] = j;
+  }
+
+  // Fill in the matrix
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1, // substitution
+          matrix[i][j - 1] + 1,     // insertion
+          matrix[i - 1][j] + 1      // deletion
+        );
+      }
+    }
+  }
+
+  return matrix[b.length][a.length];
+}
+
+/**
  * Generate a Mandarin sentence using only provided vocabulary
  * @param vocabulary Array of vocabulary words to use in sentence
  * @param difficulty Difficulty level of the sentence

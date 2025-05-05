@@ -1,4 +1,5 @@
 import { apiRequest } from './queryClient';
+import { levenshteinDistance } from './string-similarity';
 
 /**
  * Check if two English words or phrases are synonyms

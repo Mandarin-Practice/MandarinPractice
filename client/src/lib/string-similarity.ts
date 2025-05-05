@@ -381,8 +381,11 @@ const englishAlternatives: Record<string, string[]> = {
   'itself': ['himself', 'herself']
 };
 
+// Store synonym detection results to avoid repeated API calls
+const synonymCache: Record<string, boolean> = {};
+
 /**
- * Check if two words are equivalent, including checking homophones
+ * Check if two words are equivalent, including checking homophones and synonyms
  */
 function areWordsEquivalent(word1: string, word2: string): boolean {
   // Exact match
@@ -403,6 +406,35 @@ function areWordsEquivalent(word1: string, word2: string): boolean {
     return true;
   }
   
+  // Check common English adjective synonyms (most common in translations)
+  const adjectiveSynonyms: Record<string, string[]> = {
+    "beautiful": ["pretty", "lovely", "gorgeous", "attractive", "cute", "handsome", "nice"],
+    "big": ["large", "huge", "enormous", "gigantic", "massive", "sizable"],
+    "small": ["little", "tiny", "miniature", "petite", "compact"],
+    "good": ["great", "excellent", "fine", "perfect", "wonderful", "fantastic", "terrific", "nice"],
+    "bad": ["terrible", "awful", "poor", "horrible", "dreadful", "unpleasant"],
+    "fast": ["quick", "rapid", "speedy", "swift"],
+    "slow": ["sluggish", "unhurried", "leisurely", "gradual"],
+    "happy": ["glad", "joyful", "delighted", "cheerful", "pleased", "content"],
+    "sad": ["unhappy", "sorrowful", "depressed", "gloomy", "miserable", "down"],
+    "angry": ["mad", "furious", "outraged", "annoyed", "irritated", "upset"],
+    "scared": ["afraid", "frightened", "terrified", "fearful", "nervous", "anxious"],
+    "tired": ["exhausted", "weary", "sleepy", "fatigued", "drained"],
+    "smart": ["intelligent", "clever", "bright", "brilliant", "wise", "knowledgeable"],
+    "old": ["aged", "ancient", "elderly", "senior", "mature", "older"],
+    "new": ["recent", "fresh", "modern", "brand-new", "current"],
+    "busy": ["occupied", "engaged", "active", "hectic", "swamped"],
+    "interesting": ["fascinating", "intriguing", "engaging", "captivating", "compelling", "appealing"]
+  };
+  
+  // Check if words are in our adjective synonym dictionary
+  for (const [key, synonyms] of Object.entries(adjectiveSynonyms)) {
+    if ((lowerWord1 === key && synonyms.includes(lowerWord2)) || 
+        (lowerWord2 === key && synonyms.includes(lowerWord1))) {
+      return true;
+    }
+  }
+  
   // Check if either word contains any Chinese homophone
   for (const char of word1) {
     if (chineseHomophones[char]) {
@@ -421,6 +453,34 @@ function areWordsEquivalent(word1: string, word2: string): boolean {
           return true;
         }
       }
+    }
+  }
+  
+  // Check cache for previously detected synonyms
+  const cacheKey = [lowerWord1, lowerWord2].sort().join('|');
+  if (synonymCache[cacheKey] !== undefined) {
+    return synonymCache[cacheKey];
+  }
+  
+  // Common verb tenses and forms that should match
+  if (lowerWord1.endsWith('ing') && lowerWord1.slice(0, -3) === lowerWord2 ||
+      lowerWord2.endsWith('ing') && lowerWord2.slice(0, -3) === lowerWord1 ||
+      lowerWord1.endsWith('ed') && lowerWord1.slice(0, -2) === lowerWord2 ||
+      lowerWord2.endsWith('ed') && lowerWord2.slice(0, -2) === lowerWord1 ||
+      lowerWord1.endsWith('s') && lowerWord1.slice(0, -1) === lowerWord2 ||
+      lowerWord2.endsWith('s') && lowerWord2.slice(0, -1) === lowerWord1) {
+    synonymCache[cacheKey] = true;
+    return true;
+  }
+  
+  // For unmatched words, do a Levenshtein distance check for similar words
+  // This helps catch spelling differences and typos
+  if (lowerWord1.length > 3 && lowerWord2.length > 3) {
+    const similarity = 1 - (levenshteinDistance(lowerWord1, lowerWord2) / 
+                           Math.max(lowerWord1.length, lowerWord2.length));
+    if (similarity > 0.8) {
+      synonymCache[cacheKey] = true;
+      return true;
     }
   }
   
