@@ -1633,7 +1633,8 @@ export default function WordList() {
               <h3 className="text-lg font-medium">Current Word List</h3>
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-600 dark:text-gray-400">Group homophones</span>
-                <div
+                <button 
+                  type="button"
                   className={`w-10 h-5 flex items-center rounded-full p-1 cursor-pointer ${
                     groupByHomophones ? "bg-primary" : "bg-gray-300 dark:bg-gray-600"
                   }`}
@@ -1644,28 +1645,31 @@ export default function WordList() {
                       groupByHomophones ? "translate-x-5" : ""
                     }`}
                   ></div>
-                </div>
+                </button>
               </div>
             </div>
             
             {/* Search input */}
             {vocabulary && Array.isArray(vocabulary) && vocabulary.length > 0 && (
-              <div className="relative mb-4">
+              <div className="relative mb-5 mt-2">
+                <div className="text-xs text-primary font-medium uppercase tracking-wider mb-1 flex items-center">
+                  <span className="chinese-text mr-1">搜索</span> Search Words
+                </div>
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search by Chinese character (我) or pinyin (wo)"
-                  className="w-full px-10 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  className="w-full px-10 py-2.5 border border-border rounded-md bg-background text-foreground focus:border-primary focus:ring-1 focus:ring-primary/50 transition-colors"
                   title="Type either Chinese characters or pinyin to search. For example, typing '我' will find words with '我', and typing 'wo' will find words with the pinyin 'wo'."
                 />
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 top-6">
                   <div className="group relative">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 cursor-help">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary cursor-help">
                       <circle cx="11" cy="11" r="8"></circle>
                       <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                     </svg>
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 -translate-y-2 hidden group-hover:block bg-black text-white text-xs rounded py-1 px-2 w-64 z-10">
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 -translate-y-2 hidden group-hover:block bg-card border border-border text-foreground text-xs rounded-md py-2 px-3 w-64 z-10 shadow-md">
                       You can search by typing either Chinese characters or pinyin. The search is smart enough to find matching words regardless of which you use.
                     </div>
                   </div>
@@ -1673,9 +1677,9 @@ export default function WordList() {
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery("")}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3"
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 top-6 text-primary/60 hover:text-primary"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <line x1="18" y1="6" x2="6" y2="18"></line>
                       <line x1="6" y1="6" x2="18" y2="18"></line>
                     </svg>

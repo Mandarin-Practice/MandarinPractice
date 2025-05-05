@@ -17,13 +17,16 @@ function HighlightedComparison({ correctSentence, userSentence }: HighlightedCom
   const comparison = compareWordByWord(correctSentence, userSentence);
 
   return (
-    <div className="space-y-3">
-      <div className="p-2 rounded">
+    <div className="space-y-4">
+      <div className="p-3 rounded-md bg-accent/20 border border-border">
         <p className="text-base leading-relaxed">
           {comparison.correctWordElements.map((element, index) => (
             <span 
               key={`correct-${index}`}
-              className={element.matched ? "text-green-600 dark:text-green-400 font-medium" : "text-red-600 dark:text-red-400 font-medium"}
+              className={element.matched 
+                ? "text-green-600 dark:text-green-400 font-medium" 
+                : "text-primary font-medium"
+              }
             >
               {element.word}{index < comparison.correctWordElements.length - 1 ? ' ' : ''}
             </span>
@@ -31,18 +34,23 @@ function HighlightedComparison({ correctSentence, userSentence }: HighlightedCom
         </p>
       </div>
 
-      <p className="text-sm font-medium mt-3 mb-1">Your translation:</p>
-      <div className="p-2 rounded">
-        <p className="text-base leading-relaxed">
-          {comparison.userWordElements.map((element, index) => (
-            <span 
-              key={`user-${index}`}
-              className={element.matched ? "text-green-600 dark:text-green-400 font-medium" : "text-red-600 dark:text-red-400 font-medium"}
-            >
-              {element.word}{index < comparison.userWordElements.length - 1 ? ' ' : ''}
-            </span>
-          ))}
-        </p>
+      <div>
+        <p className="text-sm font-medium mb-2 text-foreground">Your translation:</p>
+        <div className="p-3 rounded-md bg-background border border-border">
+          <p className="text-base leading-relaxed">
+            {comparison.userWordElements.map((element, index) => (
+              <span 
+                key={`user-${index}`}
+                className={element.matched 
+                  ? "text-green-600 dark:text-green-400 font-medium" 
+                  : "text-primary font-medium"
+                }
+              >
+                {element.word}{index < comparison.userWordElements.length - 1 ? ' ' : ''}
+              </span>
+            ))}
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -133,20 +141,21 @@ export default function SentenceCard({
   return (
     <div className="md:col-span-2">
       <Card className="h-full flex flex-col">
-        <CardHeader className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 flex-row justify-between items-center py-4">
-          <h2 className="font-semibold">Current Sentence</h2>
-          <div className="flex items-center space-x-2">
+        <CardHeader className="bg-accent/20 border-b border-border flex-row justify-between items-center py-4">
+          <h2 className="font-semibold text-primary text-lg chinese-text">当前句子 <span className="text-foreground font-normal text-sm">Current Sentence</span></h2>
+          <div className="flex items-center space-x-3">
             <Button
-              variant="ghost"
+              variant="chinese"
               size="icon"
-              className="h-10 w-10 rounded-full bg-primary text-white hover:bg-blue-600 transition"
+              className="h-10 w-10 rounded-md"
               onClick={onPlayAudio}
               disabled={isLoading || !sentence}
             >
               <Play className={isPlaying ? "animate-pulse" : ""} />
             </Button>
-            <div className="text-sm text-gray-600 dark:text-gray-300">
-              <span>{sentence?.difficulty || "Loading..."}</span> Difficulty
+            <div className="text-sm bg-background px-2 py-1 rounded-md border border-border">
+              <span className="font-medium">{sentence?.difficulty || "Loading..."}</span> 
+              <span className="text-foreground/70"> Difficulty</span>
             </div>
           </div>
         </CardHeader>
@@ -162,43 +171,61 @@ export default function SentenceCard({
             <>
               {/* Chinese Text with Interactive Hover */}
               {showChinese && sentence?.chinese && (
-                <div className="mb-6">
-                  {/* After checking an answer, show the interactive component with hover info */}
-                  {feedbackStatus ? (
-                    <div className="relative">
-                      <InteractiveChineseText 
-                        chinese={sentence.chinese}
-                        vocabularyWords={vocabularyWords}
-                        feedbackStatus={feedbackStatus}
-                      />
-                      {feedbackStatus && (
-                        <div className="mt-1 text-xs text-gray-500">
+                <div className="mb-8 mt-2">
+                  <div className="border border-border rounded-md p-4 bg-background">
+                    {/* After checking an answer, show the interactive component with hover info */}
+                    {feedbackStatus ? (
+                      <div className="relative">
+                        <div className="text-xs text-primary font-medium uppercase tracking-wider mb-1">
+                          Chinese Text - Interactive
+                        </div>
+                        <InteractiveChineseText 
+                          chinese={sentence.chinese}
+                          vocabularyWords={vocabularyWords}
+                          feedbackStatus={feedbackStatus}
+                        />
+                        <div className="mt-2 text-xs text-foreground/70 flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1 text-primary">
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M12 16v-4" />
+                            <path d="M12 8h.01" />
+                          </svg>
                           Hover over any character to see details and manage words
                         </div>
-                      )}
-                    </div>
-                  ) : (
-                    // Normal display when no feedback yet
-                    <p className="text-2xl font-['Noto_Sans_SC',sans-serif] leading-relaxed">
-                      {sentence.chinese}
-                    </p>
-                  )}
+                      </div>
+                    ) : (
+                      // Normal display when no feedback yet
+                      <div>
+                        <div className="text-xs text-primary font-medium uppercase tracking-wider mb-1">
+                          Chinese Text
+                        </div>
+                        <p className="text-3xl chinese-text leading-relaxed">
+                          {sentence.chinese}
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
               
               {/* Pinyin */}
               {showPinyin && sentence?.pinyin && (
-                <div className="mb-6">
-                  <p className="text-lg text-gray-600 dark:text-gray-400 italic">
-                    {sentence.pinyin}
-                  </p>
+                <div className="mb-6 -mt-4">
+                  <div className="border-x border-b border-border rounded-b-md p-3 bg-accent/10">
+                    <div className="text-xs text-primary font-medium uppercase tracking-wider mb-1">
+                      Pinyin Pronunciation
+                    </div>
+                    <p className="text-lg text-foreground/80 italic">
+                      {sentence.pinyin}
+                    </p>
+                  </div>
                 </div>
               )}
               
               {/* Answer Section */}
               <div>
-                <label htmlFor="translation" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Type the English translation:
+                <label htmlFor="translation" className="block text-sm font-medium text-primary mb-2 flex items-center">
+                  <span className="chinese-text mr-2">英文翻译</span> Type the English translation:
                 </label>
                 <div className="relative">
                   <Input
@@ -207,8 +234,8 @@ export default function SentenceCard({
                     value={userTranslation}
                     onChange={onUpdateTranslation}
                     onKeyDown={onKeyPress}
-                    placeholder="Type your answer here... (Press Enter to check or to go to next)"
-                    className="w-full px-4 py-6 text-base"
+                    placeholder="Type your answer here... (Press Enter to check or go to next)"
+                    className="w-full px-4 py-6 text-base border-border bg-background focus:border-primary"
                     disabled={isLoading || !sentence}
                     autoComplete="off" // Disable browser autocomplete suggestions
                     autoCorrect="off"
@@ -216,7 +243,7 @@ export default function SentenceCard({
                     spellCheck="false"
                     data-form-type="other" // Additional attribute to help prevent autocomplete
                   />
-                  <div className="absolute right-3 top-3 text-gray-400">
+                  <div className="absolute right-3 top-3 text-primary/60">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
@@ -224,14 +251,16 @@ export default function SentenceCard({
                 </div>
                 
                 {/* Feedback display */}
-                <div className="mt-2 min-h-[24px]">
+                <div className="mt-3 min-h-[24px]">
                   {renderFeedback()}
                 </div>
 
                 {/* When feedback exists, show the correct answer with visual highlighting */}
                 {feedbackStatus && sentence?.english && (
-                  <div className="mt-4 p-3 border rounded-md bg-gray-50 dark:bg-gray-800">
-                    <p className="text-sm font-medium mb-1">Correct translation:</p>
+                  <div className="mt-4 p-4 border border-border rounded-md bg-accent/10">
+                    <p className="text-sm font-medium mb-2 text-primary flex items-center">
+                      <span className="chinese-text mr-2">正确翻译</span> Correct translation:
+                    </p>
                     <HighlightedComparison 
                       correctSentence={sentence.english} 
                       userSentence={userTranslation} 
@@ -243,23 +272,27 @@ export default function SentenceCard({
           )}
         </CardContent>
         
-        <CardFooter className="py-4 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 justify-between">
+        <CardFooter className="py-4 bg-accent/20 border-t border-border justify-between">
           {feedbackStatus && (
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              {sentence && sentence.chinese.length > 0 ? `${sentence.chinese.length} characters` : ''}
+            <p className="text-sm bg-background px-3 py-1.5 rounded-md border border-border">
+              {sentence && sentence.chinese.length > 0 ? (
+                <span className="font-medium text-primary">{sentence.chinese.length}</span>
+              ) : ''}
+              <span className="mx-1 text-foreground">characters</span>
               <span className="mx-1">•</span>
-              Hover over words to manage vocabulary
+              <span className="text-foreground/70">Hover over words to manage vocabulary</span>
             </p>
           )}
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  className="bg-secondary hover:bg-violet-600 transition"
+                  variant="chinese"
                   onClick={onNextSentence}
                   disabled={isLoading}
+                  className="border-primary"
                 >
-                  Next Sentence <SkipForward className="ml-1 h-4 w-4" />
+                  <span className="chinese-text mr-1">下一句</span> Next Sentence <SkipForward className="ml-1 h-4 w-4" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
