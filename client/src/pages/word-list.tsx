@@ -1496,7 +1496,17 @@ export default function WordList() {
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-3xl w-full max-h-[80vh] overflow-hidden flex flex-col">
             <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-              <h3 className="text-xl font-semibold">{previewList.name}</h3>
+              <div>
+                <h3 className="text-xl font-semibold">{previewList.name}</h3>
+                <div className="flex items-center text-sm mt-1">
+                  {previewList.category && (
+                    <span className="px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs mr-2">
+                      {previewList.category}
+                    </span>
+                  )}
+                  <span className="text-gray-500">{previewList.description}</span>
+                </div>
+              </div>
               <button 
                 onClick={handleClosePreview}
                 className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
@@ -1791,55 +1801,83 @@ export default function WordList() {
           <h3 className="text-lg font-medium mb-3">Suggested Word Lists</h3>
           <p className="text-gray-600 dark:text-gray-400 mb-4">Import pre-made lists to get started quickly</p>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {SAMPLE_WORD_LISTS.map((list) => {
-              const { total, imported } = getWordListStats(list.id);
+          {/* Group word lists by category */}
+          {(() => {
+            // Extract unique categories
+            const categories = Array.from(
+              new Set(SAMPLE_WORD_LISTS.map(list => list.category || "Other"))
+            ).sort();
+            
+            return categories.map(category => {
+              // Filter lists for current category
+              const listsInCategory = SAMPLE_WORD_LISTS.filter(
+                list => (list.category || "Other") === category
+              );
+              
               return (
-              <div key={list.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-blue-300 dark:hover:border-blue-500 transition-colors">
-                <div className="flex justify-between items-start mb-2">
-                  <h4 className="font-medium">{list.name}</h4>
-                  <div className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-full">
-                    <span className={imported === total ? "text-green-600 dark:text-green-400" : "text-blue-600 dark:text-blue-400"}>
-                      {imported}/{total} words added
-                    </span>
+                <div key={category} className="mb-8">
+                  {/* Category header with count */}
+                  <div className="flex items-center border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">
+                    <h4 className="text-md font-medium">{category}</h4>
+                    <div className="ml-2 px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 dark:text-gray-400">
+                      {listsInCategory.length} sets
+                    </div>
+                  </div>
+                  
+                  {/* Lists in this category */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    {listsInCategory.map((list) => {
+                      const { total, imported } = getWordListStats(list.id);
+                      return (
+                        <div key={list.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-blue-300 dark:hover:border-blue-500 transition-colors">
+                          <div className="flex justify-between items-start mb-2">
+                            <h4 className="font-medium">{list.name}</h4>
+                            <div className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-full">
+                              <span className={imported === total ? "text-green-600 dark:text-green-400" : "text-blue-600 dark:text-blue-400"}>
+                                {imported}/{total} words added
+                              </span>
+                            </div>
+                          </div>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{list.description}</p>
+                          <div className="flex gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              className="text-sm"
+                              onClick={() => handleShowPreview(list.id)}
+                            >
+                              <span className="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                                  <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                Preview & Select
+                              </span>
+                            </Button>
+                            <Button 
+                              variant="link" 
+                              className="p-0 h-auto text-sm text-primary hover:text-blue-700 dark:hover:text-blue-300"
+                              onClick={() => handleImportWordList(list.id)}
+                              disabled={importWordListMutation.isPending || (imported > 0 && imported === total)}
+                            >
+                              <span className="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                  <polyline points="17 8 12 3 7 8"></polyline>
+                                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                                </svg>
+                                {imported > 0 && imported === total ? "All Added" : "Import All"}
+                              </span>
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{list.description}</p>
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="text-sm"
-                    onClick={() => handleShowPreview(list.id)}
-                  >
-                    <span className="flex items-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
-                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                      </svg>
-                      Preview & Select
-                    </span>
-                  </Button>
-                  <Button 
-                    variant="link" 
-                    className="p-0 h-auto text-sm text-primary hover:text-blue-700 dark:hover:text-blue-300"
-                    onClick={() => handleImportWordList(list.id)}
-                    disabled={importWordListMutation.isPending || (imported > 0 && imported === total)}
-                  >
-                    <span className="flex items-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="17 8 12 3 7 8"></polyline>
-                        <line x1="12" y1="3" x2="12" y2="15"></line>
-                      </svg>
-                      {imported > 0 && imported === total ? "All Added" : "Import All"}
-                    </span>
-                  </Button>
-                </div>
-              </div>
               );
-            })}
-          </div>
+            });
+          })()}
         </CardContent>
       </Card>
     </div>
