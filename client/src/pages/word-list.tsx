@@ -1602,10 +1602,22 @@ export default function WordList() {
         </div>
       )}
     
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Your Vocabulary Words</CardTitle>
-          <CardDescription>Add the Mandarin words you want to practice</CardDescription>
+      <Card className="mb-6 border-border overflow-hidden">
+        <CardHeader className="bg-accent/20 border-b border-border pb-4">
+          <div className="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary mr-2">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"></path>
+              <path d="M12 7H7"></path>
+              <path d="M12 17H7"></path>
+              <path d="M7 12h10"></path>
+            </svg>
+            <div>
+              <CardTitle className="text-primary flex items-center">
+                <span className="chinese-text mr-2">词汇表</span> Your Vocabulary Words
+              </CardTitle>
+              <CardDescription className="text-foreground/70">Add the Mandarin words you want to practice</CardDescription>
+            </div>
+          </div>
         </CardHeader>
         
         <CardContent>
@@ -1641,21 +1653,36 @@ export default function WordList() {
           </div>
           
           <div>
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-lg font-medium">Current Word List</h3>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Group homophones</span>
+            <div className="flex justify-between items-center mb-4 border-b border-border pb-3">
+              <h3 className="text-lg font-medium flex items-center text-foreground">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5 text-primary">
+                  <path d="M8 3v3a2 2 0 0 1-2 2H3"></path>
+                  <path d="M21 8h-3a2 2 0 0 1-2-2V3"></path>
+                  <path d="M3 16h3a2 2 0 0 1 2 2v3"></path>
+                  <path d="M16 21v-3a2 2 0 0 1 2-2h3"></path>
+                </svg>
+                <span className="chinese-text mr-1.5">当前词库</span> Current Word List
+              </h3>
+              <div className="flex items-center bg-accent/20 rounded-md px-3 py-1.5 border border-border">
+                <span className="text-sm flex items-center mr-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1 text-primary">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                  </svg>
+                  <span className="chinese-text mr-1">同音词</span> Group homophones
+                </span>
                 <button 
                   type="button"
-                  className={`w-10 h-5 flex items-center rounded-full p-1 cursor-pointer ${
-                    groupByHomophones ? "bg-primary" : "bg-gray-300 dark:bg-gray-600"
-                  }`}
+                  className={`relative w-11 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors ${
+                    groupByHomophones ? "bg-primary" : "bg-foreground/20"
+                  }` as string}
                   onClick={() => setGroupByHomophones(!groupByHomophones)}
+                  aria-label={groupByHomophones ? "Disable homophone grouping" : "Enable homophone grouping"}
                 >
                   <div
-                    className={`bg-white dark:bg-gray-200 h-4 w-4 rounded-full shadow-md transform transition-transform ${
-                      groupByHomophones ? "translate-x-5" : ""
-                    }`}
+                    className={`bg-background h-4 w-4 rounded-full shadow-md transform transition-transform duration-200 ${
+                      groupByHomophones ? "translate-x-5" : "translate-x-0"
+                    }` as string}
                   ></div>
                 </button>
               </div>
@@ -1855,10 +1882,24 @@ export default function WordList() {
         </CardFooter>
       </Card>
       
-      <Card>
-        <CardContent className="pt-6">
-          <h3 className="text-lg font-medium mb-3">Suggested Word Lists</h3>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">Import pre-made lists to get started quickly</p>
+      <Card className="border-border overflow-hidden">
+        <CardHeader className="bg-accent/20 border-b border-border pb-4">
+          <div className="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary mr-2">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            <div>
+              <CardTitle className="text-primary flex items-center">
+                <span className="chinese-text mr-2">推荐词表</span> Suggested Word Lists
+              </CardTitle>
+              <CardDescription className="text-foreground/70">Import pre-made lists to get started quickly</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-4">
           
           {/* Group word lists by category */}
           {(() => {

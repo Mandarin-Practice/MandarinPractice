@@ -95,6 +95,38 @@
     font-family: 'Noto Sans SC', sans-serif;
     @apply tracking-wide;
   }
+  
+  /* Textarea with Chinese styling */
+  .chinese-textarea {
+    font-family: 'Noto Sans SC', 'Inter', sans-serif;
+    @apply text-base leading-relaxed;
+    background-image: linear-gradient(transparent, transparent calc(1.5em - 1px), hsl(var(--border)/0.2) calc(1.5em - 1px), hsl(var(--border)/0.2) 1.5em, transparent 1.5em);
+    background-size: 100% 1.5em;
+  }
+  
+  /* Loading states */
+  .loading-shimmer {
+    @apply relative overflow-hidden;
+  }
+  
+  .loading-shimmer::after {
+    @apply absolute inset-0;
+    content: '';
+    animation: shimmer 1.5s infinite;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      hsl(var(--primary)/0.05) 50%,
+      transparent 100%
+    );
+    transform: translateX(-100%);
+  }
+  
+  @keyframes shimmer {
+    100% {
+      transform: translateX(100%);
+    }
+  }
 
   /* Custom Button Styling */
   .btn-custom {
