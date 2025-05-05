@@ -158,15 +158,17 @@
   position: relative;
   z-index: 10;
   isolation: isolate;
-  background-color: hsl(var(--accent)) !important;
+  background-color: hsl(var(--background)/0.95) !important;
   backdrop-filter: none !important;
+  border-bottom: 1px solid hsl(var(--border));
 }
 
 .opaque-footer {
   position: relative;
   z-index: 10;
   isolation: isolate;
-  background-color: hsl(var(--accent)) !important;
+  background-color: hsl(var(--background)/0.95) !important;
   backdrop-filter: none !important;
+  border-top: 1px solid hsl(var(--border));
 }
 
