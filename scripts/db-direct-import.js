@@ -2,11 +2,10 @@
 // Direct database import script for sample characters
 // Bypasses ESM issues by using direct SQL queries
 
-const { Pool } = require('@neondatabase/serverless');
-const ws = require('ws');
+import { Pool, neonConfig } from '@neondatabase/serverless';
+import ws from 'ws';
 
 // Configure neonConfig for WebSockets
-const { neonConfig } = require('@neondatabase/serverless');
 neonConfig.webSocketConstructor = ws;
 
 // Configure database connection
@@ -110,7 +109,7 @@ async function addCharacter(characterData) {
       // Update character
       characterId = existingCharCheck.rows[0].id;
       await client.query(
-        'UPDATE characters SET pinyin = $1, strokes = $2, radical = $3, "hskLevel" = $4, frequency = $5 WHERE id = $6',
+        'UPDATE characters SET pinyin = $1, strokes = $2, radical = $3, hsk_level = $4, frequency = $5 WHERE id = $6',
         [pinyin, strokes, radical, hskLevel, frequency, characterId]
       );
       stats.charactersUpdated++;
@@ -118,7 +117,7 @@ async function addCharacter(characterData) {
     } else {
       // Add new character
       const result = await client.query(
-        'INSERT INTO characters (character, pinyin, strokes, radical, "hskLevel", frequency) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
+        'INSERT INTO characters (character, pinyin, strokes, radical, hsk_level, frequency) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
         [character, pinyin, strokes, radical, hskLevel, frequency]
       );
       characterId = result.rows[0].id;
@@ -129,7 +128,7 @@ async function addCharacter(characterData) {
     // Add definitions
     for (const def of definitions) {
       await client.query(
-        'INSERT INTO character_definitions ("characterId", definition, "partOfSpeech", "order") VALUES ($1, $2, $3, $4)',
+        'INSERT INTO character_definitions (character_id, definition, part_of_speech, "order") VALUES ($1, $2, $3, $4)',
         [characterId, def.definition, def.partOfSpeech, def.order]
       );
       stats.definitionsAdded++;
