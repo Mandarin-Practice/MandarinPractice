@@ -9,15 +9,17 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90 border border-primary shadow-sm",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90 border border-destructive shadow-sm",
         outline:
-          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+          "border border-primary bg-background text-primary hover:bg-primary hover:text-primary-foreground shadow-sm",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-secondary shadow-sm",
+        ghost: "hover:bg-accent text-primary hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        // Chinese theme styled button
+        chinese: "bg-background text-primary border border-primary hover:bg-primary hover:text-primary-foreground shadow-sm",
       },
       size: {
         default: "h-10 px-4 py-2",
@@ -27,7 +29,7 @@ const buttonVariants = cva(
       },
     },
     defaultVariants: {
-      variant: "default",
+      variant: "chinese", // Change default to our Chinese theme
       size: "default",
     },
   }

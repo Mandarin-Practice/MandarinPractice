@@ -1,51 +1,74 @@
+/* Import Noto Sans SC for Chinese characters */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-      --background: 0 0% 100%;
---foreground: 20 14.3% 4.1%;
---muted: 60 4.8% 95.9%;
---muted-foreground: 25 5.3% 44.7%;
---popover: 0 0% 100%;
---popover-foreground: 20 14.3% 4.1%;
---card: 0 0% 100%;
---card-foreground: 20 14.3% 4.1%;
---border: 20 5.9% 90%;
---input: 20 5.9% 90%;
---primary: 207 90% 54%;
---primary-foreground: 211 100% 99%;
---secondary: 60 4.8% 95.9%;
---secondary-foreground: 24 9.8% 10%;
---accent: 60 4.8% 95.9%;
---accent-foreground: 24 9.8% 10%;
---destructive: 0 84.2% 60.2%;
---destructive-foreground: 60 9.1% 97.8%;
---ring: 20 14.3% 4.1%;
---radius: 0.5rem;
-  }
-  .dark {
-      --background: 240 10% 3.9%;
---foreground: 0 0% 98%;
---muted: 240 3.7% 15.9%;
---muted-foreground: 240 5% 64.9%;
---popover: 240 10% 3.9%;
---popover-foreground: 0 0% 98%;
---card: 240 10% 3.9%;
---card-foreground: 0 0% 98%;
---border: 240 3.7% 15.9%;
---input: 240 3.7% 15.9%;
---primary: 207 90% 54%;
---primary-foreground: 211 100% 99%;
---secondary: 240 3.7% 15.9%;
---secondary-foreground: 0 0% 98%;
---accent: 240 3.7% 15.9%;
---accent-foreground: 0 0% 98%;
---destructive: 0 62.8% 30.6%;
---destructive-foreground: 0 0% 98%;
---ring: 240 4.9% 83.9%;
---radius: 0.5rem;
-  }
+  /* New Warm Chinese Learning Theme */
+  --background: 43 77% 84%; /* #F5E2B8 warm beige */
+  --foreground: 0 0% 31%; /* #4E4E4E dark gray for text */
+  --muted: 38 24% 72%; /* Lighter beige for muted areas */
+  --muted-foreground: 0 0% 40%; /* Muted text color */
+  
+  --popover: 43 77% 87%; /* Slightly lighter beige for popovers */
+  --popover-foreground: 0 0% 31%; /* Same as main text */
+  
+  --card: 43 77% 95%; /* Even lighter beige for cards */
+  --card-foreground: 0 0% 31%; /* Same as main text */
+  
+  --border: 79 15% 63%; /* #A3B18A soft olive green for borders */
+  --input: 79 15% 63%; /* Same olive green for inputs */
+  
+  --primary: 6 60% 40%; /* #A23429 deep red as primary accent */
+  --primary-foreground: 43 77% 98%; /* Nearly white text on primary buttons */
+  
+  --secondary: 79 15% 63%; /* #A3B18A soft olive green */
+  --secondary-foreground: 0 0% 98%; /* Light text on secondary buttons */
+  
+  --accent: 81 25% 82%; /* #CAD2C5 light green for accents */
+  --accent-foreground: 6 60% 40%; /* Red text on accent backgrounds */
+  
+  --destructive: 0 84.2% 60.2%; /* Keep destructive red */
+  --destructive-foreground: 60 9.1% 97.8%; /* Light text on destructive */
+  
+  --ring: 6 60% 40%; /* Deep red for focus rings */
+  --radius: 0.5rem; /* Rounded corners */
+}
+
+.dark {
+  /* Dark mode adaptation of the Chinese theme */
+  --background: 38 30% 15%; /* Dark brown background */
+  --foreground: 43 50% 90%; /* Light beige text */
+  
+  --muted: 38 25% 25%; /* Darker muted areas */
+  --muted-foreground: 43 30% 70%; /* Lighter text for muted areas */
+  
+  --popover: 38 30% 15%; /* Same as background */
+  --popover-foreground: 43 50% 90%; /* Same as foreground */
+  
+  --card: 38 30% 20%; /* Slightly lighter than background */
+  --card-foreground: 43 50% 90%; /* Same as foreground */
+  
+  --border: 79 15% 30%; /* Darker olive green */
+  --input: 79 15% 30%; /* Same darker olive */
+  
+  --primary: 6 60% 50%; /* Brighter red in dark mode */
+  --primary-foreground: 43 77% 98%; /* Light text */
+  
+  --secondary: 79 15% 40%; /* Darker olive green */
+  --secondary-foreground: 43 77% 95%; /* Light text */
+  
+  --accent: 81 15% 30%; /* Darker accent */
+  --accent-foreground: 6 60% 60%; /* Brighter red text */
+  
+  --destructive: 0 62.8% 50.6%; /* Brighter destructive red */
+  --destructive-foreground: 0 0% 98%; /* Light text */
+  
+  --ring: 6 60% 50%; /* Red for focus rings */
+}
 
 @layer base {
   * {
@@ -53,7 +76,36 @@
   }
 
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    @apply antialiased bg-background text-foreground;
+    font-family: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='600' viewBox='0 0 100 600'%3E%3Cg fill='%23CAD2C5' opacity='0.15'%3E%3Cpath d='M20 0C15 100 10 200 12 300 14 400 16 500 20 600'  stroke='%23A3B18A' stroke-width='3' fill='none'/%3E%3Ccircle cx='20' cy='60' r='5'/%3E%3Ccircle cx='20' cy='120' r='5'/%3E%3Ccircle cx='20' cy='180' r='5'/%3E%3Ccircle cx='20' cy='240' r='5'/%3E%3Ccircle cx='20' cy='300' r='5'/%3E%3Ccircle cx='20' cy='360' r='5'/%3E%3Ccircle cx='20' cy='420' r='5'/%3E%3Ccircle cx='20' cy='480' r='5'/%3E%3Ccircle cx='20' cy='540' r='5'/%3E%3Cpath d='M60 0C56 100 52 200 54 300 55 400 58 500 60 600' stroke='%23A3B18A' stroke-width='2' fill='none'/%3E%3Ccircle cx='60' cy='80' r='4'/%3E%3Ccircle cx='60' cy='160' r='4'/%3E%3Ccircle cx='60' cy='240' r='4'/%3E%3Ccircle cx='60' cy='320' r='4'/%3E%3Ccircle cx='60' cy='400' r='4'/%3E%3Ccircle cx='60' cy='480' r='4'/%3E%3Ccircle cx='60' cy='560' r='4'/%3E%3C/g%3E%3C/svg%3E"),
+                  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='600' viewBox='0 0 100 600'%3E%3Cg fill='%23CAD2C5' opacity='0.15'%3E%3Cpath d='M20 0C15 100 10 200 12 300 14 400 16 500 20 600'  stroke='%23A3B18A' stroke-width='3' fill='none'/%3E%3Ccircle cx='20' cy='60' r='5'/%3E%3Ccircle cx='20' cy='120' r='5'/%3E%3Ccircle cx='20' cy='180' r='5'/%3E%3Ccircle cx='20' cy='240' r='5'/%3E%3Ccircle cx='20' cy='300' r='5'/%3E%3Ccircle cx='20' cy='360' r='5'/%3E%3Ccircle cx='20' cy='420' r='5'/%3E%3Ccircle cx='20' cy='480' r='5'/%3E%3Ccircle cx='20' cy='540' r='5'/%3E%3Cpath d='M60 0C56 100 52 200 54 300 55 400 58 500 60 600' stroke='%23A3B18A' stroke-width='2' fill='none'/%3E%3Ccircle cx='60' cy='80' r='4'/%3E%3Ccircle cx='60' cy='160' r='4'/%3E%3Ccircle cx='60' cy='240' r='4'/%3E%3Ccircle cx='60' cy='320' r='4'/%3E%3Ccircle cx='60' cy='400' r='4'/%3E%3Ccircle cx='60' cy='480' r='4'/%3E%3Ccircle cx='60' cy='560' r='4'/%3E%3C/g%3E%3C/svg%3E");
+    background-position: left top, right top;
+    background-repeat: repeat-y;
+    background-attachment: fixed;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-medium text-primary;
+    font-family: 'Noto Sans SC', 'Inter', sans-serif;
+  }
+
+  /* Chinese text special styling */
+  .chinese-text {
+    font-family: 'Noto Sans SC', sans-serif;
+    @apply tracking-wide;
+  }
+
+  /* Custom Button Styling */
+  .btn-custom {
+    @apply bg-background text-primary border border-primary hover:bg-primary hover:text-primary-foreground transition-colors;
+    border-width: 1px;
+  }
+
+  /* Card custom styling */
+  .card-custom {
+    @apply bg-card border-border shadow-md;
+    box-shadow: 0 4px 6px -1px rgba(162, 52, 41, 0.1), 0 2px 4px -1px rgba(162, 52, 41, 0.06);
   }
 }
 
