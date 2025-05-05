@@ -118,14 +118,16 @@ export default function DictionaryAdmin() {
                       onClick={() => startImport('full')} 
                       disabled={isImporting}
                       className="flex-1"
+                      type="button"
                     >
                       {isImporting ? "Importing..." : "Full Import (100k+ entries)"}
                     </Button>
                     <Button 
-                      onClick={() => startImport('sample')} 
+                      onClick={() => startImport('sample')}
                       disabled={isImporting}
                       variant="secondary"
                       className="flex-1"
+                      type="button"
                     >
                       Sample Import (5 characters)
                     </Button>
@@ -135,6 +137,7 @@ export default function DictionaryAdmin() {
                   <Button 
                     variant="outline" 
                     onClick={checkStatus}
+                    type="button"
                   >
                     Check Dictionary Status
                   </Button>
