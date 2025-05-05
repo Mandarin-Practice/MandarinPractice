@@ -96,12 +96,11 @@
     @apply text-primary font-medium;
   }
   
-  /* Fun textarea styling with notebook lines */
+  /* Textarea styling with better vertical alignment */
   .chinese-textarea {
     font-family: 'Noto Sans SC', sans-serif;
-    @apply text-base leading-relaxed rounded-lg border-accent border-2;
-    background-image: linear-gradient(transparent, transparent calc(1.5em - 1px), hsl(var(--secondary)/0.2) calc(1.5em - 1px), hsl(var(--secondary)/0.2) 1.5em, transparent 1.5em);
-    background-size: 100% 1.5em;
+    @apply text-base leading-relaxed rounded-lg;
+    line-height: 1.8;
   }
   
   /* Loading states */

@@ -1619,10 +1619,8 @@ export default function WordList() {
                 value={wordInput}
                 onChange={(e) => setWordInput(e.target.value)}
                 rows={6}
-                placeholder="学习 (xuéxí) - to study
-喜欢 (xǐhuān) - to like
-中文 (zhōngwén) - Chinese language"
-                className="w-full px-4 py-3 rounded-md bg-background border-2 border-border focus:border-primary focus:ring-1 focus:ring-primary/50 chinese-textarea font-medium"
+                placeholder="学习 (xuéxí) - to study"
+                className="w-full px-4 py-3 rounded-md bg-background border-2 border-border focus:border-primary focus:ring-1 focus:ring-primary/50 font-medium leading-normal"
               />
               {/* Removed misaligned decorative line */}
             </div>
