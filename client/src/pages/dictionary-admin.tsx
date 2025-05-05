@@ -12,15 +12,19 @@ export default function DictionaryAdmin() {
   const [importLogs, setImportLogs] = useState<string[]>([]);
   const { toast } = useToast();
 
-  async function startImport() {
+  async function startImport(mode: 'full' | 'sample' = 'full') {
     if (isImporting) return;
     
     setIsImporting(true);
     setImportProgress(0);
-    setImportLogs(['Starting comprehensive dictionary import...']);
+    setImportLogs([`Starting ${mode === 'sample' ? 'sample' : 'comprehensive'} dictionary import...`]);
+    
+    const endpoint = mode === 'sample' 
+      ? '/api/admin/dictionary/import-sample' 
+      : '/api/admin/dictionary/import';
     
     try {
-      const response = await fetch('/api/admin/dictionary/import', {
+      const response = await fetch(endpoint, {
         method: 'POST',
       });
       
@@ -106,20 +110,35 @@ export default function DictionaryAdmin() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex gap-4">
-                <Button 
-                  onClick={startImport} 
-                  disabled={isImporting}
-                  className="flex-1"
-                >
-                  {isImporting ? "Importing..." : "Start Import"}
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={checkStatus}
-                >
-                  Check Status
-                </Button>
+              <div className="space-y-4">
+                <div className="flex flex-col gap-2">
+                  <h3 className="text-sm font-medium">Choose Import Option:</h3>
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={() => startImport('full')} 
+                      disabled={isImporting}
+                      className="flex-1"
+                    >
+                      {isImporting ? "Importing..." : "Full Import (100k+ entries)"}
+                    </Button>
+                    <Button 
+                      onClick={() => startImport('sample')} 
+                      disabled={isImporting}
+                      variant="secondary"
+                      className="flex-1"
+                    >
+                      Sample Import (5 characters)
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex justify-end">
+                  <Button 
+                    variant="outline" 
+                    onClick={checkStatus}
+                  >
+                    Check Dictionary Status
+                  </Button>
+                </div>
               </div>
               
               {isImporting && (

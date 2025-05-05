@@ -122,6 +122,9 @@ async function processCedictData(hanziMap) {
     crlfDelay: Infinity
   });
   
+  // Counter for line processing (more accurate for progress)
+  let processedEntries = 0;
+  
   // Process each line
   for await (const line of rl) {
     // Skip comments
@@ -159,9 +162,10 @@ async function processCedictData(hanziMap) {
         }
       }
       
-      // Log progress
-      if (++stats.charactersAdded % 1000 === 0) {
-        console.log(`Processed ${stats.charactersAdded} entries, added ${stats.definitionsAdded} definitions...`);
+      // Update and log progress
+      processedEntries++;
+      if (processedEntries % 1000 === 0) {
+        console.log(`Processed ${processedEntries} entries, added ${stats.definitionsAdded} definitions, characters: ${stats.charactersAdded}...`);
       }
     } catch (err) {
       stats.errors++;
