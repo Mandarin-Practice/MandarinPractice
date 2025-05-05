@@ -18,9 +18,9 @@ export default function Navbar({ theme, toggleTheme }: NavbarProps) {
   };
 
   const navItems = [
-    { path: "/practice", label: "练习 Practice", icon: "headphones" },
-    { path: "/word-list", label: "词汇 Words", icon: "list" },
-    { path: "/settings", label: "设置 Settings", icon: "cog" }
+    { path: "/practice", label: "Practice", icon: "headphones" },
+    { path: "/word-list", label: "Words", icon: "list" },
+    { path: "/settings", label: "Settings", icon: "cog" }
   ];
 
   return (
@@ -29,8 +29,8 @@ export default function Navbar({ theme, toggleTheme }: NavbarProps) {
         <div className="flex justify-between items-center">
           <Link href="/" className="flex items-center">
             <h1 className="text-2xl font-bold text-primary">
-              <span className="hidden sm:inline chinese-text">汉语学习 <span className="font-normal text-foreground">Mandarin Practice</span></span>
-              <span className="sm:hidden chinese-text">汉语</span>
+              <span className="hidden sm:inline">Mandarin Practice</span>
+              <span className="sm:hidden">Mandarin</span>
             </h1>
           </Link>
 

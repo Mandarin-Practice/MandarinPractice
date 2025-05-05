@@ -142,7 +142,7 @@ export default function SentenceCard({
     <div className="md:col-span-2">
       <Card className="h-full flex flex-col">
         <CardHeader className="bg-accent/20 border-b border-border flex-row justify-between items-center py-4">
-          <h2 className="font-semibold text-primary text-lg chinese-text">当前句子 <span className="text-foreground font-normal text-sm">Current Sentence</span></h2>
+          <h2 className="font-bold text-primary text-lg">Current Sentence</h2>
           <div className="flex items-center space-x-3">
             <Button
               variant="chinese"
@@ -224,8 +224,8 @@ export default function SentenceCard({
               
               {/* Answer Section */}
               <div>
-                <label htmlFor="translation" className="block text-sm font-medium text-primary mb-2 flex items-center">
-                  <span className="chinese-text mr-2">英文翻译</span> Type the English translation:
+                <label htmlFor="translation" className="block text-sm font-medium text-primary mb-2">
+                  Type the English translation:
                 </label>
                 <div className="relative">
                   <Input
