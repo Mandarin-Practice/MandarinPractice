@@ -12,7 +12,8 @@ import {
   type InsertLearnedDefinition,
   characters,
   characterDefinitions,
-  learnedDefinitions 
+  learnedDefinitions,
+  wordProficiency
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, like, desc, asc, and, or, sql } from "drizzle-orm";

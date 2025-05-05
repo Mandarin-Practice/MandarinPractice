@@ -6,8 +6,26 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { Spinner } from "@/components/ui/spinner";
 import { Label } from "@/components/ui/label";
+
+// Create inline spinner component since the external one isn't working
+const Spinner = ({ className = "", size = "md" }: { className?: string, size?: "sm" | "md" | "lg" }) => {
+  const sizeClasses = {
+    sm: "h-4 w-4 border-2",
+    md: "h-6 w-6 border-2",
+    lg: "h-10 w-10 border-3",
+  };
+
+  return (
+    <div
+      className={`inline-block animate-spin rounded-full border-solid border-current border-t-transparent text-primary ${sizeClasses[size]} ${className}`}
+      role="status"
+      aria-label="loading"
+    >
+      <span className="sr-only">Loading...</span>
+    </div>
+  );
+};
 
 interface Character {
   id: number;
