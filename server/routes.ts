@@ -55,23 +55,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Words must be an array" });
       }
       
+      console.log(`Import request received with ${words.length} words`);
+      
+      // First, validate all words using the schema
       const validatedWords = words.map(word => {
         try {
           return vocabularySchema.parse(word);
         } catch (error) {
           if (error instanceof ZodError) {
-            throw new Error(`Invalid word format: ${error.errors.map(e => e.message).join(', ')}`);
+            const errorMsg = `Invalid word format: ${error.errors.map(e => e.message).join(', ')}`;
+            console.error(`Validation error for word "${JSON.stringify(word)}": ${errorMsg}`);
+            throw new Error(errorMsg);
           }
           throw error;
         }
       });
       
-      const savedWords = await Promise.all(
-        validatedWords.map(word => storage.addVocabulary(word))
-      );
+      console.log(`Successfully validated ${validatedWords.length} words`);
       
+      // Instead of using Promise.all (which might silently swallow errors),
+      // process each word individually and track results
+      const savedWords = [];
+      const wordErrors = [];
+      
+      for (const word of validatedWords) {
+        try {
+          const savedWord = await storage.addVocabulary(word);
+          savedWords.push(savedWord);
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          console.error(`Error adding word "${word.chinese}": ${errorMessage}`);
+          wordErrors.push({
+            word: word.chinese,
+            error: errorMessage
+          });
+        }
+      }
+      
+      console.log(`Successfully saved ${savedWords.length} words out of ${validatedWords.length}`);
+      if (wordErrors.length > 0) {
+        console.log(`Encountered ${wordErrors.length} errors during import`);
+        console.log(wordErrors);
+      }
+      
+      // Return all the saved words, without the errors
       res.status(201).json(savedWords);
     } catch (error) {
+      console.error(`Import failed: ${error instanceof Error ? error.message : String(error)}`);
       res.status(400).json({ message: error instanceof Error ? error.message : "Failed to import vocabulary" });
     }
   });

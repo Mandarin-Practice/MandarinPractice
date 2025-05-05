@@ -1457,10 +1457,10 @@ export default function WordList() {
     let imported = 0;
     
     // Check how many words from this list are already in the user's vocabulary
+    // We now only check the Chinese character to match how the server merges words
     wordList.words.forEach(listWord => {
       const isImported = vocabulary.some(vocabWord => 
-        vocabWord.chinese === listWord.chinese && 
-        vocabWord.pinyin === listWord.pinyin
+        vocabWord.chinese === listWord.chinese
       );
       if (isImported) imported++;
     });
