@@ -424,7 +424,7 @@ router.post('/admin/dictionary/fix-variant-definitions', (req, res) => {
     importStatus = {
       isRunning: true,
       progress: 0,
-      logs: ['Starting variant definition fixes...'],
+      logs: ['Starting improved variant definition fixes...'],
       error: null,
       stats: {
         charactersAdded: 0,
@@ -434,8 +434,8 @@ router.post('/admin/dictionary/fix-variant-definitions', (req, res) => {
       }
     };
     
-    const scriptPath = path.resolve(process.cwd(), 'scripts/fix-variant-definitions.js');
-    log(`Starting variant definition fix process: ${scriptPath}`, 'dictionary-admin');
+    const scriptPath = path.resolve(process.cwd(), 'scripts/improved-fix-variant-definitions.js');
+    log(`Starting improved variant definition fix process: ${scriptPath}`, 'dictionary-admin');
     
     // Start the process
     importProcess = spawn('node', ['--experimental-specifier-resolution=node', scriptPath], {
