@@ -105,20 +105,61 @@ function setupImportProcessHandlers(process: any, res: any) {
   });
   
   // Handle process completion
-  process.on('close', (code: number) => {
+  process.on('close', async (code: number) => {
     log(`Import process exited with code ${code}`, 'dictionary-admin');
-    
-    importStatus.isRunning = false;
-    importStatus.progress = 100;
     
     if (code === 0) {
       importStatus.logs.push('Import completed successfully!');
-      sendUpdateToAll({ 
-        log: 'Import completed successfully!',
-        progress: 100,
-        completed: true,
-        stats: importStatus.stats
-      });
+      
+      // Run duplicate definition cleanup automatically after successful import
+      try {
+        importStatus.logs.push('Running duplicate definition cleanup...');
+        sendUpdateToAll({ 
+          log: 'Running duplicate definition cleanup...',
+          progress: 99,
+        });
+        
+        // Run cleanup script
+        const cleanupPath = path.resolve(process.cwd(), 'scripts/cleanup-duplicate-definitions.js');
+        const cleanupProcess = spawn('node', ['--experimental-specifier-resolution=node', cleanupPath], {
+          env: { ...process.env },
+          shell: true,
+          stdio: 'pipe'
+        });
+        
+        cleanupProcess.stdout.on('data', (data) => {
+          const lines = data.toString().trim().split('\n');
+          for (const line of lines) {
+            if (line.includes('Removed')) {
+              importStatus.logs.push(line);
+              sendUpdateToAll({ log: line });
+            }
+          }
+        });
+        
+        // Wait for cleanup to finish
+        await new Promise<void>((resolve) => {
+          cleanupProcess.on('close', () => {
+            resolve();
+          });
+        });
+        
+        importStatus.logs.push('Cleanup completed successfully!');
+        sendUpdateToAll({ 
+          log: 'Cleanup completed successfully!',
+          progress: 100,
+          completed: true,
+          stats: importStatus.stats
+        });
+      } catch (error) {
+        importStatus.logs.push(`Cleanup error: ${error}`);
+        sendUpdateToAll({ 
+          log: `Cleanup error: ${error}`,
+          progress: 100,
+          completed: true,
+          stats: importStatus.stats
+        });
+      }
     } else {
       importStatus.logs.push(`Import failed with exit code ${code}`);
       importStatus.error = `Process exited with code ${code}`;
@@ -129,6 +170,8 @@ function setupImportProcessHandlers(process: any, res: any) {
       });
     }
     
+    importStatus.isRunning = false;
+    importStatus.progress = 100;
     importProcess = null;
   });
   

@@ -151,13 +151,24 @@ async function addCharacter(characterData) {
       console.log(`Added character: ${character}`);
     }
     
-    // Add definitions
+    // Add definitions (check for duplicates)
     for (const def of definitions) {
-      await client.query(
-        'INSERT INTO character_definitions (character_id, definition, part_of_speech, "order") VALUES ($1, $2, $3, $4)',
-        [characterId, def.definition, def.part_of_speech, def.order]
+      // Check if this definition already exists for this character
+      const existingDefCheck = await client.query(
+        'SELECT id FROM character_definitions WHERE character_id = $1 AND definition = $2 AND part_of_speech = $3',
+        [characterId, def.definition, def.part_of_speech]
       );
-      stats.definitionsAdded++;
+      
+      if (existingDefCheck.rows.length === 0) {
+        // Only add if it doesn't already exist
+        await client.query(
+          'INSERT INTO character_definitions (character_id, definition, part_of_speech, "order") VALUES ($1, $2, $3, $4)',
+          [characterId, def.definition, def.part_of_speech, def.order]
+        );
+        stats.definitionsAdded++;
+      } else {
+        console.log(`Skipped duplicate definition for ${character}: "${def.definition}"`);
+      }
     }
     
     // Commit the transaction
