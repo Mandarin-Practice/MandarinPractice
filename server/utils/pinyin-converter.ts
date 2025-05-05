@@ -56,6 +56,15 @@ export function convertNumericPinyinToTonal(numericPinyin: string): string {
     return numericPinyin;
   }
   
+  // Replace 'v' with 'ü' in all relevant pinyin cases
+  // 'v' is commonly used in place of 'ü' in computer systems
+  numericPinyin = numericPinyin.replace(/\b(l|n)v(\d|[ ]|$)/g, '$1ü$2'); // lv, nv
+  numericPinyin = numericPinyin.replace(/\b(l|n)ve(\d|[ ]|$)/g, '$1üe$2'); // lve, nve
+  numericPinyin = numericPinyin.replace(/\bju(\d|[ ]|$)/g, 'jü$1'); // ju -> jü
+  numericPinyin = numericPinyin.replace(/\bqu(\d|[ ]|$)/g, 'qü$1'); // qu -> qü
+  numericPinyin = numericPinyin.replace(/\bxu(\d|[ ]|$)/g, 'xü$1'); // xu -> xü
+  numericPinyin = numericPinyin.replace(/\byv(\d|[ ]|$)/g, 'yü$1'); // yv -> yü (rare)
+  
   // Split the pinyin into syllables (space-separated)
   return numericPinyin.split(' ').map(syllable => {
     // Find the tone number (1-5, where 5 is neutral tone)

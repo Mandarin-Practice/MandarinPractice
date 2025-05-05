@@ -665,14 +665,27 @@ export class DatabaseStorage implements IStorage {
    */
   private formatPinyinForCharacters(chars: Character[]): Character[] {
     return chars.map(char => {
-      // Only try to convert if the pinyin looks like it has numeric tones
-      if (char.pinyin && isNumericPinyin(char.pinyin)) {
-        return {
-          ...char,
-          pinyin: convertNumericPinyinToTonal(char.pinyin)
-        };
+      if (!char.pinyin) return char;
+      
+      // Convert numeric pinyin to tonal pinyin if needed
+      let formattedPinyin = isNumericPinyin(char.pinyin) 
+        ? convertNumericPinyinToTonal(char.pinyin)
+        : char.pinyin;
+      
+      // Also handle 'v' as 'ü' in pinyin without tone numbers
+      if (!isNumericPinyin(formattedPinyin)) {
+        formattedPinyin = formattedPinyin.replace(/\b(l|n)v\b/g, '$1ü'); // lv, nv
+        formattedPinyin = formattedPinyin.replace(/\b(l|n)ve\b/g, '$1üe'); // lve, nve
+        formattedPinyin = formattedPinyin.replace(/\bju\b/g, 'jü'); // ju -> jü
+        formattedPinyin = formattedPinyin.replace(/\bqu\b/g, 'qü'); // qu -> qü
+        formattedPinyin = formattedPinyin.replace(/\bxu\b/g, 'xü'); // xu -> xü
+        formattedPinyin = formattedPinyin.replace(/\byv\b/g, 'yü'); // yv -> yü (rare)
       }
-      return char;
+      
+      return {
+        ...char,
+        pinyin: formattedPinyin
+      };
     });
   }
   
