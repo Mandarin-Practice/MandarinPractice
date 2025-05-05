@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background elements -->
+  <defs>
+    <linearGradient id="leafGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="10%" style="stop-color:#66BB6A;stop-opacity:0.95" />
+      <stop offset="90%" style="stop-color:#388E3C;stop-opacity:0.95" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Bamboo stalks -->
+  <g>
+    <!-- Main stalk -->
+    <rect x="240" y="10" width="32" height="492" fill="#4CAF50" />
+    
+    <!-- Nodes -->
+    <ellipse cx="256" cy="50" rx="20" ry="5" fill="#388E3C" />
+    <ellipse cx="256" cy="110" rx="20" ry="5" fill="#388E3C" />
+    <ellipse cx="256" cy="170" rx="20" ry="5" fill="#388E3C" />
+    <ellipse cx="256" cy="230" rx="20" ry="5" fill="#388E3C" />
+    <ellipse cx="256" cy="290" rx="20" ry="5" fill="#388E3C" />
+    <ellipse cx="256" cy="350" rx="20" ry="5" fill="#388E3C" />
+    <ellipse cx="256" cy="410" rx="20" ry="5" fill="#388E3C" />
+    <ellipse cx="256" cy="470" rx="20" ry="5" fill="#388E3C" />
+    
+    <!-- Secondary stalk -->
+    <rect x="320" y="80" width="25" height="422" fill="#4CAF50" />
+    
+    <!-- Nodes -->
+    <ellipse cx="332.5" cy="110" rx="16" ry="4" fill="#388E3C" />
+    <ellipse cx="332.5" cy="170" rx="16" ry="4" fill="#388E3C" />
+    <ellipse cx="332.5" cy="230" rx="16" ry="4" fill="#388E3C" />
+    <ellipse cx="332.5" cy="290" rx="16" ry="4" fill="#388E3C" />
+    <ellipse cx="332.5" cy="350" rx="16" ry="4" fill="#388E3C" />
+    <ellipse cx="332.5" cy="410" rx="16" ry="4" fill="#388E3C" />
+    <ellipse cx="332.5" cy="470" rx="16" ry="4" fill="#388E3C" />
+    
+    <!-- Third stalk -->
+    <rect x="180" y="50" width="22" height="452" fill="#4CAF50" />
+    
+    <!-- Nodes -->
+    <ellipse cx="191" cy="80" rx="14" ry="4" fill="#388E3C" />
+    <ellipse cx="191" cy="140" rx="14" ry="4" fill="#388E3C" />
+    <ellipse cx="191" cy="200" rx="14" ry="4" fill="#388E3C" />
+    <ellipse cx="191" cy="260" rx="14" ry="4" fill="#388E3C" />
+    <ellipse cx="191" cy="320" rx="14" ry="4" fill="#388E3C" />
+    <ellipse cx="191" cy="380" rx="14" ry="4" fill="#388E3C" />
+    <ellipse cx="191" cy="440" rx="14" ry="4" fill="#388E3C" />
+    
+    <!-- Fourth stalk -->
+    <rect x="120" y="100" width="18" height="402" fill="#4CAF50" />
+    
+    <!-- Nodes -->
+    <ellipse cx="129" cy="130" rx="12" ry="3" fill="#388E3C" />
+    <ellipse cx="129" cy="190" rx="12" ry="3" fill="#388E3C" />
+    <ellipse cx="129" cy="250" rx="12" ry="3" fill="#388E3C" />
+    <ellipse cx="129" cy="310" rx="12" ry="3" fill="#388E3C" />
+    <ellipse cx="129" cy="370" rx="12" ry="3" fill="#388E3C" />
+    <ellipse cx="129" cy="430" rx="12" ry="3" fill="#388E3C" />
+  </g>
+  
+  <!-- Bamboo leaves -->
+  <g>
+    <!-- Leaf set 1 -->
+    <path d="M272 40C320 20 350 30 340 50C330 65 290 65 272 40Z" fill="url(#leafGradient)" />
+    <path d="M272 90C320 70 350 80 340 100C330 115 290 115 272 90Z" fill="url(#leafGradient)" />
+    <path d="M272 150C320 130 350 140 340 160C330 175 290 175 272 150Z" fill="url(#leafGradient)" />
+    <path d="M272 210C320 190 350 200 340 220C330 235 290 235 272 210Z" fill="url(#leafGradient)" />
+    
+    <!-- Leaf set 2 -->
+    <path d="M240 60C180 40 160 50 170 70C180 85 220 85 240 60Z" fill="url(#leafGradient)" />
+    <path d="M240 120C180 100 160 110 170 130C180 145 220 145 240 120Z" fill="url(#leafGradient)" />
+    <path d="M240 180C180 160 160 170 170 190C180 205 220 205 240 180Z" fill="url(#leafGradient)" />
+    <path d="M240 240C180 220 160 230 170 250C180 265 220 265 240 240Z" fill="url(#leafGradient)" />
+    
+    <!-- Leaf set 3 -->
+    <path d="M345 100C395 80 415 90 405 110C395 125 365 125 345 100Z" fill="url(#leafGradient)" />
+    <path d="M345 160C395 140 415 150 405 170C395 185 365 185 345 160Z" fill="url(#leafGradient)" />
+    <path d="M345 220C395 200 415 210 405 230C395 245 365 245 345 220Z" fill="url(#leafGradient)" />
+    
+    <!-- Leaf set 4 -->
+    <path d="M320 130C270 110 250 120 260 140C270 155 300 155 320 130Z" fill="url(#leafGradient)" />
+    <path d="M320 190C270 170 250 180 260 200C270 215 300 215 320 190Z" fill="url(#leafGradient)" />
+    <path d="M320 250C270 230 250 240 260 260C270 275 300 275 320 250Z" fill="url(#leafGradient)" />
+    
+    <!-- Leaf set 5 -->
+    <path d="M175 70C125 50 105 60 115 80C125 95 155 95 175 70Z" fill="url(#leafGradient)" />
+    <path d="M175 130C125 110 105 120 115 140C125 155 155 155 175 130Z" fill="url(#leafGradient)" />
+    <path d="M175 190C125 170 105 180 115 200C125 215 155 215 175 190Z" fill="url(#leafGradient)" />
+    
+    <!-- Leaf set 6 -->
+    <path d="M202 100C252 80 272 90 262 110C252 125 222 125 202 100Z" fill="url(#leafGradient)" />
+    <path d="M202 160C252 140 272 150 262 170C252 185 222 185 202 160Z" fill="url(#leafGradient)" />
+    <path d="M202 220C252 200 272 210 262 230C252 245 222 245 202 220Z" fill="url(#leafGradient)" />
+    
+    <!-- Leaf set 7 -->
+    <path d="M115 120C65 100 45 110 55 130C65 145 95 145 115 120Z" fill="url(#leafGradient)" />
+    <path d="M115 180C65 160 45 170 55 190C65 205 95 205 115 180Z" fill="url(#leafGradient)" />
+    <path d="M115 240C65 220 45 230 55 250C65 265 95 265 115 240Z" fill="url(#leafGradient)" />
+    
+    <!-- Leaf set 8 -->
+    <path d="M142 150C192 130 212 140 202 160C192 175 162 175 142 150Z" fill="url(#leafGradient)" />
+    <path d="M142 210C192 190 212 200 202 220C192 235 162 235 142 210Z" fill="url(#leafGradient)" />
+    <path d="M142 270C192 250 212 260 202 280C192 295 162 295 142 270Z" fill="url(#leafGradient)" />
+  </g>
+</svg>
