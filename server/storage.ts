@@ -10,9 +10,12 @@ import {
   type InsertCharacterDefinition,
   type LearnedDefinition,
   type InsertLearnedDefinition,
+  type CharacterCompound,
+  type InsertCharacterCompound,
   characters,
   characterDefinitions,
   learnedDefinitions,
+  characterCompounds,
   wordProficiency
 } from "@shared/schema";
 import { db } from "./db";
@@ -42,6 +45,10 @@ export interface IStorage {
   addCharacterDefinition(definition: InsertCharacterDefinition): Promise<CharacterDefinition>;
   updateCharacterDefinition(id: number, updates: Partial<InsertCharacterDefinition>): Promise<CharacterDefinition>;
   deleteCharacterDefinition(id: number): Promise<void>;
+  
+  // Character compound relationships methods
+  getCharacterCompounds(componentId: number): Promise<{ compound: Character, position: number }[]>;
+  getCompoundComponents(compoundId: number): Promise<{ component: Character, position: number }[]>;
   
   // User learned definitions methods
   getLearnedDefinitions(userId: number): Promise<LearnedDefinition[]>;
@@ -164,6 +171,15 @@ export class MemStorage implements IStorage {
   
   async updateLearnedDefinitionNotes(id: number, notes: string): Promise<LearnedDefinition> {
     throw new Error("Method not implemented");
+  }
+  
+  // Character compound relationship methods
+  async getCharacterCompounds(componentId: number): Promise<{ compound: Character, position: number }[]> {
+    return [];
+  }
+  
+  async getCompoundComponents(compoundId: number): Promise<{ component: Character, position: number }[]> {
+    return [];
   }
 }
 

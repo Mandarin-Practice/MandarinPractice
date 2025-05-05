@@ -421,6 +421,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: error instanceof Error ? error.message : "Failed to fetch definitions" });
     }
   });
+  
+  // Get all compounds that a character is part of
+  app.get("/api/characters/:id/compounds", async (req, res) => {
+    try {
+      const characterId = parseInt(req.params.id);
+      
+      if (isNaN(characterId)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      const compounds = await storage.getCharacterCompounds(characterId);
+      res.json(compounds);
+    } catch (error) {
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to fetch character compounds" });
+    }
+  });
+  
+  // Get all components of a compound character
+  app.get("/api/characters/:id/components", async (req, res) => {
+    try {
+      const compoundId = parseInt(req.params.id);
+      
+      if (isNaN(compoundId)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      const components = await storage.getCompoundComponents(compoundId);
+      res.json(components);
+    } catch (error) {
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to fetch compound components" });
+    }
+  });
 
   // Add a new definition to a character
   app.post("/api/characters/:id/definitions", async (req, res) => {

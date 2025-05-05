@@ -268,6 +268,76 @@ async function addDefinition(characterId, definition, order) {
   }
 }
 
+// Function to create relationships between characters and compounds
+async function createCharacterRelationships() {
+  try {
+    // Get all characters from the database
+    const allCharsResult = await pool.query('SELECT id, character FROM characters ORDER BY id');
+    const allChars = allCharsResult.rows;
+    console.log(`Found ${allChars.length} characters to process for relationships`);
+    
+    // Create a map for faster lookups
+    const charMap = new Map();
+    allChars.forEach(char => {
+      charMap.set(char.character, char.id);
+    });
+    
+    // Start a counter for logging
+    let compoundsProcessed = 0;
+    let relationshipsCreated = 0;
+    
+    // Process all multi-character compounds
+    for (const char of allChars) {
+      // Skip single characters (no components)
+      if (char.character.length <= 1) continue;
+      
+      compoundsProcessed++;
+      
+      // Break compound into individual characters
+      const compoundChars = Array.from(char.character);
+      let position = 0;
+      
+      for (const component of compoundChars) {
+        // Make sure the component character exists in our database
+        if (charMap.has(component)) {
+          const componentId = charMap.get(component);
+          
+          // Check if this relationship already exists to avoid duplicates
+          const existingRel = await pool.query(
+            'SELECT id FROM character_compounds WHERE compound_id = $1 AND component_id = $2 AND position = $3',
+            [char.id, componentId, position]
+          );
+          
+          if (existingRel.rows.length === 0) {
+            // Create the relationship
+            await pool.query(
+              'INSERT INTO character_compounds (compound_id, component_id, position) VALUES ($1, $2, $3)',
+              [char.id, componentId, position]
+            );
+            relationshipsCreated++;
+          }
+        }
+        
+        position++;
+      }
+      
+      // Log progress periodically
+      if (compoundsProcessed % 1000 === 0) {
+        console.log(`Processed ${compoundsProcessed} compounds, created ${relationshipsCreated} relationships...`);
+      }
+    }
+    
+    console.log(`\nCompound relationship processing complete!`);
+    console.log(`- Compounds processed: ${compoundsProcessed}`);
+    console.log(`- Relationships created: ${relationshipsCreated}`);
+    
+    return true;
+  } catch (err) {
+    console.error('Error creating character relationships:', err);
+    return false;
+  }
+}
+
 // Function to clean up temporary files
 function cleanup() {
   try {
