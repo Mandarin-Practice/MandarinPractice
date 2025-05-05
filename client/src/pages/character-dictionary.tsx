@@ -67,6 +67,9 @@ interface SavedWord {
   timestamp: number;
 }
 
+// See if the document object is available (client-side only)
+const isClient = typeof window !== 'undefined';
+
 export default function CharacterDictionary() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
@@ -601,8 +604,12 @@ export default function CharacterDictionary() {
                 
                 <Button 
                   onClick={() => {
-                    const button = document.querySelector('button[value="dictionary"]') as HTMLButtonElement;
-                    button?.click();
+                    if (isClient) {
+                      const tabButton = document.querySelector('button[value="dictionary"]');
+                      if (tabButton && 'click' in tabButton) {
+                        (tabButton as HTMLElement).click();
+                      }
+                    }
                   }} 
                   variant="default"
                 >
