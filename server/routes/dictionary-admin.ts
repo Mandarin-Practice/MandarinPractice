@@ -3,7 +3,7 @@ import { storage } from '../storage';
 import { spawn } from 'child_process';
 import { log } from '../vite';
 import path from 'path';
-import { db } from '../db';
+import { db, pool } from '../db';
 import * as schema from '../../shared/schema';
 import { sql } from 'drizzle-orm';
 
@@ -138,22 +138,27 @@ function setupImportProcessHandlers(process: any, res: any) {
 // GET character count
 router.get('/dictionary/stats', async (req, res) => {
   try {
-    // Use a simple raw query to get the counts
-    const characterQuery = await db.execute('SELECT COUNT(*) as count FROM characters');
-    const definitionQuery = await db.execute('SELECT COUNT(*) as count FROM character_definitions');
+    // Use direct pool query that matches PostgreSQL response format
+    const characterQuery = await pool.query('SELECT COUNT(*) as count FROM characters');
+    const definitionQuery = await pool.query('SELECT COUNT(*) as count FROM character_definitions');
+    
+    // Log the raw responses to debug
+    log(`Character count raw response: ${JSON.stringify(characterQuery.rows)}`, 'dictionary-admin');
+    log(`Definition count raw response: ${JSON.stringify(definitionQuery.rows)}`, 'dictionary-admin');
     
     // Get the counts from the query result
-    // Handle different DB response formats safely
     let characterCount = 0;
     let definitionCount = 0;
     
-    if (Array.isArray(characterQuery) && characterQuery.length > 0) {
-      characterCount = parseInt(characterQuery[0].count || '0');
+    if (characterQuery.rows && characterQuery.rows.length > 0) {
+      characterCount = parseInt(characterQuery.rows[0].count || '0');
     }
     
-    if (Array.isArray(definitionQuery) && definitionQuery.length > 0) {
-      definitionCount = parseInt(definitionQuery[0].count || '0');
+    if (definitionQuery.rows && definitionQuery.rows.length > 0) {
+      definitionCount = parseInt(definitionQuery.rows[0].count || '0');
     }
+    
+    log(`Final counts: characters=${characterCount}, definitions=${definitionCount}`, 'dictionary-admin');
     
     res.json({ 
       count: characterCount,
