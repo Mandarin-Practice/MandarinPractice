@@ -35,18 +35,14 @@ function sendUpdateToAll(data: any) {
 // GET character count
 router.get('/characters/count', async (req, res) => {
   try {
-    // Use SQL query from Drizzle
-    const result = await db.execute(
-      `SELECT COUNT(DISTINCT c.id) as character_count
-       FROM characters c
-       JOIN character_definitions cd ON c.id = cd.character_id`
-    );
+    // Get character count directly using a simpler query
+    const result = await db.execute(`SELECT COUNT(*) as count FROM characters`);
     
     // Get the first row of the result
-    const firstRow = (result as any)[0];
-    const count = firstRow?.character_count || 0;
+    const rows = result as any;
+    const count = rows[0]?.count || 0;
     
-    res.json({ count });
+    res.json({ count: parseInt(count) });
   } catch (error: any) {
     log(`Error counting characters: ${error}`, 'dictionary-admin');
     res.status(500).json({ error: 'Failed to count characters' });
