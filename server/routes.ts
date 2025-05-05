@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { vocabularySchema, characterSchema, characterDefinitionSchema, learnedDefinitionSchema } from "@shared/schema";
 import { ZodError } from "zod";
 import { generateSentence, generateSentenceWithWord, checkSynonyms } from "./openai";
+import dictionaryAdminRoutes from "./routes/dictionary-admin";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Get all vocabulary words
@@ -542,6 +543,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(404).json({ message: error instanceof Error ? error.message : "Learned definition not found" });
     }
   });
+
+  // Register dictionary admin routes
+  app.use('/api', dictionaryAdminRoutes);
 
   const httpServer = createServer(app);
   return httpServer;

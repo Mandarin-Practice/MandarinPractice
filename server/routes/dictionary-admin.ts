@@ -3,6 +3,7 @@ import { storage } from '../storage';
 import { spawn } from 'child_process';
 import { log } from '../vite';
 import path from 'path';
+import { db } from '../db';
 
 const router = Router();
 
@@ -40,7 +41,7 @@ router.get('/characters/count', async (req, res) => {
       JOIN character_definitions cd ON c.id = cd.character_id
     `;
     
-    const result = await storage.db.execute({
+    const result = await db.execute({
       sql: query,
       args: []
     });
