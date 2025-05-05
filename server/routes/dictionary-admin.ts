@@ -138,22 +138,22 @@ function setupImportProcessHandlers(process: any, res: any) {
 // GET character count
 router.get('/characters/count', async (req, res) => {
   try {
-    // Get character and definition counts using Drizzle
-    const { characters, characterDefinitions } = schema;
+    // Use a simple raw query to get the counts
+    const characterQuery = await db.execute('SELECT COUNT(*) as count FROM characters');
+    const definitionQuery = await db.execute('SELECT COUNT(*) as count FROM character_definitions');
     
-    // Count characters
-    const characterCountResult = await db.select({
-      count: sql`count(*)`.mapWith(Number)
-    }).from(characters);
+    // Get the counts from the query result
+    // Handle different DB response formats safely
+    let characterCount = 0;
+    let definitionCount = 0;
     
-    // Count definitions
-    const definitionCountResult = await db.select({
-      count: sql`count(*)`.mapWith(Number)
-    }).from(characterDefinitions);
+    if (Array.isArray(characterQuery) && characterQuery.length > 0) {
+      characterCount = parseInt(characterQuery[0].count || '0');
+    }
     
-    // Extract counts
-    const characterCount = characterCountResult[0]?.count || 0;
-    const definitionCount = definitionCountResult[0]?.count || 0;
+    if (Array.isArray(definitionQuery) && definitionQuery.length > 0) {
+      definitionCount = parseInt(definitionQuery[0].count || '0');
+    }
     
     res.json({ 
       count: characterCount,

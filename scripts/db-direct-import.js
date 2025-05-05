@@ -1,14 +1,12 @@
 #!/usr/bin/env node
-// Import a small sample of common Chinese characters for testing
+// Direct database import script for sample characters
+// Bypasses ESM issues by using direct SQL queries
 
-// Use ES modules 
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import { eq } from 'drizzle-orm';
-import ws from 'ws';
-import * as schema from '../shared/schema.ts';
+const { Pool } = require('@neondatabase/serverless');
+const ws = require('ws');
 
 // Configure neonConfig for WebSockets
+const { neonConfig } = require('@neondatabase/serverless');
 neonConfig.webSocketConstructor = ws;
 
 // Configure database connection
@@ -18,7 +16,6 @@ if (!process.env.DATABASE_URL) {
 }
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const db = drizzle(pool, { schema });
 
 // Common Chinese characters with definitions
 const sampleCharacters = [
@@ -92,70 +89,63 @@ const stats = {
   errors: 0
 };
 
-// Function to add a character
+// Function to add a character using direct SQL
 async function addCharacter(characterData) {
+  const client = await pool.connect();
   try {
     const { character, pinyin, strokes, radical, hskLevel, frequency, definitions } = characterData;
-    const { characters } = schema;
+    
+    // Start a transaction
+    await client.query('BEGIN');
     
     // Check if character already exists
-    const existingChars = await db.select().from(characters).where(eq(characters.character, character));
-    const existingChar = existingChars[0];
+    const existingCharCheck = await client.query(
+      'SELECT id FROM characters WHERE character = $1',
+      [character]
+    );
     
     let characterId;
     
-    if (existingChar) {
+    if (existingCharCheck.rows.length > 0) {
       // Update character
-      await db.update(characters)
-        .set({
-          pinyin,
-          strokes,
-          radical,
-          hskLevel,
-          frequency
-        })
-        .where(eq(characters.id, existingChar.id));
-      
+      characterId = existingCharCheck.rows[0].id;
+      await client.query(
+        'UPDATE characters SET pinyin = $1, strokes = $2, radical = $3, "hskLevel" = $4, frequency = $5 WHERE id = $6',
+        [pinyin, strokes, radical, hskLevel, frequency, characterId]
+      );
       stats.charactersUpdated++;
-      characterId = existingChar.id;
       console.log(`Updated character: ${character}`);
     } else {
       // Add new character
-      const newChars = await db.insert(characters)
-        .values({
-          character,
-          pinyin,
-          strokes,
-          radical,
-          hskLevel,
-          frequency
-        })
-        .returning();
-      
+      const result = await client.query(
+        'INSERT INTO characters (character, pinyin, strokes, radical, "hskLevel", frequency) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
+        [character, pinyin, strokes, radical, hskLevel, frequency]
+      );
+      characterId = result.rows[0].id;
       stats.charactersAdded++;
-      characterId = newChars[0].id;
       console.log(`Added character: ${character}`);
     }
     
     // Add definitions
-    const { characterDefinitions } = schema;
     for (const def of definitions) {
-      await db.insert(characterDefinitions)
-        .values({
-          characterId,
-          definition: def.definition,
-          partOfSpeech: def.partOfSpeech,
-          order: def.order
-        });
-      
+      await client.query(
+        'INSERT INTO character_definitions ("characterId", definition, "partOfSpeech", "order") VALUES ($1, $2, $3, $4)',
+        [characterId, def.definition, def.partOfSpeech, def.order]
+      );
       stats.definitionsAdded++;
     }
     
+    // Commit the transaction
+    await client.query('COMMIT');
     return true;
   } catch (err) {
+    // Rollback in case of error
+    await client.query('ROLLBACK');
     console.error(`Error adding character ${characterData.character}:`, err);
     stats.errors++;
     return false;
+  } finally {
+    client.release();
   }
 }
 
@@ -177,9 +167,11 @@ async function main() {
     console.log(`- Definitions added: ${stats.definitionsAdded}`);
     console.log(`- Errors encountered: ${stats.errors}`);
     
+    await pool.end();
     process.exit(0);
   } catch (err) {
     console.error('Error in main process:', err);
+    await pool.end();
     process.exit(1);
   }
 }
