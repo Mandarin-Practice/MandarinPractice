@@ -344,6 +344,7 @@ export class DatabaseStorage implements IStorage {
     
     // Special handling for common searches
     const commonSearchTerms: Record<string, string[]> = {
+      // Basic elements and parts
       "water": ["水"],
       "fire": ["火"],
       "earth": ["土"],
@@ -356,7 +357,7 @@ export class DatabaseStorage implements IStorage {
       "moon": ["月"],
       "mountain": ["山"],
       "river": ["河"],
-      "tree": ["树"],
+      "tree": ["树", "木"],
       "door": ["门"],
       "hand": ["手"],
       "eye": ["眼"],
@@ -364,7 +365,61 @@ export class DatabaseStorage implements IStorage {
       "nose": ["鼻"],
       "tongue": ["舌"],
       "foot": ["脚"],
-      "head": ["头"]
+      "head": ["头"],
+      
+      // Common pronouns and verbs from vocabulary 
+      "i": ["我"],
+      "me": ["我"],
+      "you": ["你"],
+      "he": ["他"],
+      "she": ["她"],
+      "it": ["它"],
+      "we": ["我们"],
+      "they": ["他们", "她们"],
+      "eat": ["吃"],
+      "drink": ["喝"],
+      "go": ["去"],
+      "come": ["来"],
+      "see": ["看"],
+      "look": ["看"],
+      "listen": ["听"],
+      "speak": ["说"],
+      "talk": ["说话"],
+      "write": ["写"],
+      "read": ["念", "读"],
+      "study": ["学习", "学"],
+      "learn": ["学", "学习"],
+      "teach": ["教"],
+      "understand": ["懂"],
+      "know": ["知道"],
+      "think": ["想"],
+      "thank": ["谢谢"],
+      "sorry": ["对不起"],
+      "goodbye": ["再见"],
+      "hello": ["你好"],
+      "good": ["好"],
+      "bad": ["不好"],
+      "many": ["多"],
+      "few": ["少"],
+      "easy": ["容易"],
+      "difficult": ["难"],
+      "slow": ["慢"],
+      "fast": ["快"],
+      "early": ["早"],
+      "late": ["晚"],
+      
+      // Common nouns and other vocabulary
+      "paper": ["纸"],
+      "pen": ["笔"],
+      "character": ["字", "汉字"],
+      "word": ["词", "单词"],
+      "language": ["语言"],
+      "grammar": ["语法"],
+      "class": ["课"],
+      "homework": ["功课"],
+      "handsome": ["帅"],
+      "cool": ["酷"],
+      "text": ["课文"]
     };
     
     // Check if this is a search for a common word
