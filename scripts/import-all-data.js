@@ -25,7 +25,8 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 // Define the URLs for source data
 const CEDICT_URL = 'https://www.mdbg.net/chinese/export/cedict/cedict_1_0_ts_utf-8_mdbg.txt.gz';
-const HANZIDB_URL = 'https://raw.githubusercontent.com/kfcd/hanzidb/master/data/hanzi.csv';
+// Use alternative URL for HanziDB as the original might be outdated
+const HANZIDB_URL = 'https://raw.githubusercontent.com/skishore/makemeahanzi/master/dictionary.txt';
 
 // Temporary file paths
 const CEDICT_TEMP_PATH = './cedict_data.txt.gz';
@@ -76,32 +77,51 @@ async function extractGzipFile(source, destination) {
   });
 }
 
-// Process HanziDB CSV file to get character details
+// Process Hanzi dictionary file to get character details
 async function processHanziData() {
-  console.log('Processing HanziDB data...');
+  console.log('Processing Hanzi dictionary data...');
   
   const hanziMap = new Map(); // Map character to its data
   
   return new Promise((resolve, reject) => {
-    fs.createReadStream(HANZIDB_TEMP_PATH)
-      .pipe(csvParser())
-      .on('data', (data) => {
-        hanziMap.set(data.character, {
-          character: data.character,
-          pinyin: data.pinyin || '',
-          strokes: parseInt(data.stroke_count) || null,
-          radical: data.radical || null,
-          hskLevel: data.hsk ? parseInt(data.hsk) : null,
-          frequency: data.frequency_rank ? parseInt(data.frequency_rank) : null
-        });
-      })
-      .on('end', () => {
-        console.log(`Loaded ${hanziMap.size} characters from HanziDB`);
-        resolve(hanziMap);
-      })
-      .on('error', (err) => {
-        reject(err);
-      });
+    // Read the file line by line
+    const fileStream = fs.createReadStream(HANZIDB_TEMP_PATH);
+    const rl = readline.createInterface({
+      input: fileStream,
+      crlfDelay: Infinity
+    });
+    
+    // Process each line
+    rl.on('line', (line) => {
+      try {
+        // Parse the JSON data
+        const data = JSON.parse(line);
+        if (data.character && data.pinyin) {
+          hanziMap.set(data.character, {
+            character: data.character,
+            pinyin: data.pinyin.join(' '), // Join multiple pinyin readings
+            strokes: data.strokes || null,
+            radical: data.radical || null,
+            hskLevel: null, // Not available in this dataset
+            frequency: data.frequency || null
+          });
+        }
+      } catch (err) {
+        console.error('Error parsing line:', line.substring(0, 50) + '...', err);
+      }
+    });
+    
+    // When all lines are processed
+    rl.on('close', () => {
+      console.log(`Loaded ${hanziMap.size} characters from Hanzi dictionary`);
+      resolve(hanziMap);
+    });
+    
+    // Handle errors
+    rl.on('error', (err) => {
+      console.error('Error reading Hanzi dictionary:', err);
+      reject(err);
+    });
   });
 }
 
