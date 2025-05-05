@@ -1228,7 +1228,7 @@ export default function WordList() {
         
         let description = `${savedCount} words have been imported from ${previewList.name}.`;
         if (duplicateCount > 0) {
-          description = `${savedCount} words imported. ${duplicateCount} duplicate ${duplicateCount === 1 ? 'word was' : 'words were'} skipped.`;
+          description = `All ${originalCount} selected words now in your vocabulary. ${duplicateCount} ${duplicateCount === 1 ? 'word was' : 'words were'} already present and updated.`;
         }
         
         toast({
