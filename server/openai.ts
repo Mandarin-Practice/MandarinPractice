@@ -255,7 +255,8 @@ export async function generateSentence(
     
     return {
       ...parsedContent,
-      difficulty
+      difficulty,
+      requestedPattern: randomPattern // Include the pattern that was requested
     };
   } catch (error) {
     console.error("Error generating sentence:", error);
@@ -368,7 +369,8 @@ export async function generateSentenceWithWord(
     
     return {
       ...parsedContent,
-      difficulty
+      difficulty,
+      requestedPattern: randomPattern // Include the pattern that was requested
     };
   } catch (error) {
     console.error("Error generating sentence:", error);
