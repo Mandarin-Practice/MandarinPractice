@@ -968,17 +968,19 @@ export default function WordList() {
             <CardFooter className="border-t border-border pt-4 pb-2 px-0 flex justify-between">
               <Button
                 variant="outline"
-                onClick={() => setCurrentTab('lists')}
+                onClick={() => setCurrentTab('list')}
                 className="border-primary/70 text-primary hover:bg-primary/10"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-                  <rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect>
-                  <path d="M9 3v18"></path>
-                  <path d="M15 3v18"></path>
-                  <path d="M3 9h18"></path>
-                  <path d="M3 15h18"></path>
+                  <path d="M9 20H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3" />
+                  <path d="M17 10h.01" />
+                  <path d="M12 10h.01" />
+                  <path d="M7 10h.01" />
+                  <path d="M7 15h.01" />
+                  <path d="M12 15h.01" />
+                  <path d="M17 15h.01" />
                 </svg>
-                Browse Word Lists
+                View Word List
               </Button>
               <Button
                 onClick={handleAddWord}
@@ -995,7 +997,161 @@ export default function WordList() {
         </Card>
       )}
       
-      {currentTab === 'mywords' && (
+      {currentTab === 'proficiency' && (
+        <Card className="mb-6 border-border overflow-hidden">
+          <CardHeader className="sticky top-0 opaque-header">
+            <CardTitle>Proficiency Tracking</CardTitle>
+            <CardDescription className="text-white">Track your mastery of each vocabulary word</CardDescription>
+          </CardHeader>
+          
+          <CardContent>
+            {isLoading || isLoadingProficiency ? (
+              <div className="flex flex-wrap gap-2 mb-4">
+                <p>Loading proficiency data...</p>
+              </div>
+            ) : vocabulary && Array.isArray(vocabulary) && vocabulary.length > 0 ? (
+              <div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <div className="border-2 border-border rounded-md p-4 bg-accent/10 shadow-md text-center">
+                    <div className="text-3xl font-bold text-green-500 mb-1">
+                      {Object.values(proficiencyData).filter(p => p?.correctCount >= 3).length}
+                    </div>
+                    <div className="text-sm font-medium">
+                      Mastered Words
+                    </div>
+                  </div>
+                  
+                  <div className="border-2 border-border rounded-md p-4 bg-accent/10 shadow-md text-center">
+                    <div className="text-3xl font-bold text-yellow-500 mb-1">
+                      {Object.values(proficiencyData).filter(p => p?.correctCount > 0 && p?.correctCount < 3).length}
+                    </div>
+                    <div className="text-sm font-medium">
+                      Learning Words
+                    </div>
+                  </div>
+                  
+                  <div className="border-2 border-border rounded-md p-4 bg-accent/10 shadow-md text-center">
+                    <div className="text-3xl font-bold text-red-500 mb-1">
+                      {Object.values(proficiencyData).filter(p => !p || p?.correctCount === 0).length}
+                    </div>
+                    <div className="text-sm font-medium">
+                      New Words
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mb-4 border-b border-border pb-2">
+                  <h3 className="text-lg font-bold">Proficiency by Word</h3>
+                </div>
+                
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="border-2 border-border rounded-md p-4 bg-accent/10 shadow-md">
+                    <h4 className="text-md font-bold mb-3 text-green-500 flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                      </svg>
+                      Mastered Words
+                    </h4>
+                    <div className="flex flex-wrap gap-2.5 ml-1">
+                      {vocabulary
+                        .filter(word => proficiencyData[word.id]?.correctCount >= 3)
+                        .map(word => (
+                          <WordChip
+                            key={word.id}
+                            word={word}
+                            proficiency={proficiencyData[word.id]}
+                            onRemove={() => handleRemoveWord(word.id)}
+                            onToggleActive={() => handleToggleActive(word.id, word.active)}
+                            onSave={user ? () => addWordToList(word.id) : undefined}
+                          />
+                        ))
+                      }
+                    </div>
+                    {vocabulary.filter(word => proficiencyData[word.id]?.correctCount >= 3).length === 0 && (
+                      <p className="text-sm italic text-foreground/70 mt-2">No mastered words yet. Keep practicing!</p>
+                    )}
+                  </div>
+                  
+                  <div className="border-2 border-border rounded-md p-4 bg-accent/10 shadow-md">
+                    <h4 className="text-md font-bold mb-3 text-yellow-500 flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M12 6v6l4 2"></path>
+                      </svg>
+                      Learning Words
+                    </h4>
+                    <div className="flex flex-wrap gap-2.5 ml-1">
+                      {vocabulary
+                        .filter(word => proficiencyData[word.id]?.correctCount > 0 && proficiencyData[word.id]?.correctCount < 3)
+                        .map(word => (
+                          <WordChip
+                            key={word.id}
+                            word={word}
+                            proficiency={proficiencyData[word.id]}
+                            onRemove={() => handleRemoveWord(word.id)}
+                            onToggleActive={() => handleToggleActive(word.id, word.active)}
+                            onSave={user ? () => addWordToList(word.id) : undefined}
+                          />
+                        ))
+                      }
+                    </div>
+                    {vocabulary.filter(word => proficiencyData[word.id]?.correctCount > 0 && proficiencyData[word.id]?.correctCount < 3).length === 0 && (
+                      <p className="text-sm italic text-foreground/70 mt-2">No words in progress. Start practicing!</p>
+                    )}
+                  </div>
+                  
+                  <div className="border-2 border-border rounded-md p-4 bg-accent/10 shadow-md">
+                    <h4 className="text-md font-bold mb-3 text-red-500 flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                      </svg>
+                      New Words
+                    </h4>
+                    <div className="flex flex-wrap gap-2.5 ml-1">
+                      {vocabulary
+                        .filter(word => !proficiencyData[word.id] || proficiencyData[word.id]?.correctCount === 0)
+                        .map(word => (
+                          <WordChip
+                            key={word.id}
+                            word={word}
+                            proficiency={proficiencyData[word.id]}
+                            onRemove={() => handleRemoveWord(word.id)}
+                            onToggleActive={() => handleToggleActive(word.id, word.active)}
+                            onSave={user ? () => addWordToList(word.id) : undefined}
+                          />
+                        ))
+                      }
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="border-2 border-border rounded-md p-6 mb-4 bg-accent/10 shadow-md text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mx-auto mb-4 text-primary/30">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                <h3 className="text-xl font-semibold mb-2">No vocabulary words yet</h3>
+                <p className="mb-4 text-foreground/70">
+                  You need to add vocabulary words before you can track your proficiency.
+                </p>
+                <Button onClick={() => setCurrentTab('add')} variant="outline" className="mx-auto">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  Add Words
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+      
+      {false && (
         <Card className="mb-6 border-border overflow-hidden">
           <CardHeader className="sticky top-0 opaque-header">
             <CardTitle>My Saved Words</CardTitle>
