@@ -10,38 +10,52 @@ export function useSoundEffects() {
       try {
         const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
         
-        // Create a melodic ding sound (more pleasant chime)
+        // Create a xylophone/bell sound effect
         const playCorrect = () => {
-          // Create multiple oscillators for a richer sound
-          const oscillator1 = audioCtx.createOscillator();
-          const oscillator2 = audioCtx.createOscillator();
-          const gainNode = audioCtx.createGain();
+          // Create oscillator for the bell sound
+          const oscillator = audioCtx.createOscillator();
           
-          // Configure main oscillator (higher note)
-          oscillator1.type = 'sine';
-          oscillator1.frequency.setValueAtTime(1047, audioCtx.currentTime); // C6 note
-          oscillator1.frequency.setValueAtTime(1319, audioCtx.currentTime + 0.1); // E6 note
+          // Create gain nodes for envelope shaping
+          const mainGainNode = audioCtx.createGain();
+          const delayGainNode = audioCtx.createGain();
           
-          // Configure second oscillator (complementary note)
-          oscillator2.type = 'triangle';
-          oscillator2.frequency.setValueAtTime(784, audioCtx.currentTime); // G5 note
-          oscillator2.frequency.setValueAtTime(988, audioCtx.currentTime + 0.1); // B5 note
+          // Create a biquad filter for tonal shaping
+          const filter = audioCtx.createBiquadFilter();
+          filter.type = 'bandpass';
+          filter.frequency.value = 1800;
+          filter.Q.value = 2;
           
-          // Configure gain for pleasant decay
-          gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-          gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime + 0.1);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+          // Configure oscillator
+          oscillator.type = 'sine';
+          oscillator.frequency.value = 1760; // A6 - high xylophone note
+          
+          // Configure main gain node with attack and decay
+          mainGainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+          mainGainNode.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 0.01); // Sharp attack
+          mainGainNode.gain.setValueAtTime(0.2, audioCtx.currentTime + 0.02);
+          mainGainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5); // Long decay
+          
+          // Configure delay gain for nice decay
+          delayGainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+          delayGainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
+          
+          // Create a delay node for a slight echo
+          const delay = audioCtx.createDelay(0.5);
+          delay.delayTime.value = 0.1;
           
           // Connect nodes
-          oscillator1.connect(gainNode);
-          oscillator2.connect(gainNode);
-          gainNode.connect(audioCtx.destination);
+          oscillator.connect(filter);
+          filter.connect(mainGainNode);
+          mainGainNode.connect(audioCtx.destination);
           
-          // Play sound
-          oscillator1.start();
-          oscillator2.start();
-          oscillator1.stop(audioCtx.currentTime + 0.4);
-          oscillator2.stop(audioCtx.currentTime + 0.4);
+          // Add delay path for echo effect
+          mainGainNode.connect(delay);
+          delay.connect(delayGainNode);
+          delayGainNode.connect(audioCtx.destination);
+          
+          // Play the sound
+          oscillator.start();
+          oscillator.stop(audioCtx.currentTime + 0.8);
         };
         
         return playCorrect;
