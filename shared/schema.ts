@@ -3,11 +3,16 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
-// User schema from original template
+// User schema with Firebase authentication support
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
-  password: text("password").notNull(),
+  password: text("password"),
+  firebaseUid: text("firebase_uid").unique(),
+  email: text("email").unique(),
+  displayName: text("display_name"),
+  photoUrl: text("photo_url"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
