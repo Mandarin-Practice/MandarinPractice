@@ -9,27 +9,34 @@ export default function Home() {
       <div 
         className="max-w-4xl mx-auto text-center mb-12 relative overflow-hidden rounded-xl"
         style={{
-          backgroundImage: `url(${chineseBg})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
+          background: 'linear-gradient(135deg, #FFF5E4 0%, #FFE3E1 100%)',
+          backgroundImage: 'radial-gradient(circle at 25px 25px, rgba(255, 0, 0, 0.1) 2%, transparent 0%), linear-gradient(135deg, #FFF5E4 0%, #FFE3E1 100%)',
+          backgroundSize: '50px 50px, 100% 100%',
           boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
         }}
       >
-        {/* Semi-transparent overlay to improve text readability */}
-        <div className="absolute inset-0 bg-white/30 dark:bg-black/30 backdrop-blur-[2px] z-10"></div>
-        
         {/* Bamboo decorations */}
-        <div className="absolute left-6 top-1/2 transform -translate-y-1/2 hidden md:block z-20">
-          <img src="/images/bamboo.png" alt="Bamboo decoration" className="h-80 opacity-60" />
+        <div className="absolute left-4 md:left-12 top-1/2 transform -translate-y-1/2 z-20">
+          <img 
+            src="/images/bamboo.png" 
+            alt="Bamboo decoration" 
+            className="h-72 md:h-96"
+            style={{ filter: 'brightness(1.2) contrast(1.1)' }}
+          />
         </div>
         
-        <div className="absolute right-6 top-1/2 transform -translate-y-1/2 scale-x-[-1] hidden md:block z-20">
-          <img src="/images/bamboo.png" alt="Bamboo decoration" className="h-80 opacity-60" />
+        <div className="absolute right-4 md:right-12 top-1/2 transform -translate-y-1/2 scale-x-[-1] z-20">
+          <img 
+            src="/images/bamboo.png" 
+            alt="Bamboo decoration" 
+            className="h-72 md:h-96"
+            style={{ filter: 'brightness(1.2) contrast(1.1)' }}
+          />
         </div>
         
         {/* Content Container */}
         <div className="relative z-20 py-12 px-8">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-10 max-w-2xl mx-auto transform translate-y-4 border border-gray-100 dark:border-gray-700">
+          <div className="max-w-2xl mx-auto transform translate-y-4">
             {/* Panda image at top */}
             <div className="mx-auto w-fit -mt-24 mb-6">
               <img 
