@@ -399,14 +399,23 @@
 /* Enhanced red theme header and footer with proper z-index layering */
 .opaque-header {
   position: relative;
-  z-index: 50; /* Increased z-index to ensure header is always on top */
+  z-index: var(--z-sticky); /* Using z-index variable system */
   isolation: isolate;
   background: #cc0000 !important;
   color: white !important;
-  backdrop-filter: none !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 4px 10px rgba(204, 0, 0, 0.3);
   overflow: hidden;
+}
+
+/* Special sticky header with backdrop filter for cards */
+.sticky.opaque-header {
+  position: sticky;
+  top: 0;
+  backdrop-filter: blur(8px);
+  background: rgba(204, 0, 0, 0.9) !important;
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 12px rgba(204, 0, 0, 0.5);
 }
 
 .opaque-header::after {

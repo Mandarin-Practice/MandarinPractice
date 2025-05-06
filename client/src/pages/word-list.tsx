@@ -1603,7 +1603,7 @@ export default function WordList() {
       )}
     
       <Card className="mb-6 border-border overflow-hidden">
-        <CardHeader>
+        <CardHeader className="sticky top-0 opaque-header">
           <CardTitle>Your Vocabulary Words</CardTitle>
           <CardDescription className="text-white">Add the Mandarin words you want to practice</CardDescription>
         </CardHeader>
