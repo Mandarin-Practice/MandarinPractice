@@ -36,15 +36,17 @@ export default function Home() {
         
         {/* Content Container */}
         <div className="relative z-20 py-12 px-8">
-          <div className="max-w-2xl mx-auto bg-white/90 dark:bg-gray-800/90 p-6 rounded-xl shadow-xl backdrop-blur-sm">
+          <div className="max-w-2xl mx-auto bg-white/90 dark:bg-gray-800/90 p-8 md:p-12 rounded-xl shadow-xl backdrop-blur-sm">
             {/* Panda image at top */}
-            <div className="mx-auto w-fit -mt-24 mb-6 bg-white dark:bg-gray-800 p-2 rounded-full shadow-lg">
-              <img 
-                src="/images/cute-panda.png" 
-                alt="Cute Panda Logo" 
-                className="h-40 w-40 drop-shadow-xl object-contain"
-                style={{ filter: 'drop-shadow(0px 10px 8px rgba(0, 0, 0, 0.2))' }}
-              />
+            <div className="mx-auto w-fit mt-2 mb-6">
+              <div className="bg-white dark:bg-gray-800 p-3 rounded-full shadow-lg">
+                <img 
+                  src="/images/cute-panda.png" 
+                  alt="Cute Panda Logo" 
+                  className="h-32 w-32 drop-shadow-xl object-contain"
+                  style={{ filter: 'drop-shadow(0px 10px 8px rgba(0, 0, 0, 0.2))' }}
+                />
+              </div>
             </div>
             
             {/* Title */}
