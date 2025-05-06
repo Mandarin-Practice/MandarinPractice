@@ -31,7 +31,7 @@ const drawStar = (ctx: CanvasRenderingContext2D, x: number, y: number, size: num
   ctx.fill();
 };
 
-export default function SuccessConfetti({ active, duration = 3000 }: SuccessConfettiProps) {
+export default function SuccessConfetti({ active, duration = 1500 }: SuccessConfettiProps) {
   const [windowDimensions, setWindowDimensions] = useState({
     width: window.innerWidth,
     height: window.innerHeight,
@@ -66,17 +66,21 @@ export default function SuccessConfetti({ active, duration = 3000 }: SuccessConf
     <Confetti
       width={windowDimensions.width}
       height={windowDimensions.height}
-      numberOfPieces={150}
+      numberOfPieces={200}
       recycle={false}
       colors={['#FFEB3B', '#FFC107', '#FFD700', '#F9A825', '#FDD835']} // Different shades of yellow
       drawShape={(ctx) => {
         const size = Math.random() * 10 + 10; // Random size between 10 and 20
         drawStar(ctx, 0, 0, size);
       }}
+      initialVelocityY={-5}
+      gravity={0.3}
+      wind={0.05}
+      // Use the entire screen as the source for confetti (no specific origin point)
       confettiSource={{
-        x: windowDimensions.width / 2,
-        y: windowDimensions.height / 3,
-        w: 0,
+        x: 0,
+        y: 0,
+        w: windowDimensions.width,
         h: 0,
       }}
     />

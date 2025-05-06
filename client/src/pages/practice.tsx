@@ -222,7 +222,7 @@ export default function Practice() {
       // Reset confetti after a delay to prevent it from showing continuously
       setTimeout(() => {
         setShowConfetti(false);
-      }, 4000);
+      }, 1500);
       
       // If we have vocabulary data and this is a correct answer,
       // update proficiency for each word in the sentence
@@ -331,7 +331,7 @@ export default function Practice() {
   return (
     <div className="practice-section">
       {/* Confetti animation when answer is correct */}
-      <SuccessConfetti active={showConfetti} duration={4000} />
+      <SuccessConfetti active={showConfetti} duration={1500} />
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <SentenceCard
