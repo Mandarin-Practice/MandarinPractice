@@ -226,12 +226,12 @@ export default function SentenceCard({
               
               {/* Answer Section */}
               <div>
-                <label htmlFor="translation" className="block text-sm font-medium text-primary mb-2">
+                <label htmlFor="translation-input" className="block text-sm font-medium text-primary mb-2">
                   Type the English translation:
                 </label>
                 <div className="relative">
                   <Input
-                    id="translation"
+                    id="translation-input"
                     type="text"
                     value={userTranslation}
                     onChange={onUpdateTranslation}
@@ -244,6 +244,7 @@ export default function SentenceCard({
                     autoCapitalize="off"
                     spellCheck="false"
                     data-form-type="other" // Additional attribute to help prevent autocomplete
+                    data-confetti-source="true" // Mark this element as the confetti source
                   />
                   <div className="absolute right-3 top-3 text-primary/60">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

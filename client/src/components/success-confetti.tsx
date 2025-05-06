@@ -37,6 +37,28 @@ export default function SuccessConfetti({ active, duration = 1500 }: SuccessConf
     height: window.innerHeight,
   });
   const [showConfetti, setShowConfetti] = useState(false);
+  const [confettiSource, setConfettiSource] = useState({
+    x: 0,
+    y: 0,
+    w: 0,
+    h: 0,
+  });
+
+  // Find the input element position when activated
+  useEffect(() => {
+    if (active) {
+      const inputElement = document.getElementById('translation-input');
+      if (inputElement) {
+        const rect = inputElement.getBoundingClientRect();
+        setConfettiSource({
+          x: rect.x,
+          y: rect.y,
+          w: rect.width,
+          h: rect.height,
+        });
+      }
+    }
+  }, [active]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -44,6 +66,18 @@ export default function SuccessConfetti({ active, duration = 1500 }: SuccessConf
         width: window.innerWidth,
         height: window.innerHeight,
       });
+      
+      // Update confetti source position on resize if input exists
+      const inputElement = document.getElementById('translation-input');
+      if (inputElement) {
+        const rect = inputElement.getBoundingClientRect();
+        setConfettiSource({
+          x: rect.x,
+          y: rect.y,
+          w: rect.width,
+          h: rect.height,
+        });
+      }
     };
 
     window.addEventListener('resize', handleResize);
@@ -66,23 +100,16 @@ export default function SuccessConfetti({ active, duration = 1500 }: SuccessConf
     <Confetti
       width={windowDimensions.width}
       height={windowDimensions.height}
-      numberOfPieces={200}
+      numberOfPieces={250}
       recycle={false}
       colors={['#FFEB3B', '#FFC107', '#FFD700', '#F9A825', '#FDD835']} // Different shades of yellow
       drawShape={(ctx) => {
         const size = Math.random() * 10 + 10; // Random size between 10 and 20
         drawStar(ctx, 0, 0, size);
       }}
-      initialVelocityY={-5}
-      gravity={0.3}
-      wind={0.05}
-      // Use the entire screen as the source for confetti (no specific origin point)
-      confettiSource={{
-        x: 0,
-        y: 0,
-        w: windowDimensions.width,
-        h: 0,
-      }}
+      initialVelocityY={-8} // Shoot upward more strongly
+      gravity={0.35} // Slightly more gravity
+      confettiSource={confettiSource}
     />
   );
 }
