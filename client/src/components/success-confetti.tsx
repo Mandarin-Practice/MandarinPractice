@@ -97,19 +97,21 @@ export default function SuccessConfetti({ active, duration = 1500 }: SuccessConf
   if (!showConfetti) return null;
 
   return (
-    <Confetti
-      width={windowDimensions.width}
-      height={windowDimensions.height}
-      numberOfPieces={250}
-      recycle={false}
-      colors={['#FFEB3B', '#FFC107', '#FFD700', '#F9A825', '#FDD835']} // Different shades of yellow
-      drawShape={(ctx) => {
-        const size = Math.random() * 10 + 10; // Random size between 10 and 20
-        drawStar(ctx, 0, 0, size);
-      }}
-      initialVelocityY={-8} // Shoot upward more strongly
-      gravity={0.35} // Slightly more gravity
-      confettiSource={confettiSource}
-    />
+    <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 'var(--z-tooltip)' }}>
+      <Confetti
+        width={windowDimensions.width}
+        height={windowDimensions.height}
+        numberOfPieces={250}
+        recycle={false}
+        colors={['#FFEB3B', '#FFC107', '#FFD700', '#F9A825', '#FDD835']} // Different shades of yellow
+        drawShape={(ctx) => {
+          const size = Math.random() * 10 + 10; // Random size between 10 and 20
+          drawStar(ctx, 0, 0, size);
+        }}
+        initialVelocityY={-8} // Shoot upward more strongly
+        gravity={0.35} // Slightly more gravity
+        confettiSource={confettiSource}
+      />
+    </div>
   );
 }
