@@ -194,11 +194,15 @@ export default function SentenceCard({
                     ) : (
                       // Normal display when no feedback yet
                       <div>
-                        <div className="text-xs text-primary font-medium uppercase tracking-wider mb-1">
+                        <div className="text-xs text-primary font-medium uppercase tracking-wider mb-2">
                           Chinese Text
                         </div>
-                        <p className="text-3xl chinese-text leading-relaxed">
-                          {sentence.chinese}
+                        <p className="text-3xl font-bold leading-relaxed" style={{ color: '#cc0000' }}>
+                          {sentence.chinese.split('').map((char, index) => (
+                            <span key={index} className="chinese-character">
+                              {char}
+                            </span>
+                          ))}
                         </p>
                       </div>
                     )}
@@ -210,10 +214,10 @@ export default function SentenceCard({
               {showPinyin && sentence?.pinyin && (
                 <div className="mb-6 -mt-4">
                   <div className="border-x border-b border-red-200 dark:border-red-900 rounded-b-md p-3 bg-accent/10">
-                    <div className="text-xs text-primary font-medium uppercase tracking-wider mb-1">
+                    <div className="text-xs text-primary font-medium uppercase tracking-wider mb-2">
                       Pinyin Pronunciation
                     </div>
-                    <p className="text-lg text-foreground/80 italic">
+                    <p className="text-xl text-foreground font-medium tracking-wide italic">
                       {sentence.pinyin}
                     </p>
                   </div>

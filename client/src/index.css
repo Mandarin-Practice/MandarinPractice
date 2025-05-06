@@ -122,27 +122,23 @@
     box-shadow: 0 0 0 2px rgba(204, 0, 0, 0.1);
   }
 
-  /* Enhanced Chinese text styling */
+  /* Enhanced Chinese text styling with better readability */
   .chinese-text {
     font-family: 'Noto Sans SC', sans-serif;
-    @apply text-primary font-medium text-3xl;
-    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.05);
+    @apply text-primary font-bold text-3xl;
+    /* Remove gradient and use solid color for better readability */
+    color: #cc0000;
+    text-shadow: none;
     letter-spacing: 0.02em;
     line-height: 1.5;
-    background: linear-gradient(90deg, #e60000 0%, #cc0000 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
     position: relative;
     display: inline-block;
   }
   
   .chinese-text-large {
-    @apply text-4xl md:text-5xl tracking-wide;
-    background: linear-gradient(90deg, #cc0000 0%, #b20000 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    @apply text-4xl md:text-5xl font-bold tracking-wide;
+    /* Remove gradient and use solid color for better readability */
+    color: #cc0000;
     letter-spacing: 0.03em;
     line-height: 1.4;
   }
@@ -276,15 +272,12 @@
     @apply hidden;
   }
 
-  /* Enhanced Chinese display text for headers */
+  /* Improved Chinese display text for headers with better readability */
   .chinese-display {
     font-family: 'Noto Sans SC', sans-serif;
     @apply text-xl md:text-2xl font-bold;
-    background: linear-gradient(90deg, #cc0000 0%, #e60000 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.05));
+    /* Solid color instead of gradient for better readability */
+    color: #cc0000;
     letter-spacing: 0.02em;
     position: relative;
     display: inline-block;
@@ -297,11 +290,8 @@
     left: 0;
     width: 100%;
     height: 2px;
-    background: linear-gradient(90deg, 
-      rgba(204, 0, 0, 0.1) 0%, 
-      rgba(204, 0, 0, 0.7) 50%, 
-      rgba(204, 0, 0, 0.1) 100%
-    );
+    background: #cc0000;
+    opacity: 0.7;
   }
   
   /* Enhanced red theme button styles */

@@ -97,7 +97,7 @@ export default function InteractiveChineseText({
   });
   
   return (
-    <div className="text-2xl font-['Noto_Sans_SC',sans-serif] leading-relaxed">
+    <div className="text-3xl font-['Noto_Sans_SC',sans-serif] leading-relaxed font-bold">
       {feedbackStatus ? (
         // Display with hover functionality after checking answer
         <span className={
@@ -112,7 +112,7 @@ export default function InteractiveChineseText({
               <HoverCard key={index} openDelay={100} closeDelay={200}>
                 <HoverCardTrigger asChild>
                   <span 
-                    className="cursor-help hover:bg-gray-100 dark:hover:bg-gray-800 px-0.5 py-0.5 rounded transition-colors"
+                    className="cursor-help hover:bg-gray-100 dark:hover:bg-gray-800 px-1 py-0.5 mx-0.5 rounded transition-colors"
                   >
                     {charInfo.character}
                   </span>
@@ -174,13 +174,17 @@ export default function InteractiveChineseText({
                 </HoverCardContent>
               </HoverCard>
             ) : (
-              <span key={index}>{charInfo.character}</span>
+              <span key={index} className="px-1 mx-0.5">{charInfo.character}</span>
             )
           ))}
         </span>
       ) : (
-        // Normal display when no feedback
-        chinese
+        // Normal display when no feedback with better spacing and readability
+        <span style={{ color: '#cc0000' }}>
+          {chinese.split('').map((char, index) => (
+            <span key={index} className="px-1 mx-0.5">{char}</span>
+          ))}
+        </span>
       )}
     </div>
   );
