@@ -5,6 +5,11 @@ export default {
   content: ["./client/index.html", "./client/src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
+      fontFamily: {
+        baloo: ['"Baloo 2"', 'cursive'],
+        nunito: ['Nunito', 'sans-serif'],
+        'noto-sans': ['"Noto Sans SC"', 'sans-serif'],
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",

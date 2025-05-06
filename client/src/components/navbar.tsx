@@ -29,7 +29,7 @@ export default function Navbar({ theme, toggleTheme }: NavbarProps) {
       <div className="container mx-auto px-4 py-4 max-w-5xl">
         <div className="flex justify-between items-center">
           <Link href="/" className="flex items-center">
-            <div className="text-2xl font-bold text-white">
+            <div className="text-2xl font-bold text-white font-baloo">
               <span className="hidden sm:inline">Mandarin Practice</span>
               <span className="sm:hidden">Mandarin</span>
             </div>
