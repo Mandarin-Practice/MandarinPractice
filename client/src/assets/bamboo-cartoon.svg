@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 600">
+  <defs>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="2" dy="2" stdDeviation="3" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  
+  <!-- Bamboo stalks -->
+  <!-- Stalk 1 (left) -->
+  <g transform="translate(100, 50)">
+    <!-- Sections -->
+    <path d="M 60,40 L 40,40 L 25,140 L 45,140 L 60,40 Z" fill="#8BC34A" stroke="#333" stroke-width="5"/>
+    <path d="M 45,140 L 25,140 L 10,240 L 30,240 L 45,140 Z" fill="#8BC34A" stroke="#333" stroke-width="5"/>
+    <path d="M 30,240 L 10,240 L -5,340 L 15,340 L 30,240 Z" fill="#8BC34A" stroke="#333" stroke-width="5"/>
+    <path d="M 15,340 L -5,340 L -20,440 L 0,440 L 15,340 Z" fill="#8BC34A" stroke="#333" stroke-width="5"/>
+    
+    <!-- Joints -->
+    <ellipse cx="40" cy="140" rx="15" ry="5" fill="#333"/>
+    <ellipse cx="25" cy="240" rx="15" ry="5" fill="#333"/>
+    <ellipse cx="10" cy="340" rx="15" ry="5" fill="#333"/>
+    
+    <!-- Leaves -->
+    <path d="M 60,100 C 110,80 130,120 100,140 C 70,150 50,130 60,100 Z" fill="#8BC34A" stroke="#333" stroke-width="5" filter="url(#shadow)"/>
+    <path d="M 10,200 C -40,180 -60,220 -30,240 C 0,250 20,230 10,200 Z" fill="#8BC34A" stroke="#333" stroke-width="5" filter="url(#shadow)"/>
+    <path d="M -5,400 C -55,380 -75,420 -45,440 C -15,450 5,430 -5,400 Z" fill="#8BC34A" stroke="#333" stroke-width="5" filter="url(#shadow)"/>
+  </g>
+  
+  <!-- Stalk 2 (middle) -->
+  <g transform="translate(150, 20)">
+    <!-- Sections -->
+    <path d="M 60,40 L 40,40 L 30,170 L 50,170 L 60,40 Z" fill="#8BC34A" stroke="#333" stroke-width="5"/>
+    <path d="M 50,170 L 30,170 L 20,300 L 40,300 L 50,170 Z" fill="#8BC34A" stroke="#333" stroke-width="5"/>
+    <path d="M 40,300 L 20,300 L 10,430 L 30,430 L 40,300 Z" fill="#8BC34A" stroke="#333" stroke-width="5"/>
+    
+    <!-- Joints -->
+    <ellipse cx="40" cy="170" rx="15" ry="5" fill="#333"/>
+    <ellipse cx="30" cy="300" rx="15" ry="5" fill="#333"/>
+    
+    <!-- Top -->
+    <ellipse cx="50" cy="40" rx="10" ry="5" fill="#333"/>
+  </g>
+  
+  <!-- Stalk 3 (right) -->
+  <g transform="translate(230, 30)">
+    <!-- Sections -->
+    <path d="M 60,40 L 40,40 L 50,120 L 70,120 L 60,40 Z" fill="#8BC34A" stroke="#333" stroke-width="5"/>
+    <path d="M 70,120 L 50,120 L 60,220 L 80,220 L 70,120 Z" fill="#8BC34A" stroke="#333" stroke-width="5"/>
+    <path d="M 80,220 L 60,220 L 70,320 L 90,320 L 80,220 Z" fill="#8BC34A" stroke="#333" stroke-width="5"/>
+    <path d="M 90,320 L 70,320 L 80,420 L 100,420 L 90,320 Z" fill="#8BC34A" stroke="#333" stroke-width="5"/>
+    
+    <!-- Joints -->
+    <ellipse cx="60" cy="120" rx="15" ry="5" fill="#333"/>
+    <ellipse cx="70" cy="220" rx="15" ry="5" fill="#333"/>
+    <ellipse cx="80" cy="320" rx="15" ry="5" fill="#333"/>
+    
+    <!-- Leaves -->
+    <path d="M 90,170 C 140,150 160,190 130,210 C 100,220 80,200 90,170 Z" fill="#8BC34A" stroke="#333" stroke-width="5" filter="url(#shadow)"/>
+    <path d="M 100,270 C 150,250 170,290 140,310 C 110,320 90,300 100,270 Z" fill="#8BC34A" stroke="#333" stroke-width="5" filter="url(#shadow)"/>
+  </g>
+</svg>

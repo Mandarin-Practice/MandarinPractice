@@ -18,6 +18,15 @@ export default function Home() {
         {/* Semi-transparent overlay to improve text readability */}
         <div className="absolute inset-0 bg-white/30 dark:bg-black/30 backdrop-blur-[2px] z-10"></div>
         
+        {/* Bamboo decorations */}
+        <div className="absolute left-6 top-1/2 transform -translate-y-1/2 hidden md:block z-20">
+          <img src="/images/bamboo.png" alt="Bamboo decoration" className="h-80 opacity-60" />
+        </div>
+        
+        <div className="absolute right-6 top-1/2 transform -translate-y-1/2 scale-x-[-1] hidden md:block z-20">
+          <img src="/images/bamboo.png" alt="Bamboo decoration" className="h-80 opacity-60" />
+        </div>
+        
         {/* Content Container */}
         <div className="relative z-20 py-12 px-8">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-10 max-w-2xl mx-auto transform translate-y-4 border border-gray-100 dark:border-gray-700">
