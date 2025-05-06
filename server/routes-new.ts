@@ -1,6 +1,6 @@
 import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import { createServer, type Server } from "http";
-import { WebSocketServer, WebSocket } from "ws";
+import { WebSocketServer, type WebSocket } from "ws";
 import { storage } from "./storage";
 import { checkSynonyms, generateSentence, generateSentenceWithWord } from "./openai";
 import { checkIfDatabaseNeedsSeed, seedDatabaseWithBasicDictionary, runFullDictionaryImport } from "./db-seed";
@@ -233,7 +233,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
         
         // Common punctuation to ignore
-        const punctuation = new Set(["。", "，", "？", "！", "、", "：", "；", "（", "）", "'", "'", "…", "—"]);
+        const punctuation = new Set(["。", "，", "？", "！", "、", "：", "；", "（", "）", """, """, "…", "—"]);
         
         // Check each character
         for (const char of text) {

@@ -134,7 +134,7 @@ async function addDefinitionIfNeeded(characterId: number, definition: string) {
 }
 
 // Process each word list
-async function importHSKAndICVocabulary() {
+export async function importHSKAndICVocabulary() {
   try {
     console.log('Starting import of HSK and Integrated Chinese vocabulary...');
     
@@ -174,18 +174,16 @@ async function importHSKAndICVocabulary() {
   } catch (error) {
     console.error('Error importing HSK and IC vocabulary:', error);
     return false;
-  } finally {
-    await pool.end();
   }
 }
 
-// Run the import
-importHSKAndICVocabulary().then(success => {
-  if (success) {
-    console.log('HSK and Integrated Chinese vocabulary import completed successfully');
-    process.exit(0);
-  } else {
-    console.error('HSK and Integrated Chinese vocabulary import failed');
-    process.exit(1);
-  }
-});
+// Comment out auto-running for module reuse
+// importHSKAndICVocabulary().then(success => {
+//   if (success) {
+//     console.log('HSK and Integrated Chinese vocabulary import completed successfully');
+//     process.exit(0);
+//   } else {
+//     console.error('HSK and Integrated Chinese vocabulary import failed');
+//     process.exit(1);
+//   }
+// });
