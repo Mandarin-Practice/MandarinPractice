@@ -25,13 +25,15 @@ export default function Navbar({ theme, toggleTheme }: NavbarProps) {
   ];
 
   return (
-    <header className="bg-red-600 text-white shadow-md sticky top-0 z-10">
+    <header className="opaque-header shadow-md sticky top-0 z-10">
       <div className="container mx-auto px-4 py-4 max-w-5xl">
         <div className="flex justify-between items-center">
           <Link href="/" className="flex items-center">
-            <h1 className="text-2xl font-bold text-white">
-              <span className="hidden sm:inline">Mandarin Practice</span>
-              <span className="sm:hidden">Mandarin</span>
+            <h1 className="text-2xl font-bold text-white flex items-center">
+              <span className="hidden sm:inline">
+                <span className="bg-white text-red-600 px-3 py-1 rounded-md">Mandarin Practice</span>
+              </span>
+              <span className="sm:hidden bg-white text-red-600 px-3 py-1 rounded-md">Mandarin</span>
             </h1>
           </Link>
 
@@ -68,7 +70,7 @@ export default function Navbar({ theme, toggleTheme }: NavbarProps) {
 
         {/* Mobile navigation */}
         {mobileMenuOpen && (
-          <nav className="md:hidden mt-4 border-t border-white pt-2 bg-red-600">
+          <nav className="md:hidden mt-4 border-t border-white pt-2 bg-transparent">
             {navItems.map((item) => (
               <Link 
                 key={item.path} 
