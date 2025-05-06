@@ -16,6 +16,7 @@ import { LESSON16_WORDLIST } from "@/data/lesson16-wordlist";
 import { LESSON17_WORDLIST } from "@/data/lesson17-wordlist";
 import { LESSON18_WORDLIST } from "@/data/lesson18-wordlist";
 import { LESSON19_WORDLIST } from "@/data/lesson19-wordlist";
+import { LESSON20_WORDLIST } from "@/data/lesson20-wordlist";
 
 interface WordList {
   id: string;
@@ -30,6 +31,7 @@ interface WordList {
 }
 
 const SAMPLE_WORD_LISTS: WordList[] = [
+  LESSON20_WORDLIST,
   LESSON19_WORDLIST,
   LESSON18_WORDLIST,
   LESSON17_WORDLIST,
