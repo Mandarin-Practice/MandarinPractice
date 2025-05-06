@@ -36,10 +36,10 @@ export default function Home() {
         
         {/* Content Container */}
         <div className="relative z-20 py-12 px-8">
-          <div className="max-w-2xl mx-auto bg-white/90 dark:bg-gray-800/90 p-8 md:p-12 rounded-xl shadow-xl backdrop-blur-sm">
+          <div className="max-w-2xl mx-auto bg-white/95 dark:bg-gray-800/95 p-8 md:p-12 rounded-lg shadow-xl backdrop-blur-sm border border-red-200 dark:border-red-900">
             {/* Panda image at top */}
             <div className="mx-auto w-fit mt-2 mb-6">
-              <div className="bg-white dark:bg-gray-800 p-3 rounded-full shadow-lg">
+              <div className="bg-white dark:bg-gray-800 p-3 rounded-full shadow-lg border-2 border-red-500">
                 <img 
                   src="/images/cute-panda.png" 
                   alt="Cute Panda Logo" 
@@ -51,7 +51,7 @@ export default function Home() {
             
             {/* Title */}
             <div className="relative inline-block">
-              <h1 className="text-5xl font-extrabold mb-8 text-red-600">
+              <h1 className="text-5xl font-extrabold mb-8 text-primary">
                 Mandarin Practice
               </h1>
             </div>
@@ -60,56 +60,50 @@ export default function Home() {
               Improve your Mandarin Chinese comprehension and vocabulary one sentence at a time
             </p>
             
-            {/* Buttons with improved styling */}
+            {/* Buttons with our new styles */}
             <div className="flex flex-col sm:flex-row gap-5 justify-center mb-8">
-              <Button asChild size="lg" className="bg-red-600 hover:bg-red-700 text-white font-bold shadow-lg rounded-full px-8 py-6 text-lg">
-                <Link href="/practice">
+              <Link href="/practice">
+                <button className="btn-red px-8 py-4 text-lg shadow-lg">
                   Start Practicing
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="lg" className="border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 font-bold rounded-full px-8 py-6 text-lg">
-                <Link href="/word-list">
+                </button>
+              </Link>
+              <Link href="/word-list">
+                <button className="btn-red-outline px-8 py-4 text-lg">
                   Manage Word List
-                </Link>
-              </Button>
+                </button>
+              </Link>
             </div>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl font-bold">Step 1: Add Words</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-900 dark:text-gray-200 font-medium">
-              Input your Mandarin vocabulary words that you want to practice with.
-            </p>
-          </CardContent>
-        </Card>
+        <div className="card-custom p-6">
+          <div className="border-b border-red-200 dark:border-red-800 pb-3 mb-3">
+            <h3 className="text-xl font-bold text-primary">Step 1: Add Words</h3>
+          </div>
+          <p className="text-gray-900 dark:text-gray-200 font-medium">
+            Input your Mandarin vocabulary words that you want to practice with.
+          </p>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl font-bold">Step 2: Generate Sentences</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-900 dark:text-gray-200 font-medium">
-              The app uses AI to create natural Mandarin sentences using only your vocabulary.
-            </p>
-          </CardContent>
-        </Card>
+        <div className="card-custom p-6">
+          <div className="border-b border-red-200 dark:border-red-800 pb-3 mb-3">
+            <h3 className="text-xl font-bold text-primary">Step 2: Generate Sentences</h3>
+          </div>
+          <p className="text-gray-900 dark:text-gray-200 font-medium">
+            The app uses AI to create natural Mandarin sentences using only your vocabulary.
+          </p>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl font-bold">Step 3: Practice Listening</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-900 dark:text-gray-200 font-medium">
-              Listen to sentences spoken aloud and test your comprehension by translating.
-            </p>
-          </CardContent>
-        </Card>
+        <div className="card-custom p-6">
+          <div className="border-b border-red-200 dark:border-red-800 pb-3 mb-3">
+            <h3 className="text-xl font-bold text-primary">Step 3: Practice Listening</h3>
+          </div>
+          <p className="text-gray-900 dark:text-gray-200 font-medium">
+            Listen to sentences spoken aloud and test your comprehension by translating.
+          </p>
+        </div>
       </div>
 
       <div className="mt-16 bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">

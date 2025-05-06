@@ -8,67 +8,67 @@
 @tailwind utilities;
 
 :root {
-  /* Modern Playful Chinese Learning Theme */
-  --background: 40 40% 92%; /* Darker off-white/beige #EBDED0 */
-  --foreground: 20 70% 25%; /* Warm dark brown text */
-  --muted: 40 20% 86%; /* Muted beige for subtle areas */
-  --muted-foreground: 20 50% 40%; /* Soft brown for muted text */
+  /* Red and White Chinese Theme */
+  --background: 0 0% 100%; /* Pure white background */
+  --foreground: 0 0% 10%; /* Almost black text for readability */
+  --muted: 0 0% 96%; /* Light gray for subtle areas */
+  --muted-foreground: 0 0% 40%; /* Gray for muted text */
   
-  --popover: 40 40% 94%; /* Slightly lighter beige for popovers */
-  --popover-foreground: 20 70% 25%; /* Same as main text */
+  --popover: 0 0% 100%; /* White for popovers */
+  --popover-foreground: 0 0% 10%; /* Almost black text */
   
-  --card: 40 40% 94%; /* Slightly lighter beige for cards */
-  --card-foreground: 20 70% 25%; /* Same as main text */
+  --card: 0 0% 100%; /* White cards */
+  --card-foreground: 0 0% 10%; /* Almost black text */
   
-  --border: 40 20% 80%; /* Soft beige borders */
-  --input: 40 20% 80%; /* Same for inputs */
+  --border: 0 0% 90%; /* Light gray borders */
+  --input: 0 0% 90%; /* Same for inputs */
   
-  --primary: 350 80% 45%; /* Playful red #E12E4B */
-  --primary-foreground: 40 30% 98%; /* Light beige text on primary buttons */
+  --primary: 0 80% 45%; /* Chinese Red #CC0000 */
+  --primary-foreground: 0 0% 100%; /* White text on primary buttons */
   
-  --secondary: 150 40% 50%; /* Duolingo-inspired green #4DAA80 */
+  --secondary: 0 70% 50%; /* Lighter red */
   --secondary-foreground: 0 0% 100%; /* White text on secondary */
   
-  --accent: 40 100% 60%; /* Warm gold accent #FFAF33 */
-  --accent-foreground: 20 70% 25%; /* Dark text on accent backgrounds */
+  --accent: 0 60% 95%; /* Very light red accent */
+  --accent-foreground: 0 80% 45%; /* Red text on accent backgrounds */
   
-  --destructive: 0 84.2% 60.2%; /* Keep destructive red */
-  --destructive-foreground: 40 30% 98%; /* Light text on destructive */
+  --destructive: 0 84.2% 60.2%; /* Standard destructive red */
+  --destructive-foreground: 0 0% 98%; /* Light text on destructive */
   
-  --ring: 350 80% 45%; /* Red for focus rings */
-  --radius: 0.8rem; /* More rounded corners for playful feel */
+  --ring: 0 80% 45%; /* Red for focus rings */
+  --radius: 0.5rem; /* Slightly rounded corners */
 }
 
 .dark {
-  /* Dark mode with playful tones */
-  --background: 220 20% 18%; /* Dark blue-gray background #272E3B */
-  --foreground: 40 20% 90%; /* Light beige text */
+  /* Dark mode with red and white theme */
+  --background: 0 0% 12%; /* Dark gray background */
+  --foreground: 0 0% 95%; /* Almost white text */
   
-  --muted: 220 15% 25%; /* Darker muted areas */
-  --muted-foreground: 40 10% 75%; /* Light beige for muted text */
+  --muted: 0 0% 20%; /* Darker muted areas */
+  --muted-foreground: 0 0% 70%; /* Light gray text */
   
-  --popover: 220 20% 18%; /* Same as background */
-  --popover-foreground: 40 20% 90%; /* Same as foreground */
+  --popover: 0 0% 12%; /* Same as background */
+  --popover-foreground: 0 0% 95%; /* Same as foreground */
   
-  --card: 220 20% 22%; /* Slightly lighter than background */
-  --card-foreground: 40 20% 90%; /* Same as foreground */
+  --card: 0 0% 15%; /* Slightly lighter than background */
+  --card-foreground: 0 0% 95%; /* Same as foreground */
   
-  --border: 220 15% 30%; /* Dark border */
-  --input: 220 15% 30%; /* Same as border */
+  --border: 0 0% 25%; /* Dark border */
+  --input: 0 0% 25%; /* Same as border */
   
-  --primary: 350 80% 50%; /* Brighter red in dark mode */
-  --primary-foreground: 40 20% 98%; /* Light beige text */
+  --primary: 0 80% 55%; /* Brighter red in dark mode */
+  --primary-foreground: 0 0% 100%; /* White text */
   
-  --secondary: 150 40% 45%; /* Darker green in dark mode */
+  --secondary: 0 70% 45%; /* Darker red */
   --secondary-foreground: 0 0% 100%; /* White text on secondary */
   
-  --accent: 40 100% 60%; /* Same gold accent */
+  --accent: 0 50% 30%; /* Dark red accent */
   --accent-foreground: 0 0% 100%; /* White text on accent */
   
   --destructive: 0 80% 55%; /* Brighter destructive red */
   --destructive-foreground: 0 0% 98%; /* Light text */
   
-  --ring: 350 80% 50%; /* Red for focus rings */
+  --ring: 0 80% 55%; /* Red for focus rings */
 }
 
 @layer base {
@@ -79,8 +79,8 @@
   body {
     @apply antialiased bg-background text-foreground;
     font-family: 'Nunito', sans-serif;
-    /* Playful dotted background pattern */
-    background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23e12e4b' fill-opacity='0.05'%3E%3Ccircle cx='3' cy='3' r='1'/%3E%3Ccircle cx='13' cy='13' r='1'/%3E%3C/g%3E%3C/svg%3E");
+    /* Red dot background pattern */
+    background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23cc0000' fill-opacity='0.05'%3E%3Ccircle cx='3' cy='3' r='1'/%3E%3Ccircle cx='13' cy='13' r='1'/%3E%3C/g%3E%3C/svg%3E");
     background-attachment: fixed;
   }
 
@@ -138,38 +138,62 @@
     @apply text-primary text-lg font-bold;
   }
   
-  /* Card custom styling with fun Duolingo-inspired elements */
+  /* Red theme button styles */
+  .btn-red {
+    @apply bg-primary text-white font-semibold px-4 py-2 rounded-md;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+  }
+  
+  .btn-red:hover {
+    @apply bg-red-700;
+    transform: translateY(-1px);
+  }
+  
+  .btn-red-outline {
+    @apply bg-transparent text-primary font-semibold px-4 py-2 rounded-md;
+    border: 1px solid hsl(var(--primary));
+    transition: all 0.2s ease;
+  }
+  
+  .btn-red-outline:hover {
+    @apply bg-primary/10;
+  }
+  
+  /* Card custom styling with red and white theme */
   .card-custom {
-    @apply bg-card rounded-xl overflow-hidden;
-    box-shadow: 0 6px 0 hsl(var(--primary)/0.3), 0 8px 20px rgba(0, 0, 0, 0.1);
-    border: none;
+    @apply bg-card rounded-lg overflow-hidden;
+    box-shadow: 0 2px 0 hsl(var(--primary)), 0 4px 10px rgba(0, 0, 0, 0.1);
+    border: 1px solid hsl(var(--primary)/0.2);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
   
   .card-custom:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 0 hsl(var(--primary)/0.3), 0 12px 24px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 0 hsl(var(--primary)), 0 6px 15px rgba(0, 0, 0, 0.12);
   }
 }
 
-/* Opaque header fixes */
+/* Red theme header and footer */
 .opaque-header {
   position: relative;
   z-index: 10;
   isolation: isolate;
-  background-color: hsl(var(--accent)/0.4) !important;
+  background-color: hsl(var(--primary)) !important;
+  color: white !important;
   backdrop-filter: none !important;
-  border-bottom: 1px solid hsl(var(--border));
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid hsl(var(--primary)/0.8);
+  box-shadow: 0 2px 4px rgba(204, 0, 0, 0.2);
 }
 
 .opaque-footer {
   position: relative;
   z-index: 10;
   isolation: isolate;
-  background-color: hsl(var(--accent)/0.4) !important;
+  background-color: hsl(var(--primary)) !important;
+  color: white !important;
   backdrop-filter: none !important;
-  border-top: 1px solid hsl(var(--border));
-  box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.05);
+  border-top: 1px solid hsl(var(--primary)/0.8);
+  box-shadow: 0 -2px 4px rgba(204, 0, 0, 0.1);
 }
 
