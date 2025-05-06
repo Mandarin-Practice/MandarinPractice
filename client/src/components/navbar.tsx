@@ -25,7 +25,7 @@ export default function Navbar({ theme, toggleTheme }: NavbarProps) {
   ];
 
   return (
-    <header className="bg-red-600 shadow-md sticky top-0 z-10">
+    <header className="bg-red-600 shadow-md sticky top-0" style={{ zIndex: 'var(--z-fixed)' }}>
       <div className="container mx-auto px-4 py-4 max-w-5xl">
         <div className="flex justify-between items-center">
           <Link href="/" className="flex items-center">

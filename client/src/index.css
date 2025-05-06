@@ -396,10 +396,10 @@
   }
 }
 
-/* Enhanced red theme header and footer */
+/* Enhanced red theme header and footer with proper z-index layering */
 .opaque-header {
   position: relative;
-  z-index: 10;
+  z-index: 50; /* Increased z-index to ensure header is always on top */
   isolation: isolate;
   background: #cc0000 !important;
   color: white !important;
@@ -444,5 +444,58 @@
   background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23cc0000' fill-opacity='0.05' fill-rule='evenodd'%3E%3Cpath d='M0 20L20 0h10L0 30v-10zm0 10L30 0h10L0 40v-10zM30 40L40 30v10H30z'/%3E%3C/g%3E%3C/svg%3E");
   pointer-events: none;
   z-index: -1;
+}
+
+/* Z-Index Layering System */
+:root {
+  --z-background: -10;
+  --z-below: 1;
+  --z-default: 10;
+  --z-above: 20;
+  --z-modal: 30;
+  --z-sticky: 40;
+  --z-fixed: 50;
+  --z-dropdown: 60;
+  --z-popover: 70;
+  --z-tooltip: 80;
+  --z-toast: 90;
+  --z-maximum: 100;
+}
+
+/* Ensure proper stacking of important elements */
+.sticky {
+  position: sticky;
+  z-index: var(--z-sticky);
+}
+
+.fixed {
+  position: fixed;
+  z-index: var(--z-fixed);
+}
+
+.dropdown {
+  z-index: var(--z-dropdown);
+}
+
+.popover {
+  z-index: var(--z-popover);
+}
+
+.tooltip {
+  z-index: var(--z-tooltip);
+}
+
+.toast {
+  z-index: var(--z-toast);
+}
+
+/* Apply to important elements that should be above others */
+.above {
+  z-index: var(--z-above);
+}
+
+/* Apply to elements that should always be at the very top */
+.top-layer {
+  z-index: var(--z-maximum);
 }
 
