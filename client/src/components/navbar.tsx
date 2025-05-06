@@ -25,14 +25,14 @@ export default function Navbar({ theme, toggleTheme }: NavbarProps) {
   ];
 
   return (
-    <header className="opaque-header shadow-md sticky top-0 z-10">
+    <header className="bg-red-600 shadow-md sticky top-0 z-10">
       <div className="container mx-auto px-4 py-4 max-w-5xl">
         <div className="flex justify-between items-center">
           <Link href="/" className="flex items-center">
-            <h1 className="text-2xl font-bold text-white">
+            <div className="text-2xl font-bold text-white">
               <span className="hidden sm:inline">Mandarin Practice</span>
               <span className="sm:hidden">Mandarin</span>
-            </h1>
+            </div>
           </Link>
 
           {/* Mobile menu button */}
