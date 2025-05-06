@@ -60,7 +60,7 @@ export default function WordList() {
   // Hooks
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, signIn } = useAuth();
   const { 
     wordList: userWordList, 
     isLoading: userWordListLoading,
@@ -953,7 +953,7 @@ export default function WordList() {
               <div className="p-4 text-center">
                 <h3 className="text-xl font-semibold mb-2">Sign In Required</h3>
                 <p className="mb-4">Please sign in to view and manage your saved words</p>
-                <Button onClick={() => user?.signIn ? user.signIn() : null}>
+                <Button onClick={signIn}>
                   Sign In with Google
                 </Button>
               </div>
