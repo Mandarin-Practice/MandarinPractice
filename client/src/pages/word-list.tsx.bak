@@ -7,16 +7,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import WordChip from "@/components/word-chip";
 import { Separator } from "@/components/ui/separator";
-import { LESSON11_WORDLIST } from "@/data/word-lists";
-import { LESSON12_WORDLIST } from "@/data/lesson12-wordlist";
-import { LESSON13_WORDLIST } from "@/data/lesson13-wordlist";
-import { LESSON14_WORDLIST } from "@/data/lesson14-wordlist";
-import { LESSON15_WORDLIST } from "@/data/lesson15-wordlist";
-import { LESSON16_WORDLIST } from "@/data/lesson16-wordlist";
-import { LESSON17_WORDLIST } from "@/data/lesson17-wordlist";
-import { LESSON18_WORDLIST } from "@/data/lesson18-wordlist";
-import { LESSON19_WORDLIST } from "@/data/lesson19-wordlist";
-import { LESSON20_WORDLIST } from "@/data/lesson20-wordlist";
 
 interface WordList {
   id: string;
@@ -31,158 +21,6 @@ interface WordList {
 }
 
 const SAMPLE_WORD_LISTS: WordList[] = [
-  {
-    id: "ic-lesson1",
-    name: "Integrated Chinese Lesson 1",
-    description: "Greetings - 25 essential words",
-    category: "Integrated Chinese",
-    words: [
-      { chinese: "你", pinyin: "nǐ", english: "you" },
-      { chinese: "好", pinyin: "hǎo", english: "fine; good; nice; O.K.; it's settled" },
-      { chinese: "请", pinyin: "qǐng", english: "please (polite form of request); to treat or to invite" },
-      { chinese: "问", pinyin: "wèn", english: "to ask (a question)" },
-      { chinese: "贵", pinyin: "guì", english: "honorable; expensive" },
-      { chinese: "姓", pinyin: "xìng", english: "(one's) surname is...; to be surnamed" },
-      { chinese: "我", pinyin: "wǒ", english: "I; me" },
-      { chinese: "呢", pinyin: "ne", english: "(question particle)" },
-      { chinese: "小姐", pinyin: "xiǎo jiě", english: "Miss; young lady" },
-      { chinese: "叫", pinyin: "jiào", english: "to be called; to call" },
-      { chinese: "什么", pinyin: "shén me", english: "what" },
-      { chinese: "名字", pinyin: "míng zì", english: "name" },
-      { chinese: "先生", pinyin: "xiān sheng", english: "Mr.; husband; teacher" },
-      { chinese: "李友", pinyin: "Lǐ Yǒu", english: "(a personal name)" },
-      { chinese: "李", pinyin: "Lǐ", english: "(a surname); plum" },
-      { chinese: "王朋", pinyin: "Wáng Péng", english: "(a personal name)" },
-      { chinese: "王", pinyin: "Wáng", english: "(a surname); king" },
-      { chinese: "是", pinyin: "shì", english: "to be" },
-      { chinese: "老师", pinyin: "lǎo shī", english: "teacher" },
-      { chinese: "吗", pinyin: "ma", english: "(question particle)" },
-      { chinese: "不", pinyin: "bù", english: "not; no" },
-      { chinese: "学生", pinyin: "xué shēng", english: "student" },
-      { chinese: "也", pinyin: "yě", english: "too; also" },
-      { chinese: "人", pinyin: "rén", english: "people; person" },
-      { chinese: "中国", pinyin: "Zhōng guó", english: "China" },
-      { chinese: "北京", pinyin: "Běi jīng", english: "Beijing" },
-      { chinese: "美国", pinyin: "Měi guó", english: "America" },
-      { chinese: "纽约", pinyin: "Niǔ yuē", english: "New York" }
-    ]
-  },
-  {
-    id: "ic-lesson2",
-    name: "Integrated Chinese Lesson 2",
-    description: "Family - 38 family-related words",
-    category: "Integrated Chinese",
-    words: [
-      { chinese: "那", pinyin: "nà", english: "that" },
-      { chinese: "的", pinyin: "de", english: "(a possessive or descriptive particle)" },
-      { chinese: "照片", pinyin: "zhào piàn", english: "picture; photo" },
-      { chinese: "这", pinyin: "zhè", english: "this" },
-      { chinese: "爸爸", pinyin: "bà ba", english: "father; dad" },
-      { chinese: "妈妈", pinyin: "mā ma", english: "mother; mom" },
-      { chinese: "个", pinyin: "gè", english: "(measure word for many common everyday objects)" },
-      { chinese: "女", pinyin: "nǚ", english: "female" },
-      { chinese: "孩子", pinyin: "hái zi", english: "child" },
-      { chinese: "谁", pinyin: "shéi", english: "who" },
-      { chinese: "她", pinyin: "tā", english: "she; her" },
-      { chinese: "姐姐", pinyin: "jiě jie", english: "older sister" },
-      { chinese: "男", pinyin: "nán", english: "male" },
-      { chinese: "弟弟", pinyin: "dì di", english: "younger brother" },
-      { chinese: "他", pinyin: "tā", english: "he; him" },
-      { chinese: "哥哥", pinyin: "gē ge", english: "older brother" },
-      { chinese: "家", pinyin: "jiā", english: "home; family; house" },
-      { chinese: "有", pinyin: "yǒu", english: "to have; there is" },
-      { chinese: "没有", pinyin: "méi yǒu", english: "does not have; there is not" },
-      { chinese: "二", pinyin: "èr", english: "two" },
-      { chinese: "一", pinyin: "yī", english: "one" },
-      { chinese: "忙", pinyin: "máng", english: "busy" },
-      { chinese: "很", pinyin: "hěn", english: "very" },
-      { chinese: "做", pinyin: "zuò", english: "to do" },
-      { chinese: "律师", pinyin: "lǜ shī", english: "lawyer" },
-      { chinese: "医生", pinyin: "yī shēng", english: "doctor" },
-      { chinese: "大夫", pinyin: "dài fu", english: "doctor" },
-      { chinese: "都", pinyin: "dōu", english: "all; both" },
-      { chinese: "妹妹", pinyin: "mèi mei", english: "younger sister" },
-      { chinese: "漂亮", pinyin: "piào liang", english: "pretty; beautiful" },
-      { chinese: "高兴", pinyin: "gāo xìng", english: "happy; pleased" },
-      { chinese: "认识", pinyin: "rèn shi", english: "to know (sb.); to recognize" },
-      { chinese: "会", pinyin: "huì", english: "can; to know how to; will; to be able to" },
-      { chinese: "说", pinyin: "shuō", english: "to speak; to say" },
-      { chinese: "英文", pinyin: "Yīng wén", english: "English (language)" },
-      { chinese: "法文", pinyin: "Fǎ wén", english: "French (language)" },
-      { chinese: "法国", pinyin: "Fǎ guó", english: "France" },
-      { chinese: "英国", pinyin: "Yīng guó", english: "Britain; England" }
-    ]
-  },
-  {
-    id: "ic-lesson11",
-    name: "Integrated Chinese Lesson 11",
-    description: "Seasons and weather - 25 essential terms",
-    category: "Integrated Chinese",
-    words: LESSON11_WORDLIST.words
-  },
-  {
-    id: "ic-lesson12",
-    name: "Integrated Chinese Lesson 12",
-    description: "Restaurant and dining vocabulary",
-    category: "Integrated Chinese",
-    words: LESSON12_WORDLIST.words
-  },
-  {
-    id: "ic-lesson13",
-    name: "Integrated Chinese Lesson 13",
-    description: "Direction and location terms",
-    category: "Integrated Chinese",
-    words: LESSON13_WORDLIST.words
-  },
-  {
-    id: "ic-lesson14",
-    name: "Integrated Chinese Lesson 14",
-    description: "Family, gifts, and physical descriptions",
-    category: "Integrated Chinese",
-    words: LESSON14_WORDLIST.words
-  },
-  {
-    id: "ic-lesson15",
-    name: "Integrated Chinese Lesson 15",
-    description: "Health and medical terminology",
-    category: "Integrated Chinese",
-    words: LESSON15_WORDLIST.words
-  },
-  {
-    id: "ic-lesson16",
-    name: "Integrated Chinese Lesson 16",
-    description: "Moving, travel, and daily life vocabulary",
-    category: "Integrated Chinese",
-    words: LESSON16_WORDLIST.words
-  },
-  {
-    id: "ic-lesson17",
-    name: "Integrated Chinese Lesson 17",
-    description: "Housing, apartments, and furniture vocabulary",
-    category: "Integrated Chinese",
-    words: LESSON17_WORDLIST.words
-  },
-  {
-    id: "ic-lesson18",
-    name: "Integrated Chinese Lesson 18",
-    description: "Sports, activities, and physical fitness vocabulary",
-    category: "Integrated Chinese",
-    words: LESSON18_WORDLIST.words
-  },
-  {
-    id: "ic-lesson19",
-    name: "Integrated Chinese Lesson 19",
-    description: "Travel, vacation, and tourism vocabulary",
-    category: "Integrated Chinese",
-    words: LESSON19_WORDLIST.words
-  },
-  {
-    id: "ic-lesson20",
-    name: "Integrated Chinese Lesson 20",
-    description: "Travel, airport, and luggage vocabulary",
-    category: "Integrated Chinese",
-    words: LESSON20_WORDLIST.words
-  },
   {
     id: "hsk1",
     name: "HSK Level 1 Basics",
@@ -303,7 +141,6 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     id: "travel",
     name: "Travel Phrases",
     description: "25 useful travel expressions",
-    category: "Topics",
     words: [
       { chinese: "你好", pinyin: "nǐ hǎo", english: "hello" },
       { chinese: "谢谢", pinyin: "xiè xiè", english: "thank you" },
@@ -333,28 +170,79 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     ]
   },
   {
-    id: "ic-lesson03",
-    name: "Integrated Chinese Lesson 3",
-    description: "Basic conversation and introductions",
-    category: "Integrated Chinese",
+    id: "ic-lesson1",
+    name: "Integrated Chinese Lesson 1",
+    description: "Greetings - 25 essential words",
     words: [
-      { chinese: "大家", pinyin: "dà jiā", english: "everybody; everyone" },
-      { chinese: "现在", pinyin: "xiàn zài", english: "now" },
-      { chinese: "认识", pinyin: "rèn shi", english: "to know (sb.); to recognize" },
-      { chinese: "一下", pinyin: "yí xià", english: "(used after a verb to indicate a brief or casual action)" },
-      { chinese: "美国人", pinyin: "Měi guó rén", english: "American" },
-      { chinese: "认识", pinyin: "rèn shi", english: "to know (sb.); to recognize" },
-      { chinese: "中国人", pinyin: "Zhōng guó rén", english: "Chinese (person)" },
-      { chinese: "同学", pinyin: "tóng xué", english: "classmate" },
-      { chinese: "朋友", pinyin: "péng you", english: "friend" },
-      { chinese: "都", pinyin: "dōu", english: "all; both" },
-      { chinese: "会", pinyin: "huì", english: "can; will; to know how to" },
-      { chinese: "说", pinyin: "shuō", english: "to speak; to say" },
-      { chinese: "汉语", pinyin: "Hàn yǔ", english: "Chinese language" },
-      { chinese: "法国", pinyin: "Fǎ guó", english: "France" },
-      { chinese: "法国人", pinyin: "Fǎ guó rén", english: "French person" }
+      { chinese: "你", pinyin: "nǐ", english: "you" },
+      { chinese: "好", pinyin: "hǎo", english: "fine; good; nice; O.K.; it's settled" },
+      { chinese: "请", pinyin: "qǐng", english: "please (polite form of request); to treat or to invite" },
+      { chinese: "问", pinyin: "wèn", english: "to ask (a question)" },
+      { chinese: "贵", pinyin: "guì", english: "honorable; expensive" },
+      { chinese: "姓", pinyin: "xìng", english: "(one's) surname is...; to be surnamed" },
+      { chinese: "我", pinyin: "wǒ", english: "I; me" },
+      { chinese: "呢", pinyin: "ne", english: "(question particle)" },
+      { chinese: "小姐", pinyin: "xiǎo jiě", english: "Miss; young lady" },
+      { chinese: "叫", pinyin: "jiào", english: "to be called; to call" },
+      { chinese: "什么", pinyin: "shén me", english: "what" },
+      { chinese: "名字", pinyin: "míng zì", english: "name" },
+      { chinese: "先生", pinyin: "xiān sheng", english: "Mr.; husband; teacher" },
+      { chinese: "李友", pinyin: "Lǐ Yǒu", english: "(a personal name)" },
+      { chinese: "李", pinyin: "Lǐ", english: "(a surname); plum" },
+      { chinese: "王朋", pinyin: "Wáng Péng", english: "(a personal name)" },
+      { chinese: "王", pinyin: "Wáng", english: "(a surname); king" },
+      { chinese: "是", pinyin: "shì", english: "to be" },
+      { chinese: "老师", pinyin: "lǎo shī", english: "teacher" },
+      { chinese: "吗", pinyin: "ma", english: "(question particle)" },
+      { chinese: "不", pinyin: "bù", english: "not; no" },
+      { chinese: "学生", pinyin: "xué shēng", english: "student" },
+      { chinese: "也", pinyin: "yě", english: "too; also" },
+      { chinese: "人", pinyin: "rén", english: "people; person" },
+      { chinese: "中国", pinyin: "Zhōng guó", english: "China" },
+      { chinese: "北京", pinyin: "Běi jīng", english: "Beijing" },
+      { chinese: "美国", pinyin: "Měi guó", english: "America" },
+      { chinese: "纽约", pinyin: "Niǔ yuē", english: "New York" }
     ]
   },
+  {
+    id: "ic-lesson2",
+    name: "Integrated Chinese Lesson 2",
+    description: "Family - 38 family-related words",
+    words: [
+      { chinese: "那", pinyin: "nà", english: "that" },
+      { chinese: "的", pinyin: "de", english: "(a possessive or descriptive particle)" },
+      { chinese: "照片", pinyin: "zhào piàn", english: "picture; photo" },
+      { chinese: "这", pinyin: "zhè", english: "this" },
+      { chinese: "爸爸", pinyin: "bà ba", english: "father; dad" },
+      { chinese: "妈妈", pinyin: "mā ma", english: "mother; mom" },
+      { chinese: "个", pinyin: "gè", english: "(measure word for many common everyday objects)" },
+      { chinese: "女", pinyin: "nǚ", english: "female" },
+      { chinese: "孩子", pinyin: "hái zi", english: "child" },
+      { chinese: "谁", pinyin: "shéi", english: "who" },
+      { chinese: "她", pinyin: "tā", english: "she; her" },
+      { chinese: "姐姐", pinyin: "jiě jie", english: "older sister" },
+      { chinese: "男", pinyin: "nán", english: "male" },
+      { chinese: "弟弟", pinyin: "dì di", english: "younger brother" },
+      { chinese: "他", pinyin: "tā", english: "he; him" },
+      { chinese: "大哥", pinyin: "dà gē", english: "eldest brother" },
+      { chinese: "儿子", pinyin: "ér zi", english: "son" },
+      { chinese: "有", pinyin: "yǒu", english: "to have; to exist" },
+      { chinese: "女儿", pinyin: "nǚ ér", english: "daughter" },
+      { chinese: "没", pinyin: "méi", english: "not" },
+      { chinese: "高文中", pinyin: "Gāo Wén zhōng", english: "(a personal name)" },
+      { chinese: "高", pinyin: "Gāo", english: "(a surname); tall; high" },
+      { chinese: "家", pinyin: "jiā", english: "family; home" },
+      { chinese: "几", pinyin: "jǐ", english: "how many; some; a few" },
+      { chinese: "口", pinyin: "kǒu", english: "(measure word for number of family members)" },
+      { chinese: "哥哥", pinyin: "gē ge", english: "older brother" },
+      { chinese: "两", pinyin: "liǎng", english: "two; a couple of" },
+      { chinese: "妹妹", pinyin: "mèi mei", english: "younger sister" },
+      { chinese: "和", pinyin: "hé", english: "and" },
+      { chinese: "大姐", pinyin: "dà jiě", english: "eldest sister" },
+      { chinese: "二姐", pinyin: "èr jiě", english: "second oldest sister" },
+      { chinese: "做", pinyin: "zuò", english: "to do" },
+      { chinese: "工作", pinyin: "gōng zuò", english: "job; to work" },
+      { chinese: "律师", pinyin: "lǜ shī", english: "lawyer" },
       { chinese: "英文", pinyin: "Yīng wén", english: "English (language)" },
       { chinese: "都", pinyin: "dōu", english: "both; all" },
       { chinese: "大学生", pinyin: "dà xué shēng", english: "college student" },
@@ -367,7 +255,6 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     id: "ic-lesson3",
     name: "Integrated Chinese Lesson 3",
     description: "Dates and Time - 45 time expressions and daily activities",
-    category: "Integrated Chinese",
     words: [
       { chinese: "九月", pinyin: "jiǔ yuè", english: "September" },
       { chinese: "月", pinyin: "yuè", english: "month" },
@@ -428,7 +315,6 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     id: "food",
     name: "Food & Dining",
     description: "35 common food and dining terms",
-    category: "Topics",
     words: [
       { chinese: "饭", pinyin: "fàn", english: "rice/meal" },
       { chinese: "菜", pinyin: "cài", english: "dish/vegetable" },
@@ -471,7 +357,6 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     id: "ic-lesson4",
     name: "Integrated Chinese Lesson 4",
     description: "Hobbies - 48 leisure activity words",
-    category: "Integrated Chinese",
     words: [
       { chinese: "周末", pinyin: "zhōu mò", english: "weekend" },
       { chinese: "打球", pinyin: "dǎ qiú", english: "to play ball" },
@@ -527,7 +412,6 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     id: "ic-lesson5",
     name: "Integrated Chinese Lesson 5",
     description: "Visiting Friends - 35 conversational expressions",
-    category: "Integrated Chinese",
     words: [
       { chinese: "呀", pinyin: "ya", english: "(interjectory particle used to soften a question)" },
       { chinese: "进", pinyin: "jìn", english: "to enter" },
@@ -572,7 +456,6 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     id: "ic-lesson6",
     name: "Integrated Chinese Lesson 6",
     description: "Making Appointments - 48 conversation and scheduling terms",
-    category: "Integrated Chinese",
     words: [
       { chinese: "给", pinyin: "gěi", english: "to; for" },
       { chinese: "打电话", pinyin: "dǎ diàn huà", english: "to make a phone call" },
@@ -629,7 +512,6 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     id: "ic-lesson7",
     name: "Integrated Chinese Lesson 7",
     description: "Studying Chinese - 40 academic vocabulary words",
-    category: "Integrated Chinese",
     words: [
       { chinese: "说话", pinyin: "shuō huà", english: "to talk" },
       { chinese: "话", pinyin: "huà", english: "word; speech" },
@@ -678,7 +560,6 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     id: "ic-lesson8", 
     name: "Integrated Chinese Lesson 8",
     description: "School Life - 40 daily routine and campus vocabulary words",
-    category: "Integrated Chinese",
     words: [
       { chinese: "篇", pinyin: "piān", english: "(measure word for essays, articles, etc.)" },
       { chinese: "日记", pinyin: "rì jì", english: "diary" },
@@ -726,7 +607,6 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     id: "hsk3",
     name: "HSK Level 3 Vocabulary",
     description: "45 essential intermediate words",
-    category: "HSK",
     words: [
       { chinese: "汉语", pinyin: "hàn yǔ", english: "Chinese language" },
       { chinese: "意思", pinyin: "yì sī", english: "meaning" },
@@ -779,7 +659,6 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     id: "business",
     name: "Business Chinese",
     description: "30 essential terms for professional settings",
-    category: "Topics",
     words: [
       { chinese: "公司", pinyin: "gōng sī", english: "company" },
       { chinese: "职位", pinyin: "zhí wèi", english: "position/job title" },
@@ -817,7 +696,6 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     id: "tech",
     name: "Technology Terms",
     description: "25 modern technology vocabulary words",
-    category: "Topics",
     words: [
       { chinese: "科技", pinyin: "kē jì", english: "technology" },
       { chinese: "电脑", pinyin: "diàn nǎo", english: "computer" },
@@ -850,7 +728,6 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     id: "ic-lesson9",
     name: "Integrated Chinese Lesson 9",
     description: "Shopping - 50 shopping and money-related terms",
-    category: "Integrated Chinese",
     words: [
       { chinese: "商店", pinyin: "shāng diàn", english: "store; shop" },
       { chinese: "买", pinyin: "mǎi", english: "to buy" },
@@ -911,7 +788,6 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     id: "emotions",
     name: "Emotions & Feelings",
     description: "30 words to express emotions and feelings",
-    category: "Topics",
     words: [
       { chinese: "高兴", pinyin: "gāo xìng", english: "happy" },
       { chinese: "开心", pinyin: "kāi xīn", english: "happy/joyful" },
@@ -949,7 +825,6 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     id: "medical",
     name: "Medical & Health",
     description: "25 essential health and medical terms",
-    category: "Topics",
     words: [
       { chinese: "医生", pinyin: "yī shēng", english: "doctor" },
       { chinese: "护士", pinyin: "hù shì", english: "nurse" },
@@ -982,7 +857,6 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     id: "ic-lesson10",
     name: "Integrated Chinese Lesson 10",
     description: "Transportation - 45 travel and transportation terms",
-    category: "Integrated Chinese",
     words: [
       { chinese: "寒假", pinyin: "hán jià", english: "winter vacation" },
       { chinese: "飞机", pinyin: "fēi jī", english: "airplane" },
@@ -1038,7 +912,6 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     id: "weather",
     name: "Weather & Seasons",
     description: "20 common weather expressions",
-    category: "Topics",
     words: [
       { chinese: "天气", pinyin: "tiān qì", english: "weather" },
       { chinese: "晴天", pinyin: "qíng tiān", english: "sunny day" },
@@ -1605,17 +1478,7 @@ export default function WordList() {
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-3xl w-full max-h-[80vh] overflow-hidden flex flex-col">
             <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-              <div>
-                <h3 className="text-xl font-semibold">{previewList.name}</h3>
-                <div className="flex items-center text-sm mt-1">
-                  {previewList.category && (
-                    <span className="px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white text-xs mr-2 font-medium">
-                      {previewList.category}
-                    </span>
-                  )}
-                  <span className="text-gray-700 dark:text-white">{previewList.description}</span>
-                </div>
-              </div>
+              <h3 className="text-xl font-semibold">{previewList.name}</h3>
               <button 
                 onClick={handleClosePreview}
                 className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
@@ -1657,7 +1520,7 @@ export default function WordList() {
                 >
                   Deselect All
                 </Button>
-                <span className="ml-4 text-sm font-medium text-gray-800 dark:text-white">
+                <span className="ml-4 text-sm">
                   {Object.values(selectedWords).filter(Boolean).length} of {previewList.words.length} selected
                 </span>
               </div>
@@ -1684,7 +1547,7 @@ export default function WordList() {
                       />
                       <div>
                         <div className="font-medium">{word.chinese}</div>
-                        <div className="text-xs text-gray-700 dark:text-gray-200 font-medium">{word.pinyin}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">{word.pinyin}</div>
                         <div className="text-sm">{word.english}</div>
                       </div>
                     </div>
@@ -1711,89 +1574,70 @@ export default function WordList() {
         </div>
       )}
     
-      <Card className="mb-6 border-border overflow-hidden">
-        <CardHeader className="sticky top-0 opaque-header">
+      <Card className="mb-6">
+        <CardHeader>
           <CardTitle>Your Vocabulary Words</CardTitle>
-          <CardDescription className="text-white">Add the Mandarin words you want to practice</CardDescription>
+          <CardDescription>Add the Mandarin words you want to practice</CardDescription>
         </CardHeader>
         
         <CardContent>
           <div className="mb-6">
-            <label htmlFor="word-input" className="block text-sm font-bold mb-2">
+            <label htmlFor="word-input" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Add Words (one per line)
             </label>
-            <div className="relative">
-              <Textarea
-                id="word-input"
-                value={wordInput}
-                onChange={(e) => setWordInput(e.target.value)}
-                rows={6}
-                placeholder="学习 (xuéxí) - to study"
-                className="w-full px-4 py-3 rounded-md bg-background border-2 border-border focus:border-primary focus:ring-1 focus:ring-primary/50 font-medium leading-normal"
-              />
-              {/* Removed misaligned decorative line */}
-            </div>
-            <p className="text-sm text-foreground/70 mt-2 flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1 text-primary">
-                <path d="M12 9v4"></path>
-                <path d="M12 17h.01"></path>
-                <path d="M12 3c-1.2 0-2.4.6-3 1.7A4 4 0 0 0 9 12a4 4 0 0 1 1 7.3A4 4 0 0 0 12 21a4 4 0 0 0 2-7.3A4 4 0 0 1 15 6a4 4 0 0 0-.1-1.3c-.5-1.1-1.7-1.7-2.9-1.7Z"></path>
-              </svg>
+            <Textarea
+              id="word-input"
+              value={wordInput}
+              onChange={(e) => setWordInput(e.target.value)}
+              rows={5}
+              placeholder="学习 (xuéxí) - to study
+喜欢 (xǐhuān) - to like
+中文 (zhōngwén) - Chinese language"
+              className="w-full px-4 py-3 rounded-lg"
+            />
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
               Format: Chinese characters (pinyin) - English meaning
             </p>
           </div>
           
           <div>
-            <div className="flex justify-between items-center mb-4 border-b border-border pb-3">
-              <h3 className="text-lg font-bold">
-                Current Word List
-              </h3>
-              <div className="flex items-center px-3 py-1.5">
-                <span className="text-sm flex items-center mr-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1 text-primary">
-                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-                  </svg>
-                  Group Homophones
-                </span>
-                <button 
-                  type="button"
-                  className={`relative w-11 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors ${
-                    groupByHomophones ? "bg-primary" : "bg-foreground/20"
-                  }` as string}
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-lg font-medium">Current Word List</h3>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Group homophones</span>
+                <div
+                  className={`w-10 h-5 flex items-center rounded-full p-1 cursor-pointer ${
+                    groupByHomophones ? "bg-primary" : "bg-gray-300 dark:bg-gray-600"
+                  }`}
                   onClick={() => setGroupByHomophones(!groupByHomophones)}
-                  aria-label={groupByHomophones ? "Disable homophone grouping" : "Enable homophone grouping"}
                 >
                   <div
-                    className={`bg-background h-4 w-4 rounded-full shadow-md transform transition-transform duration-200 ${
-                      groupByHomophones ? "translate-x-5" : "translate-x-0"
-                    }` as string}
+                    className={`bg-white dark:bg-gray-200 h-4 w-4 rounded-full shadow-md transform transition-transform ${
+                      groupByHomophones ? "translate-x-5" : ""
+                    }`}
                   ></div>
-                </button>
+                </div>
               </div>
             </div>
             
             {/* Search input */}
-            {vocabulary && Array.isArray(vocabulary) && vocabulary.length > 0 ? (
-              <div className="relative mb-5 mt-2">
-                <div className="text-sm font-bold mb-1">
-                  Search Words
-                </div>
+            {vocabulary && Array.isArray(vocabulary) && vocabulary.length > 0 && (
+              <div className="relative mb-4">
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search by Chinese character (我) or pinyin (wo)"
-                  className="w-full px-10 py-2.5 border-2 border-border rounded-md bg-background text-foreground focus:border-primary focus:ring-1 focus:ring-primary/50 transition-colors font-medium"
+                  className="w-full px-10 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   title="Type either Chinese characters or pinyin to search. For example, typing '我' will find words with '我', and typing 'wo' will find words with the pinyin 'wo'."
                 />
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3 top-6">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3">
                   <div className="group relative">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary cursor-help">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 cursor-help">
                       <circle cx="11" cy="11" r="8"></circle>
                       <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                     </svg>
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 -translate-y-2 hidden group-hover:block bg-card border border-border text-black dark:text-white text-xs rounded-md py-2 px-3 w-64 z-10 shadow-md font-medium">
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 -translate-y-2 hidden group-hover:block bg-black text-white text-xs rounded py-1 px-2 w-64 z-10">
                       You can search by typing either Chinese characters or pinyin. The search is smart enough to find matching words regardless of which you use.
                     </div>
                   </div>
@@ -1801,16 +1645,16 @@ export default function WordList() {
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery("")}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 top-6 text-primary/60 hover:text-primary"
+                    className="absolute inset-y-0 right-0 flex items-center pr-3"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
                       <line x1="18" y1="6" x2="6" y2="18"></line>
                       <line x1="6" y1="6" x2="18" y2="18"></line>
                     </svg>
                   </button>
                 )}
               </div>
-            ) : null}
+            )}
             
             {isLoading ? (
               <div className="flex flex-wrap gap-2 mb-4">
@@ -1819,7 +1663,7 @@ export default function WordList() {
             ) : vocabulary && Array.isArray(vocabulary) && vocabulary.length > 0 ? (
               // Check if there are any results after filtering
               filterVocabulary(vocabulary).length === 0 ? (
-                <div className="text-gray-900 dark:text-white italic mb-4 font-medium">
+                <div className="text-gray-500 dark:text-gray-400 italic mb-4">
                   No words match your search query.
                 </div>
               ) : (
@@ -1828,16 +1672,13 @@ export default function WordList() {
                 <div className="space-y-4 mb-4">
                   {/* Display homophone groups */}
                   {getHomophoneGroups(filterVocabulary(vocabulary)).map((group, index) => (
-                    <div key={index} className="border-2 border-border rounded-md p-4 bg-accent/10 shadow-md">
-                      <h4 className="text-md font-bold mb-3 text-primary flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
-                          <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
-                        </svg>
+                    <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                      <h4 className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-300">
                         {group.type === 'pronoun' 
-                          ? <span><span className="font-bold">tā</span> - Pronoun Homophones (他/她/它)</span> 
-                          : <span><span className="font-bold">{normalizePinyin(group.words[0].pinyin)}</span> - Homophones</span>}
+                          ? 'tā - Pronoun Homophones (他/她/它)' 
+                          : `${normalizePinyin(group.words[0].pinyin)} - Homophones`}
                       </h4>
-                      <div className="flex flex-wrap gap-2.5 ml-1">
+                      <div className="flex flex-wrap gap-2">
                         {group.words.map((word) => (
                           <WordChip
                             key={word.id}
@@ -1868,17 +1709,11 @@ export default function WordList() {
                     );
                     
                     return singleWords.length > 0 ? (
-                      <div className="border-2 border-border rounded-md p-4 bg-accent/10 shadow-md">
-                        <h4 className="text-md font-bold mb-3 text-primary flex items-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
-                            <path d="M7 20h10"></path>
-                            <path d="M10 20c5.5-2.5.8-6.4 3-10"></path>
-                            <path d="M9.5 9.4c1.1.8 1.8 1.7 2.3 3.7"></path>
-                            <path d="M14.1 6a7 7 0 0 0-4.2 0"></path>
-                          </svg>
+                      <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                        <h4 className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-300">
                           Words without homophones
                         </h4>
-                        <div className="flex flex-wrap gap-2.5 ml-1">
+                        <div className="flex flex-wrap gap-2">
                           {singleWords.map((word) => (
                             <WordChip
                               key={word.id}
@@ -1895,199 +1730,98 @@ export default function WordList() {
                 </div>
               ) : (
                 // Normal list mode
-                <div className="border-2 border-border rounded-md p-4 mb-4 bg-accent/10 shadow-md">
-                  <h4 className="text-md font-bold mb-3 text-primary flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
-                      <path d="M3 5v14"></path>
-                      <path d="M8 5v14"></path>
-                      <path d="M12 5v14"></path>
-                      <path d="M17 5v14"></path>
-                      <path d="M21 5v14"></path>
-                    </svg>
-                    All Vocabulary Words
-                  </h4>
-                  <div className="flex flex-wrap gap-2.5 ml-1">
-                    {filterVocabulary(vocabulary).map((word) => (
-                      <WordChip
-                        key={word.id}
-                        word={word}
-                        proficiency={proficiencyData[word.id]}
-                        onRemove={() => handleRemoveWord(word.id)}
-                        onToggleActive={() => handleToggleActive(word.id, word.active)}
-                      />
-                    ))}
-                  </div>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {filterVocabulary(vocabulary).map((word) => (
+                    <WordChip
+                      key={word.id}
+                      word={word}
+                      proficiency={proficiencyData[word.id]}
+                      onRemove={() => handleRemoveWord(word.id)}
+                      onToggleActive={() => handleToggleActive(word.id, word.active)}
+                    />
+                  ))}
                 </div>
               )
               )
             ) : (
-              <div className="border-2 border-border rounded-md p-6 mb-4 bg-accent/10 shadow-md text-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="mx-auto mb-3 text-primary/50">
-                  <rect width="16" height="20" x="4" y="2" rx="2" ry="2"></rect>
-                  <path d="M9 22v-4h6v4"></path>
-                  <path d="M8 8h8"></path>
-                  <path d="M8 12h8"></path>
-                  <path d="M8 16h8"></path>
-                </svg>
-                <p className="text-gray-900 dark:text-white font-semibold mb-1">No words in your vocabulary list yet.</p>
-                <p className="text-sm text-gray-900 dark:text-white">Add words above or import a pre-made word list below.</p>
+              <div className="text-gray-500 dark:text-gray-400 italic mb-4">
+                No words in your vocabulary list yet.
               </div>
             )}
           </div>
         </CardContent>
         
-        <CardFooter className="flex justify-between bg-accent border-t border-border opaque-footer">
+        <CardFooter className="flex justify-between">
           <Button
             variant="outline"
             onClick={handleClearWords}
             disabled={isLoading || !vocabulary || !Array.isArray(vocabulary) || vocabulary.length === 0}
-            className="border-primary text-primary hover:bg-primary/10"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
-              <path d="M3 6h18"></path>
-              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-              <line x1="10" x2="10" y1="11" y2="17"></line>
-              <line x1="14" x2="14" y1="11" y2="17"></line>
-            </svg>
             Clear List
           </Button>
           <Button
             onClick={parseWords}
             disabled={!wordInput.trim()}
-            variant="chinese"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
-              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-              <polyline points="17 21 17 13 7 13 7 21"></polyline>
-              <polyline points="7 3 7 8 15 8"></polyline>
-            </svg>
             Save Words
           </Button>
         </CardFooter>
       </Card>
       
-      <Card className="border-border overflow-hidden">
-        <CardHeader className="bg-accent border-b border-border pb-4 opaque-header">
-          <div className="flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-white mr-2">
-              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-              <circle cx="9" cy="7" r="4"></circle>
-              <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-            </svg>
-            <div>
-              <CardTitle className="text-white">
-                Suggested Word Lists
-              </CardTitle>
-              <CardDescription className="text-white/90">Import pre-made lists to get started quickly</CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="pt-4">
+      <Card>
+        <CardContent className="pt-6">
+          <h3 className="text-lg font-medium mb-3">Suggested Word Lists</h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">Import pre-made lists to get started quickly</p>
           
-          {/* Group word lists by category */}
-          {(() => {
-            // Extract unique categories
-            const categories = Array.from(
-              new Set(SAMPLE_WORD_LISTS.map(list => list.category || "Other"))
-            ).sort();
-            
-            return categories.map(category => {
-              // Filter lists for current category
-              const listsInCategory = SAMPLE_WORD_LISTS.filter(
-                list => (list.category || "Other") === category
-              );
-              
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {SAMPLE_WORD_LISTS.map((list) => {
+              const { total, imported } = getWordListStats(list.id);
               return (
-                <div key={category} className="mb-8">
-                  {/* Category header with count */}
-                  <div className="flex items-center border-b border-primary/20 pb-3 mb-5">
-                    <h4 className="text-xl font-bold text-primary flex items-center">
-                      {category === "HSK" && (
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-                          <path d="M12 2v8"></path>
-                          <path d="m4.93 10.93 1.41 1.41"></path>
-                          <path d="M2 18h2"></path>
-                          <path d="M20 18h2"></path>
-                          <path d="m19.07 10.93-1.41 1.41"></path>
-                          <path d="M22 22H2"></path>
-                          <path d="m16 8-4 4-4-4"></path>
-                          <path d="M16 16a4 4 0 0 0-8 0"></path>
-                        </svg>
-                      )}
-                      {category === "Integrated Chinese" && (
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-                          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-                          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-                        </svg>
-                      )}
-                      {category === "Topics" && (
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-                          <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path>
-                        </svg>
-                      )}
-                      {category}
-                    </h4>
-                    <div className="ml-2 px-3 py-1.5 rounded-md bg-accent/30 border-2 border-primary/30 text-sm font-bold text-primary shadow-sm">
-                      {listsInCategory.length} sets
-                    </div>
-                  </div>
-                  
-                  {/* Lists in this category */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    {listsInCategory.map((list) => {
-                      const { total, imported } = getWordListStats(list.id);
-                      return (
-                        <div key={list.id} className="border-2 border-border rounded-md p-4 bg-accent/10 hover:border-primary/50 hover:bg-accent/20 transition-all shadow-sm">
-                          <div className="flex justify-between items-start mb-3">
-                            <h4 className="font-bold text-primary text-lg">{list.name}</h4>
-                            <div className="text-sm px-3 py-1.5 rounded-md border-2 border-primary/30 bg-background shadow-sm">
-                              <span className={imported === total ? "text-green-600 font-bold" : "text-primary font-bold"}>
-                                {imported}/{total} words added
-                              </span>
-                            </div>
-                          </div>
-                          <p className="text-sm text-gray-900 dark:text-white mb-3 font-medium">{list.description}</p>
-                          <div className="flex gap-3">
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              className="text-sm border-primary/50 text-primary hover:bg-primary/10"
-                              onClick={() => handleShowPreview(list.id)}
-                            >
-                              <span className="flex items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
-                                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
-                                  <circle cx="12" cy="12" r="3"></circle>
-                                </svg>
-                                Preview
-                              </span>
-                            </Button>
-                            <Button 
-                              variant="link" 
-                              className="p-0 h-auto text-sm text-primary"
-                              onClick={() => handleImportWordList(list.id)}
-                              disabled={importWordListMutation.isPending || (imported > 0 && imported === total)}
-                            >
-                              <span className="flex items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
-                                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                  <polyline points="17 8 12 3 7 8"></polyline>
-                                  <line x1="12" y1="3" x2="12" y2="15"></line>
-                                </svg>
-                                {imported > 0 && imported === total ? "All Added" : "Import All"}
-                              </span>
-                            </Button>
-                          </div>
-                        </div>
-                      );
-                    })}
+              <div key={list.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-blue-300 dark:hover:border-blue-500 transition-colors">
+                <div className="flex justify-between items-start mb-2">
+                  <h4 className="font-medium">{list.name}</h4>
+                  <div className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-full">
+                    <span className={imported === total ? "text-green-600 dark:text-green-400" : "text-blue-600 dark:text-blue-400"}>
+                      {imported}/{total} words added
+                    </span>
                   </div>
                 </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{list.description}</p>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="text-sm"
+                    onClick={() => handleShowPreview(list.id)}
+                  >
+                    <span className="flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                      Preview & Select
+                    </span>
+                  </Button>
+                  <Button 
+                    variant="link" 
+                    className="p-0 h-auto text-sm text-primary hover:text-blue-700 dark:hover:text-blue-300"
+                    onClick={() => handleImportWordList(list.id)}
+                    disabled={importWordListMutation.isPending || (imported > 0 && imported === total)}
+                  >
+                    <span className="flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                      </svg>
+                      {imported > 0 && imported === total ? "All Added" : "Import All"}
+                    </span>
+                  </Button>
+                </div>
+              </div>
               );
-            });
-          })()}
+            })}
+          </div>
         </CardContent>
       </Card>
     </div>
