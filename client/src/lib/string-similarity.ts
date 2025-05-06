@@ -321,26 +321,26 @@ export function checkSimilarity(
   let combinedSimilarity;
   switch (matchLevel) {
     case 'lenient':
-      // In lenient mode, prioritize semantic meaning over exact wording
-      combinedSimilarity = (semanticSimilarity * 0.6) + (wordBasedSimilarity * 0.3) + (similarity * 0.1);
+      // In lenient mode, prioritize semantic meaning over exact wording even more
+      combinedSimilarity = (semanticSimilarity * 0.7) + (wordBasedSimilarity * 0.25) + (similarity * 0.05);
       break;
     case 'moderate':
-      // Balanced approach
-      combinedSimilarity = (semanticSimilarity * 0.4) + (wordBasedSimilarity * 0.4) + (similarity * 0.2);
+      // Balanced approach, still emphasizing meaning over exact wording
+      combinedSimilarity = (semanticSimilarity * 0.5) + (wordBasedSimilarity * 0.4) + (similarity * 0.1);
       break;
     case 'strict':
-      // In strict mode, require more exact matching but still consider meaning
-      combinedSimilarity = (semanticSimilarity * 0.2) + (wordBasedSimilarity * 0.5) + (similarity * 0.3);
+      // In strict mode, still require matching but give more weight to meaning than before
+      combinedSimilarity = (semanticSimilarity * 0.3) + (wordBasedSimilarity * 0.5) + (similarity * 0.2);
       break;
     default:
-      combinedSimilarity = (semanticSimilarity * 0.4) + (wordBasedSimilarity * 0.4) + (similarity * 0.2);
+      combinedSimilarity = (semanticSimilarity * 0.5) + (wordBasedSimilarity * 0.4) + (similarity * 0.1);
   }
   
-  // Apply strictness adjustment for final score
+  // Apply strictness adjustment for final score - more forgiving for all levels
   const strictnessFactors = {
-    lenient: 1.3,   // Be more forgiving
-    moderate: 1.0,  // Normal strictness
-    strict: 0.8     // Require more precision
+    lenient: 1.4,   // Much more forgiving
+    moderate: 1.2,  // More forgiving than before
+    strict: 1.0     // Now use normal strictness instead of being more strict
   };
   
   // Apply strictness factor and cap at 1.0

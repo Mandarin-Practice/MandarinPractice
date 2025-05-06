@@ -212,9 +212,9 @@ export default function Practice() {
     });
 
     // Threshold adjustments:
-    // - With semantic matching, we're now more flexible with thresholds for "correct"
-    // - Lowered threshold to be more lenient with translations
-    if (similarity >= 0.65) {
+    // - With semantic matching, we're now much more flexible with thresholds for "correct"
+    // - Significantly lowered threshold to be very lenient with translations that have the same meaning
+    if (similarity >= 0.55) {
       setFeedbackStatus("correct");
       calculateScore(similarity);
       
