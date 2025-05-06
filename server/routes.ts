@@ -1,39 +1,156 @@
-import express, { type Express, type Request, type Response, type NextFunction } from "express";
+import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
-import { checkSynonyms, generateSentence, generateSentenceWithWord } from "./openai";
-import { checkIfDatabaseNeedsSeed, seedDatabaseWithBasicDictionary, runFullDictionaryImport } from "./db-seed";
-import { importHSKAndICVocabulary } from "./hsk-import";
-
-// WebSocket connections for realtime updates
-const connections = new Set<WebSocket>();
+import { vocabularySchema, characterSchema, characterDefinitionSchema, learnedDefinitionSchema } from "@shared/schema";
+import { ZodError } from "zod";
+import { generateSentence, generateSentenceWithWord, checkSynonyms } from "./openai";
+import dictionaryAdminRoutes from "./routes/dictionary-admin";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Check if we need to seed the database with basic dictionary data
-  try {
-    if (await checkIfDatabaseNeedsSeed()) {
-      console.log("Database needs to be seeded with initial data. This may take a minute...");
-      await seedDatabaseWithBasicDictionary();
-      console.log("Database seeded successfully with basic dictionary data");
-    }
-  } catch (error) {
-    console.error("Error checking or seeding database:", error);
-  }
-  
-  // ============= VOCABULARY API ENDPOINTS =============
-  
-  // Get all vocabulary
-  app.get("/api/vocabulary", async (_req, res) => {
+  // Get all vocabulary words
+  app.get("/api/vocabulary", async (req, res) => {
     try {
       const vocabulary = await storage.getAllVocabulary();
       res.json(vocabulary);
     } catch (error) {
-      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to retrieve vocabulary" });
+      res.status(500).json({ message: "Failed to fetch vocabulary" });
     }
   });
-  
-  // Get a specific vocabulary word
+
+  // Add vocabulary words
+  app.post("/api/vocabulary", async (req, res) => {
+    try {
+      const { words } = req.body;
+      
+      if (!Array.isArray(words)) {
+        return res.status(400).json({ message: "Words must be an array" });
+      }
+      
+      const validatedWords = words.map(word => {
+        try {
+          return vocabularySchema.parse(word);
+        } catch (error) {
+          if (error instanceof ZodError) {
+            throw new Error(`Invalid word format: ${error.errors.map(e => e.message).join(', ')}`);
+          }
+          throw error;
+        }
+      });
+      
+      const savedWords = await Promise.all(
+        validatedWords.map(word => storage.addVocabulary(word))
+      );
+      
+      res.status(201).json(savedWords);
+    } catch (error) {
+      res.status(400).json({ message: error instanceof Error ? error.message : "Failed to add vocabulary" });
+    }
+  });
+
+  // Import a list of vocabulary words
+  app.post("/api/vocabulary/import", async (req, res) => {
+    try {
+      const { words } = req.body;
+      
+      if (!Array.isArray(words)) {
+        return res.status(400).json({ message: "Words must be an array" });
+      }
+      
+      console.log(`Import request received with ${words.length} words`);
+      
+      // First, validate all words using the schema
+      const validatedWords = words.map(word => {
+        try {
+          return vocabularySchema.parse(word);
+        } catch (error) {
+          if (error instanceof ZodError) {
+            const errorMsg = `Invalid word format: ${error.errors.map(e => e.message).join(', ')}`;
+            console.error(`Validation error for word "${JSON.stringify(word)}": ${errorMsg}`);
+            throw new Error(errorMsg);
+          }
+          throw error;
+        }
+      });
+      
+      console.log(`Successfully validated ${validatedWords.length} words`);
+      
+      // Instead of using Promise.all (which might silently swallow errors),
+      // process each word individually and track results
+      const savedWords = [];
+      const wordErrors = [];
+      
+      for (const word of validatedWords) {
+        try {
+          const savedWord = await storage.addVocabulary(word);
+          savedWords.push(savedWord);
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          console.error(`Error adding word "${word.chinese}": ${errorMessage}`);
+          wordErrors.push({
+            word: word.chinese,
+            error: errorMessage
+          });
+        }
+      }
+      
+      console.log(`Successfully saved ${savedWords.length} words out of ${validatedWords.length}`);
+      if (wordErrors.length > 0) {
+        console.log(`Encountered ${wordErrors.length} errors during import`);
+        console.log(wordErrors);
+      }
+      
+      // Return all the saved words, without the errors
+      res.status(201).json(savedWords);
+    } catch (error) {
+      console.error(`Import failed: ${error instanceof Error ? error.message : String(error)}`);
+      res.status(400).json({ message: error instanceof Error ? error.message : "Failed to import vocabulary" });
+    }
+  });
+
+  // Update a vocabulary word
+  app.patch("/api/vocabulary/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      const updates = req.body;
+      const updatedWord = await storage.updateVocabulary(id, updates);
+      res.status(200).json(updatedWord);
+    } catch (error) {
+      res.status(404).json({ message: error instanceof Error ? error.message : "Vocabulary not found" });
+    }
+  });
+
+  // Delete a vocabulary word
+  app.delete("/api/vocabulary/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      await storage.deleteVocabulary(id);
+      res.status(200).json({ message: "Vocabulary deleted" });
+    } catch (error) {
+      res.status(404).json({ message: "Vocabulary not found" });
+    }
+  });
+
+  // Delete all vocabulary words
+  app.delete("/api/vocabulary", async (req, res) => {
+    try {
+      await storage.deleteAllVocabulary();
+      res.status(200).json({ message: "All vocabulary deleted" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete vocabulary" });
+    }
+  });
+
+  // Get a specific vocabulary word by ID
   app.get("/api/vocabulary/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -45,137 +162,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const word = await storage.getVocabulary(id);
       
       if (!word) {
-        return res.status(404).json({ message: "Vocabulary word not found" });
+        return res.status(404).json({ message: "Vocabulary not found" });
       }
       
       res.json(word);
     } catch (error) {
-      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to retrieve vocabulary word" });
+      res.status(500).json({ message: "Failed to fetch vocabulary" });
     }
   });
-  
-  // Add a new vocabulary word
-  app.post("/api/vocabulary", async (req, res) => {
-    try {
-      const newWord = req.body;
-      
-      // Validate required fields
-      if (!newWord.chinese || !newWord.english || !newWord.pinyin) {
-        return res.status(400).json({ message: "Chinese, English, and Pinyin fields are required" });
-      }
-      
-      const word = await storage.addVocabulary(newWord);
-      res.status(201).json(word);
-    } catch (error) {
-      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to add vocabulary word" });
-    }
-  });
-  
-  // Update a vocabulary word
-  app.patch("/api/vocabulary/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const updates = req.body;
-      
-      if (isNaN(id)) {
-        return res.status(400).json({ message: "Invalid ID format" });
-      }
-      
-      const word = await storage.getVocabulary(id);
-      
-      if (!word) {
-        return res.status(404).json({ message: "Vocabulary word not found" });
-      }
-      
-      const updatedWord = await storage.updateVocabulary(id, updates);
-      res.json(updatedWord);
-    } catch (error) {
-      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to update vocabulary word" });
-    }
-  });
-  
-  // Delete a vocabulary word
-  app.delete("/api/vocabulary/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      
-      if (isNaN(id)) {
-        return res.status(400).json({ message: "Invalid ID format" });
-      }
-      
-      const word = await storage.getVocabulary(id);
-      
-      if (!word) {
-        return res.status(404).json({ message: "Vocabulary word not found" });
-      }
-      
-      await storage.deleteVocabulary(id);
-      res.json({ message: "Vocabulary word deleted successfully" });
-    } catch (error) {
-      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to delete vocabulary word" });
-    }
-  });
-  
-  // Create a bulk import of vocabulary words
-  app.post("/api/vocabulary/import", async (req, res) => {
-    try {
-      const { words } = req.body;
-      
-      if (!Array.isArray(words) || words.length === 0) {
-        return res.status(400).json({ message: "Words array is required and must not be empty" });
-      }
-      
-      const importedWords = [];
-      
-      for (const word of words) {
-        if (!word.chinese || !word.english || !word.pinyin) {
-          return res.status(400).json({ message: "All words must have Chinese, English, and Pinyin fields" });
-        }
-        
-        const importedWord = await storage.addVocabulary(word);
-        importedWords.push(importedWord);
-      }
-      
-      res.status(201).json({ 
-        message: `Successfully imported ${importedWords.length} vocabulary words`,
-        words: importedWords 
-      });
-    } catch (error) {
-      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to import vocabulary words" });
-    }
-  });
-  
-  // Import HSK vocabulary lists
-  app.post("/api/vocabulary/import-hsk", async (req, res) => {
-    try {
-      const { level } = req.body;
-      
-      if (!level || typeof level !== 'number' || level < 1 || level > 6) {
-        return res.status(400).json({ message: "Valid HSK level (1-6) is required" });
-      }
-      
-      await importHSKAndICVocabulary();
-      
-      res.status(200).json({ message: `Successfully imported HSK level ${level} vocabulary` });
-    } catch (error) {
-      console.error("Error importing HSK vocabulary:", error);
-      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to import HSK vocabulary" });
-    }
-  });
-  
-  // Delete all vocabulary
-  app.delete("/api/vocabulary", async (_req, res) => {
-    try {
-      await storage.deleteAllVocabulary();
-      res.json({ message: "All vocabulary words deleted successfully" });
-    } catch (error) {
-      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to delete all vocabulary words" });
-    }
-  });
-  
-  // ============= PRACTICE API ENDPOINTS =============
-  
-  // Generate sentence for practice
+
+  // Generate a sentence using the user's vocabulary
   app.post("/api/sentence/generate", async (req, res) => {
     try {
       const { difficulty = "beginner" } = req.body;
@@ -190,102 +186,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No active vocabulary words available. Please add or activate some words first." });
       }
       
-      // Safe pre-vetted beginner sentences
-      const safeBeginnerSentences = [
-        { chinese: "我很好。", pinyin: "Wǒ hěn hǎo.", english: "I am very well." },
-        { chinese: "你好吗？", pinyin: "Nǐ hǎo ma?", english: "How are you?" },
-        { chinese: "请喝水。", pinyin: "Qǐng hē shuǐ.", english: "Please drink water." },
-        { chinese: "谢谢你。", pinyin: "Xièxiè nǐ.", english: "Thank you." },
-        { chinese: "我喜欢。", pinyin: "Wǒ xǐhuān.", english: "I like it." },
-        { chinese: "你吃了吗？", pinyin: "Nǐ chī le ma?", english: "Have you eaten?" },
-        { chinese: "我不知道。", pinyin: "Wǒ bù zhīdào.", english: "I don't know." },
-        { chinese: "再见。", pinyin: "Zàijiàn.", english: "Goodbye." }
-      ];
-      
-      // Create fallback sentences for other difficulty levels
-      const fallbackSentences = {
-        intermediate: [
-          { chinese: "这本书很有意思。", pinyin: "Zhè běn shū hěn yǒuyìsi.", english: "This book is very interesting." },
-          { chinese: "中国菜很好吃。", pinyin: "Zhōngguó cài hěn hǎochī.", english: "Chinese food is delicious." },
-          { chinese: "你能帮我吗？", pinyin: "Nǐ néng bāng wǒ ma?", english: "Can you help me?" },
-          { chinese: "我在学校。", pinyin: "Wǒ zài xuéxiào.", english: "I am at school." },
-          { chinese: "我们明天见。", pinyin: "Wǒmen míngtiān jiàn.", english: "See you tomorrow." },
-          { chinese: "我认为很好。", pinyin: "Wǒ rènwéi hěn hǎo.", english: "I think it's very good." }
-        ],
-        advanced: [
-          { chinese: "我认为学习语言很重要。", pinyin: "Wǒ rènwéi xuéxí yǔyán hěn zhòngyào.", english: "I think learning languages is important." },
-          { chinese: "虽然很难，但是很有用。", pinyin: "Suīrán hěn nán, dànshì hěn yǒuyòng.", english: "Although it's difficult, it's very useful." },
-          { chinese: "今天我们学了新的单词。", pinyin: "Jīntiān wǒmen xué le xīn de dāncí.", english: "Today we learned new words." },
-          { chinese: "下次我会做得更好。", pinyin: "Xià cì wǒ huì zuò de gèng hǎo.", english: "Next time I will do better." }
-        ]
-      };
-      
-      let sentence;
-      
-      // Helper function to check if all chars in a sentence are in the vocabulary list
-      const containsOnlyKnownChars = (text: string, vocabList: string[]) => {
-        // Create a set of all characters in the vocabulary
-        const knownChars = new Set<string>();
-        vocabList.forEach(word => {
-          for (const char of word) {
-            knownChars.add(char);
-          }
-        });
-        
-        // Common punctuation to ignore
-        const punctuation = new Set(["。", "，", "？", "！", "、", "：", "；", "（", "）", "'", "'", "…", "—"]);
-        
-        // Check each character
-        for (const char of text) {
-          if (!knownChars.has(char) && !punctuation.has(char)) {
-            return false;
-          }
-        }
-        return true;
-      };
-      
-      // First try to generate a proper sentence with OpenAI
+      // Generate sentence using OpenAI with retries and fallback to simple sentences
       try {
-        sentence = await generateSentence(activeVocabulary, difficulty);
+        const sentence = await generateSentence(activeVocabulary, difficulty);
+        res.json(sentence);
+      } catch (generateError) {
+        console.log("Error generating sentence with OpenAI, using fallback sentences");
         
-        // For beginner level, verify all characters are known
-        if (difficulty === "beginner") {
-          const allWordsAreKnown = containsOnlyKnownChars(
-            sentence.chinese, 
-            activeVocabulary.map(v => v.chinese)
-          );
-          
-          if (!allWordsAreKnown) {
-            throw new Error("Generated sentence contains unknown characters");
-          }
-        }
-      } catch (error) {
-        // If generation fails, use fallback sentences
-        console.log("Error generating sentence, using fallback:", error);
-        
-        // Choose appropriate fallback sentence set
-        let options;
-        if (difficulty === "beginner") {
-          options = safeBeginnerSentences;
-        } else {
-          options = fallbackSentences[difficulty as keyof typeof fallbackSentences] || safeBeginnerSentences;
-        }
-        
-        // Pick a random fallback sentence
-        const randomIndex = Math.floor(Math.random() * options.length);
-        sentence = {
-          ...options[randomIndex],
-          difficulty,
-          fromFallback: true
+        // Fallback sentences for different difficulty levels with proper grammar and tense markers
+        const fallbackSentences = {
+          beginner: [
+            // Present tense sentences
+            { chinese: "我很高兴。", pinyin: "Wǒ hěn gāoxìng.", english: "I am very happy." },
+            { chinese: "今天天气很好。", pinyin: "Jīntiān tiānqì hěn hǎo.", english: "The weather is good today." },
+            { chinese: "你好吗？", pinyin: "Nǐ hǎo ma?", english: "How are you?" },
+            { chinese: "我喜欢学中文。", pinyin: "Wǒ xǐhuān xué Zhōngwén.", english: "I like learning Chinese." },
+            { chinese: "谢谢你的帮助。", pinyin: "Xièxiè nǐ de bāngzhù.", english: "Thank you for your help." },
+            { chinese: "我想喝水。", pinyin: "Wǒ xiǎng hē shuǐ.", english: "I want to drink water." },
+            { chinese: "这个很有意思。", pinyin: "Zhège hěn yǒuyìsi.", english: "This is very interesting." },
+            { chinese: "你叫什么名字？", pinyin: "Nǐ jiào shénme míngzi?", english: "What is your name?" },
+            
+            // Past tense sentences with 了
+            { chinese: "我买了一本书。", pinyin: "Wǒ mǎi le yī běn shū.", english: "I bought a book." },
+            { chinese: "他去了图书馆。", pinyin: "Tā qù le túshūguǎn.", english: "He went to the library." },
+            { chinese: "我们吃了晚饭。", pinyin: "Wǒmen chī le wǎnfàn.", english: "We ate dinner." },
+            { chinese: "我看了这部电影。", pinyin: "Wǒ kàn le zhè bù diànyǐng.", english: "I watched this movie." },
+            { chinese: "我学了新的汉字。", pinyin: "Wǒ xué le xīn de hànzì.", english: "I learned new Chinese characters." },
+            { chinese: "昨天下了雨。", pinyin: "Zuótiān xià le yǔ.", english: "It rained yesterday." },
+            { chinese: "他写了一封信。", pinyin: "Tā xiě le yī fēng xìn.", english: "He wrote a letter." },
+            { chinese: "我吃了早饭。", pinyin: "Wǒ chī le zǎofàn.", english: "I ate breakfast." },
+            
+            // Future tense or modal sentences
+            { chinese: "明天我要去学校。", pinyin: "Míngtiān wǒ yào qù xuéxiào.", english: "Tomorrow I will go to school." },
+            { chinese: "下周我们会见面。", pinyin: "Xià zhōu wǒmen huì jiànmiàn.", english: "We will meet next week." },
+            { chinese: "我可以帮你吗？", pinyin: "Wǒ kěyǐ bāng nǐ ma?", english: "Can I help you?" },
+            { chinese: "他会说中文。", pinyin: "Tā huì shuō Zhōngwén.", english: "He can speak Chinese." }
+          ],
+          intermediate: [
+            // Present tense sentences
+            { chinese: "这本书很有意思。", pinyin: "Zhè běn shū hěn yǒuyìsi.", english: "This book is very interesting." },
+            { chinese: "中国菜很好吃。", pinyin: "Zhōngguó cài hěn hǎochī.", english: "Chinese food is delicious." },
+            { chinese: "你能帮我一下吗？", pinyin: "Nǐ néng bāng wǒ yīxià ma?", english: "Can you help me?" },
+            { chinese: "我在北京工作。", pinyin: "Wǒ zài Běijīng gōngzuò.", english: "I work in Beijing." },
+            
+            // Past tense with 了
+            { chinese: "我昨天去了图书馆。", pinyin: "Wǒ zuótiān qù le túshūguǎn.", english: "I went to the library yesterday." },
+            { chinese: "他已经看完了这本书。", pinyin: "Tā yǐjīng kàn wán le zhè běn shū.", english: "He has finished reading this book." },
+            { chinese: "我们参观了故宫。", pinyin: "Wǒmen cānguān le Gùgōng.", english: "We visited the Forbidden City." },
+            { chinese: "他学了三年中文了。", pinyin: "Tā xué le sān nián Zhōngwén le.", english: "He has been learning Chinese for three years." },
+            { chinese: "我们认识了很多新朋友。", pinyin: "Wǒmen rènshí le hěn duō xīn péngyǒu.", english: "We met many new friends." },
+            
+            // Future tense
+            { chinese: "我明天要去北京。", pinyin: "Wǒ míngtiān yào qù Běijīng.", english: "I will go to Beijing tomorrow." },
+            { chinese: "下个月我会回国。", pinyin: "Xià gè yuè wǒ huì huí guó.", english: "I will return to my country next month." },
+            { chinese: "我打算学习中文。", pinyin: "Wǒ dǎsuàn xuéxí Zhōngwén.", english: "I plan to study Chinese." }
+          ],
+          advanced: [
+            // Complex sentences with 了 and other grammar patterns
+            { chinese: "我已经学了三年中文了，但是还是说得不太流利。", pinyin: "Wǒ yǐjīng xué le sān nián Zhōngwén le, dànshì háishì shuō de bú tài liúlì.", english: "I have been learning Chinese for three years, but I still don't speak very fluently." },
+            { chinese: "虽然学习中文很难，但是很有意思。", pinyin: "Suīrán xuéxí Zhōngwén hěn nán, dànshì hěn yǒuyìsi.", english: "Although learning Chinese is difficult, it is very interesting." },
+            { chinese: "如果明天天气好的话，我们可以去公园。", pinyin: "Rúguǒ míngtiān tiānqì hǎo dehuà, wǒmen kěyǐ qù gōngyuán.", english: "If the weather is good tomorrow, we can go to the park." },
+            { chinese: "我认为学习语言的最好方法是每天练习。", pinyin: "Wǒ rènwéi xuéxí yǔyán de zuì hǎo fāngfǎ shì měitiān liànxí.", english: "I think the best way to learn a language is to practice every day." },
+            { chinese: "昨天我看了一部电影，这部电影讲的是中国历史。", pinyin: "Zuótiān wǒ kàn le yī bù diànyǐng, zhè bù diànyǐng jiǎng de shì Zhōngguó lìshǐ.", english: "Yesterday I watched a movie that was about Chinese history." },
+            { chinese: "我们吃完了饭，就去看电影了。", pinyin: "Wǒmen chī wán le fàn, jiù qù kàn diànyǐng le.", english: "After we finished eating, we went to see a movie." },
+            { chinese: "他告诉我他已经去过北京了。", pinyin: "Tā gàosù wǒ tā yǐjīng qùguò Běijīng le.", english: "He told me he had already been to Beijing." },
+            { chinese: "学习汉语不仅要学习语法，还要了解中国文化。", pinyin: "Xuéxí Hànyǔ bùjǐn yào xuéxí yǔfǎ, hái yào liǎojiě Zhōngguó wénhuà.", english: "Learning Chinese requires not only learning grammar, but also understanding Chinese culture." }
+          ]
         };
+        
+        // Select a random fallback sentence based on difficulty
+        const fallbackOptions = fallbackSentences[difficulty as keyof typeof fallbackSentences] || fallbackSentences.beginner;
+        const randomFallback = fallbackOptions[Math.floor(Math.random() * fallbackOptions.length)];
+        
+        res.json({
+          ...randomFallback,
+          difficulty,
+          fromFallback: true // Mark that this is a fallback sentence
+        });
       }
-      
-      // Return the sentence (either generated or fallback)
-      return res.json(sentence);
     } catch (error) {
-      return res.status(500).json({ 
-        message: error instanceof Error ? error.message : "Failed to generate sentence"
-      });
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to generate sentence" });
     }
   });
   
@@ -348,7 +328,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: error instanceof Error ? error.message : "Failed to generate sentence" });
     }
   });
-  
+
   // Get proficiency for a specific word
   app.get("/api/word-proficiency/:wordId", async (req, res) => {
     try {
@@ -382,7 +362,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: error instanceof Error ? error.message : "Failed to get word proficiency" });
     }
   });
-  
+
   // Update proficiency for a word (after practice)
   app.post("/api/word-proficiency/:wordId", async (req, res) => {
     try {
@@ -428,7 +408,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: error instanceof Error ? error.message : "Failed to reset word proficiency" });
     }
   });
-  
+
   // Check if two words are synonyms
   app.post("/api/synonym-check", async (req, res) => {
     try {
@@ -459,9 +439,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
-  
+
   // ============= CHARACTER DICTIONARY API ENDPOINTS =============
-  
+
   // Search for characters by query (character or pinyin)
   app.get("/api/characters/search", async (req, res) => {
     try {
@@ -479,7 +459,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: error instanceof Error ? error.message : "Failed to search characters" });
     }
   });
-  
+
   // Get a specific character by ID
   app.get("/api/characters/:id", async (req, res) => {
     try {
@@ -497,56 +477,134 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(character);
     } catch (error) {
-      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to get character" });
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to fetch character" });
     }
   });
-  
-  // Get definitions for a specific character
+
+  // Get a character by its value (the actual Chinese character)
+  app.get("/api/characters/value/:char", async (req, res) => {
+    try {
+      const charValue = req.params.char;
+      
+      if (!charValue) {
+        return res.status(400).json({ message: "Character value is required" });
+      }
+      
+      const character = await storage.getCharacterByValue(charValue);
+      
+      if (!character) {
+        return res.status(404).json({ message: "Character not found" });
+      }
+      
+      res.json(character);
+    } catch (error) {
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to fetch character" });
+    }
+  });
+
+  // Add a new character
+  app.post("/api/characters", async (req, res) => {
+    try {
+      const character = req.body;
+      
+      // Validate character
+      const validatedCharacter = characterSchema.parse(character);
+      
+      const savedCharacter = await storage.addCharacter(validatedCharacter);
+      res.status(201).json(savedCharacter);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ 
+          message: `Invalid character format: ${error.errors.map(e => e.message).join(', ')}` 
+        });
+      }
+      res.status(400).json({ message: error instanceof Error ? error.message : "Failed to add character" });
+    }
+  });
+
+  // Get all definitions for a character
   app.get("/api/characters/:id/definitions", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const characterId = parseInt(req.params.id);
       
-      if (isNaN(id)) {
+      if (isNaN(characterId)) {
         return res.status(400).json({ message: "Invalid ID format" });
       }
       
-      const character = await storage.getCharacter(id);
-      
-      if (!character) {
-        return res.status(404).json({ message: "Character not found" });
-      }
-      
-      const definitions = await storage.getCharacterDefinitions(id);
+      const definitions = await storage.getCharacterDefinitions(characterId);
       res.json(definitions);
     } catch (error) {
-      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to get character definitions" });
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to fetch definitions" });
     }
   });
   
-  // Get compounds that contain a character as a component
+  // Get all compounds that a character is part of
   app.get("/api/characters/:id/compounds", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const characterId = parseInt(req.params.id);
       
-      if (isNaN(id)) {
+      if (isNaN(characterId)) {
         return res.status(400).json({ message: "Invalid ID format" });
       }
       
-      const character = await storage.getCharacter(id);
-      
-      if (!character) {
-        return res.status(404).json({ message: "Character not found" });
-      }
-      
-      const compounds = await storage.getCharacterCompounds(id);
+      const compounds = await storage.getCharacterCompounds(characterId);
       res.json(compounds);
     } catch (error) {
-      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to get character compounds" });
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to fetch character compounds" });
     }
   });
   
-  // Get components that make up a compound character
+  // Get all components of a compound character
   app.get("/api/characters/:id/components", async (req, res) => {
+    try {
+      const compoundId = parseInt(req.params.id);
+      
+      if (isNaN(compoundId)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      const components = await storage.getCompoundComponents(compoundId);
+      res.json(components);
+    } catch (error) {
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to fetch compound components" });
+    }
+  });
+
+  // Add a new definition to a character
+  app.post("/api/characters/:id/definitions", async (req, res) => {
+    try {
+      const characterId = parseInt(req.params.id);
+      
+      if (isNaN(characterId)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      // Check if character exists
+      const character = await storage.getCharacter(characterId);
+      
+      if (!character) {
+        return res.status(404).json({ message: "Character not found" });
+      }
+      
+      const definition = { ...req.body, characterId };
+      
+      // Validate definition
+      const validatedDefinition = characterDefinitionSchema.parse(definition);
+      
+      const savedDefinition = await storage.addCharacterDefinition(validatedDefinition);
+      res.status(201).json(savedDefinition);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ 
+          message: `Invalid definition format: ${error.errors.map(e => e.message).join(', ')}` 
+        });
+      }
+      res.status(400).json({ message: error instanceof Error ? error.message : "Failed to add definition" });
+    }
+  });
+
+  // Update a character definition
+  app.patch("/api/character-definitions/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       
@@ -554,146 +612,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid ID format" });
       }
       
-      const character = await storage.getCharacter(id);
-      
-      if (!character) {
-        return res.status(404).json({ message: "Character not found" });
-      }
-      
-      const components = await storage.getCompoundComponents(id);
-      res.json(components);
+      const updates = req.body;
+      const updatedDefinition = await storage.updateCharacterDefinition(id, updates);
+      res.json(updatedDefinition);
     } catch (error) {
-      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to get character components" });
+      res.status(404).json({ message: error instanceof Error ? error.message : "Definition not found" });
     }
   });
-  
-  // ============= LEARNED DEFINITIONS API ENDPOINTS =============
-  
-  // Get all learned definitions for a user
-  app.get("/api/learned-definitions", async (req, res) => {
+
+  // Delete a character definition
+  app.delete("/api/character-definitions/:id", async (req, res) => {
     try {
-      // For now, we'll use a hardcoded user ID of 1 - in a future version with auth, this would come from the authenticated user
-      const userId = 1;
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      await storage.deleteCharacterDefinition(id);
+      res.json({ message: "Definition deleted successfully" });
+    } catch (error) {
+      res.status(404).json({ message: error instanceof Error ? error.message : "Definition not found" });
+    }
+  });
+
+  // Get all learned definitions for a user
+  app.get("/api/users/:userId/learned-definitions", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID format" });
+      }
       
       const learnedDefinitions = await storage.getLearnedDefinitions(userId);
       res.json(learnedDefinitions);
     } catch (error) {
-      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to get learned definitions" });
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to fetch learned definitions" });
     }
   });
-  
-  // Toggle learned status for a definition
-  app.post("/api/learned-definitions/:defId", async (req, res) => {
+
+  // Toggle a definition as learned/unlearned for a user
+  app.post("/api/users/:userId/learned-definitions/:definitionId", async (req, res) => {
     try {
-      const defId = parseInt(req.params.defId);
-      const { isLearned = true } = req.body;
+      const userId = parseInt(req.params.userId);
+      const definitionId = parseInt(req.params.definitionId);
       
-      if (isNaN(defId)) {
-        return res.status(400).json({ message: "Invalid definition ID format" });
+      if (isNaN(userId) || isNaN(definitionId)) {
+        return res.status(400).json({ message: "Invalid ID format" });
       }
       
-      // For now, we'll use a hardcoded user ID of 1 - in a future version with auth, this would come from the authenticated user
-      const userId = 1;
+      const { isLearned = true } = req.body;
       
-      const learnedDefinition = await storage.toggleLearnedDefinition(userId, defId, isLearned);
-      res.json(learnedDefinition);
+      if (typeof isLearned !== 'boolean') {
+        return res.status(400).json({ message: "isLearned must be a boolean" });
+      }
+      
+      const result = await storage.toggleLearnedDefinition(userId, definitionId, isLearned);
+      res.json(result);
     } catch (error) {
-      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to toggle learned definition" });
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to update learned status" });
     }
   });
-  
+
   // Update notes for a learned definition
-  app.patch("/api/learned-definitions/:id", async (req, res) => {
+  app.patch("/api/learned-definitions/:id/notes", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const { notes } = req.body;
       
       if (isNaN(id)) {
         return res.status(400).json({ message: "Invalid ID format" });
       }
+      
+      const { notes } = req.body;
       
       if (typeof notes !== 'string') {
         return res.status(400).json({ message: "Notes must be a string" });
       }
       
-      const learnedDefinition = await storage.updateLearnedDefinitionNotes(id, notes);
-      res.json(learnedDefinition);
+      const updatedDefinition = await storage.updateLearnedDefinitionNotes(id, notes);
+      res.json(updatedDefinition);
     } catch (error) {
-      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to update learned definition notes" });
+      res.status(404).json({ message: error instanceof Error ? error.message : "Learned definition not found" });
     }
   });
-  
-  // ============= ADMIN API ENDPOINTS =============
-  
-  // Import full dictionary data (admin operation - can take a while)
-  app.post("/api/admin/import-dictionary", async (_req, res) => {
-    try {
-      // Send an initial response to prevent timeout
-      res.write(JSON.stringify({ status: "started", message: "Starting full dictionary import..." }));
-      
-      // Create a WebSocket server to send progress updates
-      const httpServer = createServer(app);
-      const wss = new WebSocketServer({ server: httpServer });
-      
-      wss.on("connection", (ws) => {
-        console.log("Admin client connected to import progress stream");
-        connections.add(ws);
-        
-        ws.on("close", () => {
-          connections.delete(ws);
-        });
-      });
-      
-      // Start the import process
-      const importResult = await runFullDictionaryImport();
-      
-      // Send final result
-      res.write(JSON.stringify({ 
-        status: "completed", 
-        success: importResult,
-        message: importResult ? "Dictionary import completed successfully" : "Dictionary import failed"
-      }));
-      res.end();
-    } catch (error) {
-      console.error("Error importing dictionary:", error);
-      res.status(500).json({ 
-        status: "error",
-        message: error instanceof Error ? error.message : "Failed to import dictionary data" 
-      });
-    }
-  });
-  
-  // Setup HTTP server
-  const httpServer = createServer(app);
-  
-  // WebSocket server for real-time updates
-  const wss = new WebSocketServer({ server: httpServer });
-  
-  wss.on("connection", (ws) => {
-    console.log("Client connected");
-    connections.add(ws);
-    
-    ws.send(JSON.stringify({ message: "Connected to server" }));
-    
-    ws.on("close", () => {
-      console.log("Client disconnected");
-      connections.delete(ws);
-    });
-    
-    ws.on("message", (message) => {
-      console.log(`Received message: ${message}`);
-    });
-  });
-  
-  return httpServer;
-}
 
-// Helper function to send a message to all connected WebSocket clients
-function sendToAll(data: any) {
-  const message = JSON.stringify(data);
-  connections.forEach((client) => {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(message);
-    }
-  });
+  // Register dictionary admin routes
+  app.use('/api', dictionaryAdminRoutes);
+
+  const httpServer = createServer(app);
+  return httpServer;
 }
