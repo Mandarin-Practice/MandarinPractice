@@ -5,6 +5,7 @@ import { vocabularySchema, characterSchema, characterDefinitionSchema, learnedDe
 import { ZodError } from "zod";
 import { generateSentence, generateSentenceWithWord, checkSynonyms } from "./openai";
 import dictionaryAdminRoutes from "./routes/dictionary-admin";
+import authRoutes from "./routes/auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Get all vocabulary words
@@ -699,6 +700,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Register dictionary admin routes
   app.use('/api', dictionaryAdminRoutes);
+  app.use(authRoutes);
 
   const httpServer = createServer(app);
   return httpServer;

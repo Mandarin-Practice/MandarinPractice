@@ -84,6 +84,40 @@ export class MemStorage implements IStorage {
     this.currentVocabularyId = 1;
     this.currentProficiencyId = 1;
   }
+  
+  // User authentication methods (stubs)
+  async getUserById(_id: number): Promise<User | undefined> {
+    return undefined;
+  }
+  
+  async getUserByUsername(_username: string): Promise<User | undefined> {
+    return undefined;
+  }
+  
+  async getUserByFirebaseUid(_firebaseUid: string): Promise<User | undefined> {
+    return undefined;
+  }
+  
+  async createUser(_user: InsertUser): Promise<User> {
+    throw new Error("Method not implemented");
+  }
+  
+  async updateUser(_id: number, _updates: Partial<InsertUser>): Promise<User> {
+    throw new Error("Method not implemented");
+  }
+  
+  // User word proficiency methods (stubs)
+  async getUserWordProficiencies(_userId: number): Promise<WordProficiency[]> {
+    return [];
+  }
+  
+  async saveWordToUserList(_userId: number, _wordId: number): Promise<WordProficiency> {
+    throw new Error("Method not implemented");
+  }
+  
+  async removeWordFromUserList(_userId: number, _wordId: number): Promise<void> {
+    // Do nothing
+  }
 
   async getAllVocabulary(): Promise<Vocabulary[]> {
     return Array.from(this.vocabulary.values());
@@ -124,15 +158,18 @@ export class MemStorage implements IStorage {
     return undefined;
   }
 
-  async updateWordProficiency(wordId: number, isCorrect: boolean): Promise<WordProficiency> {
+  async updateWordProficiency(wordId: number, isCorrect: boolean, userId?: number): Promise<WordProficiency> {
     const id = this.currentProficiencyId++;
     const now = Date.now().toString();
     const proficiency: WordProficiency = {
       id,
       wordId: wordId.toString(),
+      userId: userId || null,
       correctCount: isCorrect ? "1" : "0",
       attemptCount: "1",
-      lastPracticed: now
+      lastPracticed: now,
+      isSaved: false,
+      createdAt: new Date()
     };
     return proficiency;
   }
@@ -330,11 +367,22 @@ export class DatabaseStorage implements IStorage {
       .where(eq(wordProficiency.wordId, wordId.toString()));
     return proficiency;
   }
+  
+  async getUserWordProficiencies(userId: number): Promise<WordProficiency[]> {
+    return await db.select().from(wordProficiency)
+      .where(eq(wordProficiency.userId, userId));
+  }
 
-  async updateWordProficiency(wordId: number, isCorrect: boolean): Promise<WordProficiency> {
+  async updateWordProficiency(wordId: number, isCorrect: boolean, userId?: number): Promise<WordProficiency> {
     // Find existing proficiency or create new one
+    const whereConditions = [eq(wordProficiency.wordId, wordId.toString())];
+    
+    if (userId) {
+      whereConditions.push(eq(wordProficiency.userId, userId));
+    }
+    
     const [existingProf] = await db.select().from(wordProficiency)
-      .where(eq(wordProficiency.wordId, wordId.toString()));
+      .where(and(...whereConditions));
       
     const now = Date.now().toString();
     
@@ -361,9 +409,11 @@ export class DatabaseStorage implements IStorage {
       const [newProf] = await db.insert(wordProficiency)
         .values({
           wordId: wordId.toString(),
+          userId: userId || null,
           correctCount: isCorrect ? "1" : "0",
           attemptCount: "1",
-          lastPracticed: now
+          lastPracticed: now,
+          isSaved: false
         })
         .returning();
         
@@ -374,6 +424,66 @@ export class DatabaseStorage implements IStorage {
   async resetWordProficiency(wordId: number): Promise<void> {
     await db.delete(wordProficiency)
       .where(eq(wordProficiency.wordId, wordId.toString()));
+  }
+  
+  async saveWordToUserList(userId: number, wordId: number): Promise<WordProficiency> {
+    // Check if the word is already in the user's list
+    const [existingProf] = await db.select().from(wordProficiency)
+      .where(
+        and(
+          eq(wordProficiency.userId, userId),
+          eq(wordProficiency.wordId, wordId.toString())
+        )
+      );
+      
+    if (existingProf) {
+      // Update the existing record to mark it as saved
+      const [updated] = await db.update(wordProficiency)
+        .set({ isSaved: true })
+        .where(eq(wordProficiency.id, existingProf.id))
+        .returning();
+        
+      return updated;
+    } else {
+      // Create a new proficiency record with the word marked as saved
+      const now = Date.now().toString();
+      const [newProf] = await db.insert(wordProficiency)
+        .values({
+          userId,
+          wordId: wordId.toString(),
+          correctCount: "0",
+          attemptCount: "0",
+          lastPracticed: now,
+          isSaved: true
+        })
+        .returning();
+        
+      return newProf;
+    }
+  }
+  
+  async removeWordFromUserList(userId: number, wordId: number): Promise<void> {
+    // Find the word proficiency record
+    const [existingProf] = await db.select().from(wordProficiency)
+      .where(
+        and(
+          eq(wordProficiency.userId, userId),
+          eq(wordProficiency.wordId, wordId.toString())
+        )
+      );
+      
+    if (existingProf) {
+      // If the word has practice history, just mark it as not saved
+      if (parseInt(existingProf.attemptCount) > 0) {
+        await db.update(wordProficiency)
+          .set({ isSaved: false })
+          .where(eq(wordProficiency.id, existingProf.id));
+      } else {
+        // If no practice history, remove it completely
+        await db.delete(wordProficiency)
+          .where(eq(wordProficiency.id, existingProf.id));
+      }
+    }
   }
   
   // Chinese character dictionary methods
