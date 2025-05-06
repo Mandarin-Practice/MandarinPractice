@@ -193,9 +193,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (generateError) {
         console.log("Error generating sentence with OpenAI, using fallback sentences");
         
-        // Fallback sentences for different difficulty levels
+        // Fallback sentences for different difficulty levels with proper grammar and tense markers
         const fallbackSentences = {
           beginner: [
+            // Present tense sentences
             { chinese: "我很高兴。", pinyin: "Wǒ hěn gāoxìng.", english: "I am very happy." },
             { chinese: "今天天气很好。", pinyin: "Jīntiān tiānqì hěn hǎo.", english: "The weather is good today." },
             { chinese: "你好吗？", pinyin: "Nǐ hǎo ma?", english: "How are you?" },
@@ -204,20 +205,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
             { chinese: "我想喝水。", pinyin: "Wǒ xiǎng hē shuǐ.", english: "I want to drink water." },
             { chinese: "这个很有意思。", pinyin: "Zhège hěn yǒuyìsi.", english: "This is very interesting." },
             { chinese: "你叫什么名字？", pinyin: "Nǐ jiào shénme míngzi?", english: "What is your name?" },
-            { chinese: "我不明白。", pinyin: "Wǒ bù míngbái.", english: "I don't understand." },
-            { chinese: "请再说一次。", pinyin: "Qǐng zài shuō yīcì.", english: "Please say it again." }
+            
+            // Past tense sentences with 了
+            { chinese: "我买了一本书。", pinyin: "Wǒ mǎi le yī běn shū.", english: "I bought a book." },
+            { chinese: "他去了图书馆。", pinyin: "Tā qù le túshūguǎn.", english: "He went to the library." },
+            { chinese: "我们吃了晚饭。", pinyin: "Wǒmen chī le wǎnfàn.", english: "We ate dinner." },
+            { chinese: "我看了这部电影。", pinyin: "Wǒ kàn le zhè bù diànyǐng.", english: "I watched this movie." },
+            { chinese: "我学了新的汉字。", pinyin: "Wǒ xué le xīn de hànzì.", english: "I learned new Chinese characters." },
+            { chinese: "昨天下了雨。", pinyin: "Zuótiān xià le yǔ.", english: "It rained yesterday." },
+            { chinese: "他写了一封信。", pinyin: "Tā xiě le yī fēng xìn.", english: "He wrote a letter." },
+            { chinese: "我吃了早饭。", pinyin: "Wǒ chī le zǎofàn.", english: "I ate breakfast." },
+            
+            // Future tense or modal sentences
+            { chinese: "明天我要去学校。", pinyin: "Míngtiān wǒ yào qù xuéxiào.", english: "Tomorrow I will go to school." },
+            { chinese: "下周我们会见面。", pinyin: "Xià zhōu wǒmen huì jiànmiàn.", english: "We will meet next week." },
+            { chinese: "我可以帮你吗？", pinyin: "Wǒ kěyǐ bāng nǐ ma?", english: "Can I help you?" },
+            { chinese: "他会说中文。", pinyin: "Tā huì shuō Zhōngwén.", english: "He can speak Chinese." }
           ],
           intermediate: [
-            { chinese: "我昨天去了图书馆。", pinyin: "Wǒ zuótiān qùle túshūguǎn.", english: "I went to the library yesterday." },
+            // Present tense sentences
             { chinese: "这本书很有意思。", pinyin: "Zhè běn shū hěn yǒuyìsi.", english: "This book is very interesting." },
-            { chinese: "我明天要去北京。", pinyin: "Wǒ míngtiān yào qù Běijīng.", english: "I will go to Beijing tomorrow." },
             { chinese: "中国菜很好吃。", pinyin: "Zhōngguó cài hěn hǎochī.", english: "Chinese food is delicious." },
-            { chinese: "你能帮我一下吗？", pinyin: "Nǐ néng bāng wǒ yīxià ma?", english: "Can you help me?" }
+            { chinese: "你能帮我一下吗？", pinyin: "Nǐ néng bāng wǒ yīxià ma?", english: "Can you help me?" },
+            { chinese: "我在北京工作。", pinyin: "Wǒ zài Běijīng gōngzuò.", english: "I work in Beijing." },
+            
+            // Past tense with 了
+            { chinese: "我昨天去了图书馆。", pinyin: "Wǒ zuótiān qù le túshūguǎn.", english: "I went to the library yesterday." },
+            { chinese: "他已经看完了这本书。", pinyin: "Tā yǐjīng kàn wán le zhè běn shū.", english: "He has finished reading this book." },
+            { chinese: "我们参观了故宫。", pinyin: "Wǒmen cānguān le Gùgōng.", english: "We visited the Forbidden City." },
+            { chinese: "他学了三年中文了。", pinyin: "Tā xué le sān nián Zhōngwén le.", english: "He has been learning Chinese for three years." },
+            { chinese: "我们认识了很多新朋友。", pinyin: "Wǒmen rènshí le hěn duō xīn péngyǒu.", english: "We met many new friends." },
+            
+            // Future tense
+            { chinese: "我明天要去北京。", pinyin: "Wǒ míngtiān yào qù Běijīng.", english: "I will go to Beijing tomorrow." },
+            { chinese: "下个月我会回国。", pinyin: "Xià gè yuè wǒ huì huí guó.", english: "I will return to my country next month." },
+            { chinese: "我打算学习中文。", pinyin: "Wǒ dǎsuàn xuéxí Zhōngwén.", english: "I plan to study Chinese." }
           ],
           advanced: [
-            { chinese: "如果明天天气好的话，我们可以去公园。", pinyin: "Rúguǒ míngtiān tiānqì hǎo dehuà, wǒmen kěyǐ qù gōngyuán.", english: "If the weather is good tomorrow, we can go to the park." },
+            // Complex sentences with 了 and other grammar patterns
+            { chinese: "我已经学了三年中文了，但是还是说得不太流利。", pinyin: "Wǒ yǐjīng xué le sān nián Zhōngwén le, dànshì háishì shuō de bú tài liúlì.", english: "I have been learning Chinese for three years, but I still don't speak very fluently." },
             { chinese: "虽然学习中文很难，但是很有意思。", pinyin: "Suīrán xuéxí Zhōngwén hěn nán, dànshì hěn yǒuyìsi.", english: "Although learning Chinese is difficult, it is very interesting." },
-            { chinese: "我认为学习语言的最好方法是每天练习。", pinyin: "Wǒ rènwéi xuéxí yǔyán de zuì hǎo fāngfǎ shì měitiān liànxí.", english: "I think the best way to learn a language is to practice every day." }
+            { chinese: "如果明天天气好的话，我们可以去公园。", pinyin: "Rúguǒ míngtiān tiānqì hǎo dehuà, wǒmen kěyǐ qù gōngyuán.", english: "If the weather is good tomorrow, we can go to the park." },
+            { chinese: "我认为学习语言的最好方法是每天练习。", pinyin: "Wǒ rènwéi xuéxí yǔyán de zuì hǎo fāngfǎ shì měitiān liànxí.", english: "I think the best way to learn a language is to practice every day." },
+            { chinese: "昨天我看了一部电影，这部电影讲的是中国历史。", pinyin: "Zuótiān wǒ kàn le yī bù diànyǐng, zhè bù diànyǐng jiǎng de shì Zhōngguó lìshǐ.", english: "Yesterday I watched a movie that was about Chinese history." },
+            { chinese: "我们吃完了饭，就去看电影了。", pinyin: "Wǒmen chī wán le fàn, jiù qù kàn diànyǐng le.", english: "After we finished eating, we went to see a movie." },
+            { chinese: "他告诉我他已经去过北京了。", pinyin: "Tā gàosù wǒ tā yǐjīng qùguò Běijīng le.", english: "He told me he had already been to Beijing." },
+            { chinese: "学习汉语不仅要学习语法，还要了解中国文化。", pinyin: "Xuéxí Hànyǔ bùjǐn yào xuéxí yǔfǎ, hái yào liǎojiě Zhōngguó wénhuà.", english: "Learning Chinese requires not only learning grammar, but also understanding Chinese culture." }
           ]
         };
         
@@ -252,25 +285,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (generateError) {
         console.log(`Error generating sentence with word "${word}", using fallback`);
         
-        // Create a simple fallback sentence using the word
+        // Create fallback sentences with proper grammar using the word
         const fallbackSentences = [
-          { template: "我喜欢{word}。", english: "I like {word}." },
-          { template: "这是{word}。", english: "This is {word}." },
-          { template: "我有{word}。", english: "I have {word}." },
-          { template: "我想要{word}。", english: "I want {word}." },
-          { template: "{word}很好。", english: "{word} is good." }
+          // Present tense templates
+          { template: "我喜欢{word}。", english: "I like {word}.", pinyin: "Wǒ xǐhuān {word}." },
+          { template: "这是{word}。", english: "This is {word}.", pinyin: "Zhè shì {word}." },
+          { template: "我有{word}。", english: "I have {word}.", pinyin: "Wǒ yǒu {word}." },
+          { template: "我想要{word}。", english: "I want {word}.", pinyin: "Wǒ xiǎng yào {word}." },
+          { template: "{word}很好。", english: "{word} is good.", pinyin: "{word} hěn hǎo." },
+          { template: "我们学习{word}。", english: "We learn {word}.", pinyin: "Wǒmen xuéxí {word}." },
+          
+          // Past tense templates with 了
+          { template: "我买了{word}。", english: "I bought {word}.", pinyin: "Wǒ mǎi le {word}." },
+          { template: "我看了{word}。", english: "I saw {word}.", pinyin: "Wǒ kàn le {word}." },
+          { template: "我们用了{word}。", english: "We used {word}.", pinyin: "Wǒmen yòng le {word}." },
+          { template: "我学了{word}。", english: "I learned {word}.", pinyin: "Wǒ xué le {word}." },
+          { template: "我昨天去了{word}。", english: "I went to {word} yesterday.", pinyin: "Wǒ zuótiān qù le {word}." },
+          
+          // Future tense templates
+          { template: "明天我要去{word}。", english: "Tomorrow I will go to {word}.", pinyin: "Míngtiān wǒ yào qù {word}." },
+          { template: "我会学习{word}。", english: "I will study {word}.", pinyin: "Wǒ huì xuéxí {word}." },
+          { template: "我想看{word}。", english: "I want to see {word}.", pinyin: "Wǒ xiǎng kàn {word}." }
         ];
         
         // Select a random template
         const randomTemplate = fallbackSentences[Math.floor(Math.random() * fallbackSentences.length)];
         
-        // Replace the placeholder with the actual word
+        // Replace the placeholder with the actual word in all fields
         const chinese = randomTemplate.template.replace('{word}', word);
         const english = randomTemplate.english.replace('{word}', word);
-        
-        // Create pinyin for the sentence (simplified version)
-        // In a real app, we would use a proper pinyin converter
-        const pinyin = "Fallback pinyin";
+        const pinyin = randomTemplate.pinyin.replace('{word}', word);
         
         res.json({
           chinese,

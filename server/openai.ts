@@ -184,6 +184,16 @@ export async function generateSentence(
           - Emotional expressions
           - Location expressions
           
+          IMPORTANT: Use proper grammar particles for tense and aspect:
+          - Use the 了 particle to indicate completed actions or change of state (approximately 30% of sentences)
+          - Use 过 for past experiences when appropriate
+          - Use 正在 or 着 for ongoing actions when appropriate
+          
+          Examples of proper grammar:
+          - "我昨天看了一本书" (I read a book yesterday) - not "我昨天看一本书"
+          - "他学了三年中文" (He has studied Chinese for three years) - not "他学三年中文"
+          - "我吃了早饭" (I ate breakfast) - not "我吃早饭" when referring to past
+          
           Provide the sentence in Chinese characters, pinyin (with proper tone marks), and an English translation.
           Important: ONLY use words from the provided vocabulary list. If you need common connecting words like "的" or "是", you may use them ONLY if they're in the vocabulary list.
           Format your response as a valid JSON object with 'chinese', 'pinyin', and 'english' fields.`
@@ -338,6 +348,16 @@ export async function generateSentenceWithWord(
           - Negative statements
           - Emotional expressions
           - Location expressions
+          
+          IMPORTANT: Use proper grammar particles for tense and aspect:
+          - Use the 了 particle to indicate completed actions or change of state (approximately 30% of sentences)
+          - Use 过 for past experiences when appropriate
+          - Use 正在 or 着 for ongoing actions when appropriate
+          
+          Examples of proper grammar:
+          - "我昨天看了一本书" (I read a book yesterday) - not "我昨天看一本书"
+          - "他学了三年中文" (He has studied Chinese for three years) - not "他学三年中文"
+          - "我吃了早饭" (I ate breakfast) - not "我吃早饭" when referring to past
           
           Provide the sentence in Chinese characters, pinyin (with proper tone marks), and an English translation.
           Format your response as a valid JSON object with 'chinese', 'pinyin', and 'english' fields.`
