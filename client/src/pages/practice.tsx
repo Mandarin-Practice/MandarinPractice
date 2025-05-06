@@ -8,6 +8,7 @@ import SuccessConfetti from "@/components/success-confetti";
 import { apiRequest } from "@/lib/queryClient";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTextToSpeech } from "@/hooks/use-text-to-speech";
+import { useToast } from "@/hooks/use-toast";
 import { checkSimilarity } from "@/lib/string-similarity";
 
 interface Sentence {
@@ -60,6 +61,9 @@ export default function Practice() {
     refetchOnWindowFocus: false,
   });
 
+  // Get toast hook for notifications
+  const { toast } = useToast();
+  
   // Function to get a new sentence, with duplicate prevention
   const fetchNewSentence = async (maxAttempts = 3): Promise<any> => {
     // Always get the most recent difficulty setting
@@ -85,9 +89,6 @@ export default function Practice() {
     const response = await apiRequest('POST', '/api/sentence/generate', { difficulty });
     return response.json();
   };
-  
-  // Import toast hook for notifications
-  const { toast } = useToast();
 
   // Generate sentence mutation with loading state handling
   const generateSentenceMutation = useMutation<any, unknown, void>({
