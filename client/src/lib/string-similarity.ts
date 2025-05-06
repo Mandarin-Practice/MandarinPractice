@@ -406,23 +406,53 @@ function areWordsEquivalent(word1: string, word2: string): boolean {
     return true;
   }
   
-  // Check common English adjective synonyms (most common in translations)
+  // Check common English adjective synonyms and other common words (most common in translations)
   const adjectiveSynonyms: Record<string, string[]> = {
-    "beautiful": ["pretty", "lovely", "gorgeous", "attractive", "cute", "handsome", "nice"],
-    "big": ["large", "huge", "enormous", "gigantic", "massive", "sizable"],
-    "small": ["little", "tiny", "miniature", "petite", "compact"],
-    "good": ["great", "excellent", "fine", "perfect", "wonderful", "fantastic", "terrific", "nice"],
-    "bad": ["terrible", "awful", "poor", "horrible", "dreadful", "unpleasant"],
-    "fast": ["quick", "rapid", "speedy", "swift"],
-    "slow": ["sluggish", "unhurried", "leisurely", "gradual"],
-    "happy": ["glad", "joyful", "delighted", "cheerful", "pleased", "content"],
-    "sad": ["unhappy", "sorrowful", "depressed", "gloomy", "miserable", "down"],
-    "angry": ["mad", "furious", "outraged", "annoyed", "irritated", "upset"],
-    "scared": ["afraid", "frightened", "terrified", "fearful", "nervous", "anxious"],
-    "tired": ["exhausted", "weary", "sleepy", "fatigued", "drained"],
-    "smart": ["intelligent", "clever", "bright", "brilliant", "wise", "knowledgeable"],
-    "old": ["aged", "ancient", "elderly", "senior", "mature", "older"],
-    "new": ["recent", "fresh", "modern", "brand-new", "current"],
+    // Appearance
+    "beautiful": ["pretty", "lovely", "gorgeous", "attractive", "cute", "handsome", "nice", "good-looking"],
+    "ugly": ["unattractive", "unappealing", "hideous", "homely"],
+    "thin": ["skinny", "slim", "slender", "lean"],
+    "fat": ["overweight", "heavy", "plump", "chubby", "obese"],
+    "tall": ["high", "towering", "lofty"],
+    "short": ["small", "little", "tiny", "not tall"],
+    
+    // Size
+    "big": ["large", "huge", "enormous", "gigantic", "massive", "sizable", "great", "grand"],
+    "small": ["little", "tiny", "miniature", "petite", "compact", "not big"],
+    
+    // Quality
+    "good": ["great", "excellent", "fine", "perfect", "wonderful", "fantastic", "terrific", "nice", "pleasant", "awesome"],
+    "bad": ["terrible", "awful", "poor", "horrible", "dreadful", "unpleasant", "not good"],
+    
+    // Speed
+    "fast": ["quick", "rapid", "speedy", "swift", "promptly", "quickly", "speedily", "swiftly", "immediately"],
+    "slow": ["sluggish", "unhurried", "leisurely", "gradual", "not fast", "lazy"],
+    
+    // Emotions
+    "happy": ["glad", "joyful", "delighted", "cheerful", "pleased", "content", "thrilled", "joyous", "elated"],
+    "sad": ["unhappy", "sorrowful", "depressed", "gloomy", "miserable", "down", "blue", "upset", "disappointed"],
+    "angry": ["mad", "furious", "outraged", "annoyed", "irritated", "upset", "irate", "enraged", "cross"],
+    "scared": ["afraid", "frightened", "terrified", "fearful", "nervous", "anxious", "worried", "spooked", "terrified"],
+    "tired": ["exhausted", "weary", "sleepy", "fatigued", "drained", "worn out", "beat", "spent"],
+    
+    // Intelligence
+    "smart": ["intelligent", "clever", "bright", "brilliant", "wise", "knowledgeable", "sharp", "brainy", "genius"],
+    "stupid": ["dumb", "idiotic", "foolish", "unintelligent", "dense", "slow", "not smart"],
+    
+    // Age
+    "old": ["aged", "ancient", "elderly", "senior", "mature", "older", "vintage", "antique", "not young"],
+    "new": ["recent", "fresh", "modern", "brand-new", "current", "novel", "contemporary", "not old"],
+    "young": ["youthful", "juvenile", "immature", "teenage", "adolescent", "not old"],
+    
+    // Common Words
+    "have": ["has", "possess", "own", "hold", "get", "got"],
+    "want": ["desire", "wish", "need", "would like", "like", "hope", "prefer", "long for"],
+    "like": ["enjoy", "love", "be fond of", "fancy", "be interested in", "appreciate"],
+    "need": ["require", "must have", "want", "lack", "desire"],
+    "very": ["really", "extremely", "quite", "exceptionally", "particularly", "especially", "highly"],
+    "today": ["this day", "now", "currently", "presently", "at this time", "this morning", "this afternoon"],
+    "tomorrow": ["the next day", "the following day", "the day after today"],
+    "yesterday": ["the day before", "the previous day", "last day"],
     "busy": ["occupied", "engaged", "active", "hectic", "swamped"],
     "interesting": ["fascinating", "intriguing", "engaging", "captivating", "compelling", "appealing"]
   };
@@ -475,10 +505,11 @@ function areWordsEquivalent(word1: string, word2: string): boolean {
   
   // For unmatched words, do a Levenshtein distance check for similar words
   // This helps catch spelling differences and typos
-  if (lowerWord1.length > 3 && lowerWord2.length > 3) {
+  if (lowerWord1.length > 2 && lowerWord2.length > 2) {
     const similarity = 1 - (levenshteinDistance(lowerWord1, lowerWord2) / 
                            Math.max(lowerWord1.length, lowerWord2.length));
-    if (similarity > 0.8) {
+    // More lenient similarity check (0.7 instead of 0.8)
+    if (similarity > 0.7) {
       synonymCache[cacheKey] = true;
       return true;
     }
@@ -574,10 +605,10 @@ export function compareWordByWord(
       const maxLength = Math.max(userWord.length, correctWord.length);
       const wordSimilarity = 1 - (distance / maxLength);
       
-      // Even short words can match if they're very similar
-      const similarityThreshold = (userWord.length <= 3 || correctWord.length <= 3) ? 0.85 : 0.75;
+      // More lenient similarity threshold for matching words
+      const similarityThreshold = (userWord.length <= 3 || correctWord.length <= 3) ? 0.75 : 0.65;
       
-      // If words are very similar, mark as matched
+      // If words are similar enough, mark as matched
       if (wordSimilarity > similarityThreshold) {
         userWordElements[i].matched = true;
         correctWordElements[j].matched = true;
