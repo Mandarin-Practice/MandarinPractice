@@ -73,13 +73,6 @@ export default function Home() {
                 </Link>
               </Button>
             </div>
-            
-            {/* Chinese characters for decoration */}
-            <div className="flex justify-center space-x-8 mt-4 text-2xl text-red-400 dark:text-red-300 font-bold">
-              <span className="transform hover:scale-110 transition-transform cursor-default" title="Study">学习</span>
-              <span className="transform hover:scale-110 transition-transform cursor-default" title="Practice">练习</span>
-              <span className="transform hover:scale-110 transition-transform cursor-default" title="Master">掌握</span>
-            </div>
           </div>
         </div>
       </div>
