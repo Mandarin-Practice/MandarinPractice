@@ -186,10 +186,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No active vocabulary words available. Please add or activate some words first." });
       }
       
-      // Generate sentence using OpenAI
-      const sentence = await generateSentence(activeVocabulary, difficulty);
-      
-      res.json(sentence);
+      // Generate sentence using OpenAI with retries and fallback to simple sentences
+      try {
+        const sentence = await generateSentence(activeVocabulary, difficulty);
+        res.json(sentence);
+      } catch (generateError) {
+        console.log("Error generating sentence with OpenAI, using fallback sentences");
+        
+        // Fallback sentences for different difficulty levels
+        const fallbackSentences = {
+          beginner: [
+            { chinese: "我很高兴。", pinyin: "Wǒ hěn gāoxìng.", english: "I am very happy." },
+            { chinese: "今天天气很好。", pinyin: "Jīntiān tiānqì hěn hǎo.", english: "The weather is good today." },
+            { chinese: "你好吗？", pinyin: "Nǐ hǎo ma?", english: "How are you?" },
+            { chinese: "我喜欢学中文。", pinyin: "Wǒ xǐhuān xué Zhōngwén.", english: "I like learning Chinese." },
+            { chinese: "谢谢你的帮助。", pinyin: "Xièxiè nǐ de bāngzhù.", english: "Thank you for your help." },
+            { chinese: "我想喝水。", pinyin: "Wǒ xiǎng hē shuǐ.", english: "I want to drink water." },
+            { chinese: "这个很有意思。", pinyin: "Zhège hěn yǒuyìsi.", english: "This is very interesting." },
+            { chinese: "你叫什么名字？", pinyin: "Nǐ jiào shénme míngzi?", english: "What is your name?" },
+            { chinese: "我不明白。", pinyin: "Wǒ bù míngbái.", english: "I don't understand." },
+            { chinese: "请再说一次。", pinyin: "Qǐng zài shuō yīcì.", english: "Please say it again." }
+          ],
+          intermediate: [
+            { chinese: "我昨天去了图书馆。", pinyin: "Wǒ zuótiān qùle túshūguǎn.", english: "I went to the library yesterday." },
+            { chinese: "这本书很有意思。", pinyin: "Zhè běn shū hěn yǒuyìsi.", english: "This book is very interesting." },
+            { chinese: "我明天要去北京。", pinyin: "Wǒ míngtiān yào qù Běijīng.", english: "I will go to Beijing tomorrow." },
+            { chinese: "中国菜很好吃。", pinyin: "Zhōngguó cài hěn hǎochī.", english: "Chinese food is delicious." },
+            { chinese: "你能帮我一下吗？", pinyin: "Nǐ néng bāng wǒ yīxià ma?", english: "Can you help me?" }
+          ],
+          advanced: [
+            { chinese: "如果明天天气好的话，我们可以去公园。", pinyin: "Rúguǒ míngtiān tiānqì hǎo dehuà, wǒmen kěyǐ qù gōngyuán.", english: "If the weather is good tomorrow, we can go to the park." },
+            { chinese: "虽然学习中文很难，但是很有意思。", pinyin: "Suīrán xuéxí Zhōngwén hěn nán, dànshì hěn yǒuyìsi.", english: "Although learning Chinese is difficult, it is very interesting." },
+            { chinese: "我认为学习语言的最好方法是每天练习。", pinyin: "Wǒ rènwéi xuéxí yǔyán de zuì hǎo fāngfǎ shì měitiān liànxí.", english: "I think the best way to learn a language is to practice every day." }
+          ]
+        };
+        
+        // Select a random fallback sentence based on difficulty
+        const fallbackOptions = fallbackSentences[difficulty as keyof typeof fallbackSentences] || fallbackSentences.beginner;
+        const randomFallback = fallbackOptions[Math.floor(Math.random() * fallbackOptions.length)];
+        
+        res.json({
+          ...randomFallback,
+          difficulty,
+          fromFallback: true // Mark that this is a fallback sentence
+        });
+      }
     } catch (error) {
       res.status(500).json({ message: error instanceof Error ? error.message : "Failed to generate sentence" });
     }
@@ -204,10 +245,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Word is required" });
       }
       
-      // Generate sentence using OpenAI with specific word
-      const sentence = await generateSentenceWithWord(word, difficulty);
-      
-      res.json(sentence);
+      // Generate sentence using OpenAI with specific word, with fallback
+      try {
+        const sentence = await generateSentenceWithWord(word, difficulty);
+        res.json(sentence);
+      } catch (generateError) {
+        console.log(`Error generating sentence with word "${word}", using fallback`);
+        
+        // Create a simple fallback sentence using the word
+        const fallbackSentences = [
+          { template: "我喜欢{word}。", english: "I like {word}." },
+          { template: "这是{word}。", english: "This is {word}." },
+          { template: "我有{word}。", english: "I have {word}." },
+          { template: "我想要{word}。", english: "I want {word}." },
+          { template: "{word}很好。", english: "{word} is good." }
+        ];
+        
+        // Select a random template
+        const randomTemplate = fallbackSentences[Math.floor(Math.random() * fallbackSentences.length)];
+        
+        // Replace the placeholder with the actual word
+        const chinese = randomTemplate.template.replace('{word}', word);
+        const english = randomTemplate.english.replace('{word}', word);
+        
+        // Create pinyin for the sentence (simplified version)
+        // In a real app, we would use a proper pinyin converter
+        const pinyin = "Fallback pinyin";
+        
+        res.json({
+          chinese,
+          pinyin,
+          english,
+          difficulty,
+          fromFallback: true
+        });
+      }
     } catch (error) {
       res.status(500).json({ message: error instanceof Error ? error.message : "Failed to generate sentence" });
     }

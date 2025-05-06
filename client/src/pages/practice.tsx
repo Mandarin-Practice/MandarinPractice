@@ -86,9 +86,25 @@ export default function Practice() {
     return response.json();
   };
   
-  // Generate sentence mutation
+  // Import toast hook for notifications
+  const { toast } = useToast();
+
+  // Generate sentence mutation with loading state handling
   const generateSentenceMutation = useMutation<any, unknown, void>({
-    mutationFn: () => fetchNewSentence(),
+    mutationFn: () => {
+      // Set a timeout to show a message if sentence generation takes too long
+      const timeoutId = setTimeout(() => {
+        toast({
+          title: "Generating sentence...",
+          description: "This might take a moment. Please wait...",
+          duration: 5000,
+        });
+      }, 2000);
+
+      // Return the fetch promise and clear the timeout when done
+      return fetchNewSentence()
+        .finally(() => clearTimeout(timeoutId));
+    },
     onSuccess: (data) => {
       // Reset states for new sentence
       setUserTranslation("");
@@ -105,6 +121,15 @@ export default function Practice() {
         
         speak(data.chinese);
       }
+    },
+    onError: () => {
+      // Show an error toast when sentence generation fails
+      toast({
+        title: "Sentence generation failed",
+        description: "Using a built-in sentence instead. You can continue practicing.",
+        variant: "destructive",
+        duration: 3000,
+      });
     }
   });
   
