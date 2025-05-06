@@ -983,8 +983,15 @@ export default function WordList() {
   const [groupByHomophones, setGroupByHomophones] = useState(false);
   const [previewList, setPreviewList] = useState<WordList | null>(null);
   const [selectedWords, setSelectedWords] = useState<Record<number, boolean>>({});
+  const [currentTab, setCurrentTab] = useState<'lists' | 'all' | 'mywords'>('lists');
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Get user authentication context
+  const { user } = useAuth();
+  
+  // Use the custom hook to fetch the user's word list
+  const { wordList: userWordList, isLoading: userWordListLoading } = useUserWordList();
 
   // Fetch user's vocabulary
   const { data: vocabulary, isLoading } = useQuery({

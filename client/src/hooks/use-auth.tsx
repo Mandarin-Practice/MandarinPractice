@@ -2,7 +2,14 @@ import { createContext, ReactNode, useContext, useEffect, useState } from "react
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { auth, googleProvider } from "@/lib/firebase";
-import { signInWithPopup, signOut as firebaseSignOut, User as FirebaseUser, onAuthStateChanged } from "firebase/auth";
+import { 
+  signInWithPopup, 
+  signInWithRedirect,
+  getRedirectResult,
+  signOut as firebaseSignOut, 
+  User as FirebaseUser, 
+  onAuthStateChanged 
+} from "firebase/auth";
 
 // Backend user type from database
 interface BackendUser {
@@ -138,13 +145,41 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  // Check for redirect result on component mount
+  useEffect(() => {
+    const checkRedirectResult = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result && result.user) {
+          await registerOrLoginWithBackend(result.user);
+          queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
+        }
+      } catch (error) {
+        console.error("Redirect sign in error:", error);
+      }
+    };
+    
+    checkRedirectResult();
+  }, []);
+  
   // Sign in with Google
   const signIn = async () => {
     try {
       setFirebaseLoading(true);
-      const result = await signInWithPopup(auth, googleProvider);
-      await registerOrLoginWithBackend(result.user);
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
+      try {
+        // First try with popup
+        const result = await signInWithPopup(auth, googleProvider);
+        await registerOrLoginWithBackend(result.user);
+        queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
+      } catch (popupError) {
+        console.error("Popup sign in error:", popupError);
+        // If popup fails, try with redirect
+        toast({
+          title: "Trying another sign-in method",
+          description: "Redirecting to Google sign-in...",
+        });
+        await signInWithRedirect(auth, googleProvider);
+      }
     } catch (error) {
       console.error("Sign in error:", error);
       toast({
