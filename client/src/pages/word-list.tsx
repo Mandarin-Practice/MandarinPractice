@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import WordChip from "@/components/word-chip";
+import SimpleWordChip from "@/components/simple-word-chip";
 import { Separator } from "@/components/ui/separator";
 import { LESSON11_WORDLIST } from "@/data/word-lists";
 import { LESSON12_WORDLIST } from "@/data/lesson12-wordlist";
@@ -777,7 +777,7 @@ export default function WordList() {
                       <CardContent className="flex-grow">
                         <div className="flex flex-wrap gap-1 mb-2">
                           {list.words.slice(0, 5).map((word, i) => (
-                            <WordChip key={i} chinese={word.chinese} />
+                            <SimpleWordChip key={i} chinese={word.chinese} />
                           ))}
                           {list.words.length > 5 && (
                             <span className="text-sm text-muted-foreground">
