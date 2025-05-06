@@ -9,6 +9,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTextToSpeech } from "@/hooks/use-text-to-speech";
 import { useToast } from "@/hooks/use-toast";
+import { useSoundEffects } from "@/hooks/use-sound-effects";
 import { checkSimilarity } from "@/lib/string-similarity";
 
 interface Sentence {
@@ -54,6 +55,7 @@ export default function Practice() {
   });
   
   const { speak, isPlaying } = useTextToSpeech();
+  const { playCorrectSound, playIncorrectSound } = useSoundEffects();
 
   // Fetch vocabulary words
   const { data: vocabularyWords, isLoading: isLoadingVocabulary } = useQuery({
@@ -244,6 +246,9 @@ export default function Practice() {
       setFeedbackStatus("correct");
       calculateScore(similarity);
       
+      // Play correct answer sound
+      playCorrectSound();
+      
       // Trigger confetti animation for correct answer
       setShowConfetti(true);
       
@@ -271,8 +276,12 @@ export default function Practice() {
       }
     } else if (similarity >= 0.25) {
       setFeedbackStatus("partial");
+      // Play incorrect sound for partial matches too
+      playIncorrectSound();
     } else {
       setFeedbackStatus("incorrect");
+      // Play incorrect answer sound
+      playIncorrectSound();
       
       // If answer is incorrect, update proficiency for words in the sentence
       if (vocabularyWords && Array.isArray(vocabularyWords)) {
