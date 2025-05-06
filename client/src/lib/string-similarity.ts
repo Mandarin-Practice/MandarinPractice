@@ -217,9 +217,10 @@ function assessSemanticSimilarity(str1: string, str2: string): number {
       arePhrasesEquivalent(word1, word2) ||
       areWordsEquivalent(word1, word2) ||
       // For longer words (likely more important), allow partial matches with high similarity
-      (word1.length > 3 && word2.length > 3 && 
+      // Using a more lenient distance threshold (0.4 instead of 0.3)
+      (word1.length > 2 && word2.length > 2 && 
         (word1.includes(word2) || word2.includes(word1) || 
-         levenshteinDistance(word1, word2) / Math.max(word1.length, word2.length) < 0.3)
+         levenshteinDistance(word1, word2) / Math.max(word1.length, word2.length) < 0.4)
       )
     );
     
@@ -256,7 +257,8 @@ function assessSemanticSimilarity(str1: string, str2: string): number {
     }
     
     // Boost score if different parts of the sentence have matches
-    const distributionBonus = (partsMatched / 3) * 0.2;
+    // Increased bonus from 0.2 to 0.3 to give more weight to well-distributed matches
+    const distributionBonus = (partsMatched / 3) * 0.3;
     return Math.min(1, semanticScore + distributionBonus);
   }
   
@@ -273,7 +275,7 @@ function assessSemanticSimilarity(str1: string, str2: string): number {
 export function checkSimilarity(
   str1: string,
   str2: string,
-  matchLevel: 'lenient' | 'moderate' | 'strict' = 'moderate'
+  matchLevel: 'lenient' | 'moderate' | 'strict' = 'lenient'
 ): number {
   // Normalize both strings
   const s1 = normalizeString(str1);

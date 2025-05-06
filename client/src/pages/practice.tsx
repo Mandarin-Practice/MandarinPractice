@@ -198,7 +198,7 @@ export default function Practice() {
     }
 
     const correctAnswer = generateSentenceMutation.data.english;
-    // Get the match strictness from localStorage or use lenient by default
+    // Always use lenient matching by default to maximize flexibility
     const matchStrictness = localStorage.getItem('matchStrictness') || 'lenient';
     // Use the improved semantic similarity check with the configured strictness level
     const similarity = checkSimilarity(input, correctAnswer, matchStrictness as 'lenient' | 'moderate' | 'strict');
@@ -243,7 +243,7 @@ export default function Practice() {
           }
         });
       }
-    } else if (similarity >= 0.35) {
+    } else if (similarity >= 0.25) {
       setFeedbackStatus("partial");
     } else {
       setFeedbackStatus("incorrect");
