@@ -123,11 +123,41 @@ export async function generateSentence(
     {} as Record<string, string>
   );
 
+  // Get current date and time for context in sentences
+  const now = new Date();
+  const hour = now.getHours();
+  const dayTime = hour < 12 ? "morning" : hour < 18 ? "afternoon" : "evening";
+  const dayOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][now.getDay()];
+  const season = ["winter", "winter", "spring", "spring", "spring", "summer", "summer", "summer", "autumn", "autumn", "autumn", "winter"][now.getMonth()];
+
   const difficultyGuide = {
     beginner: "Use simple sentence structures with basic subject-verb patterns. Include 3-5 words.",
     intermediate: "Use more complex grammar with some compounds and basic conjunctions. Include 5-8 words.",
     advanced: "Use sophisticated grammar and sentence structures. Include 8-10 words or more."
   };
+
+  // Pick one sentence pattern to specifically request
+  const sentencePatterns = [
+    "Create a question using 吗, 呢, or 吧.",
+    "Create an imperative statement (a command or request).",
+    "Create a comparison between two things.",
+    "Create an if/then conditional statement.",
+    "Create a sentence expressing an opinion or preference.",
+    "Create a time-based sentence about a daily routine.",
+    "Create a descriptive sentence about weather, food, or a place.",
+    "Create a cause and effect relationship sentence.",
+    "Create a sentence about future plans or intentions.",
+    "Create a sentence with a location expression.",
+    `Create a sentence about ${dayTime} activities.`,
+    `Create a sentence mentioning it's ${dayOfWeek}.`,
+    `Create a seasonal sentence about ${season}.`,
+    "Create a sentence with a negative statement (using 不 or 没).",
+    "Create a sentence about wanting or needing something.",
+    "Create a sentence with emotional expression (happy, sad, tired, etc)."
+  ];
+
+  // Randomly select a sentence pattern to request
+  const randomPattern = sentencePatterns[Math.floor(Math.random() * sentencePatterns.length)];
 
   try {
     const response = await openai.chat.completions.create({
@@ -139,17 +169,21 @@ export async function generateSentence(
           Generate a grammatically correct Mandarin sentence using ONLY the vocabulary words provided.
           ${difficultyGuide[difficulty]}
           
-          Use varied sentence structures, such as:
+          You must create highly varied sentence structures. Avoid repetitive patterns.
+          
+          Include different sentence types:
           - Questions (using 吗, 呢, 吧)
-          - Imperative statements
+          - Imperative statements (commands or requests)
           - Comparison sentences
           - If/then structures
           - Opinion statements
-          - Time-based sentences
+          - Time-based sentences (morning, afternoon, days of week, seasons)
           - Descriptive sentences
           - Cause and effect relationships
+          - Negative statements
+          - Emotional expressions
+          - Location expressions
           
-          Avoid generating similar sentence patterns repeatedly. Try to introduce variety.
           Provide the sentence in Chinese characters, pinyin (with proper tone marks), and an English translation.
           Important: ONLY use words from the provided vocabulary list. If you need common connecting words like "的" or "是", you may use them ONLY if they're in the vocabulary list.
           Format your response as a valid JSON object with 'chinese', 'pinyin', and 'english' fields.`
@@ -158,7 +192,10 @@ export async function generateSentence(
           role: "user",
           content: `Vocabulary words (in Chinese): ${chineseWords}. 
           Difficulty level: ${difficulty}.
-          Generate a sentence using only these words. Make sure to use a different sentence structure than recently generated sentences. Be creative with the structure.`
+          
+          For this specific request: ${randomPattern}
+          
+          Generate a sentence using only these words. Make it sound natural and conversational.`
         }
       ],
       response_format: { type: "json_object" }
@@ -240,11 +277,41 @@ export async function generateSentenceWithWord(
     throw new Error("No word provided");
   }
 
+  // Get current date and time for context in sentences
+  const now = new Date();
+  const hour = now.getHours();
+  const dayTime = hour < 12 ? "morning" : hour < 18 ? "afternoon" : "evening";
+  const dayOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][now.getDay()];
+  const season = ["winter", "winter", "spring", "spring", "spring", "summer", "summer", "summer", "autumn", "autumn", "autumn", "winter"][now.getMonth()];
+
   const difficultyGuide = {
     beginner: "Use simple sentence structures with basic subject-verb patterns. Include 3-5 words.",
     intermediate: "Use more complex grammar with some compounds and basic conjunctions. Include 5-8 words.",
     advanced: "Use sophisticated grammar and sentence structures. Include 8-10 words or more."
   };
+
+  // Pick one sentence pattern to specifically request
+  const sentencePatterns = [
+    "Create a question using 吗, 呢, or 吧.",
+    "Create an imperative statement (a command or request).",
+    "Create a comparison between two things.",
+    "Create an if/then conditional statement.",
+    "Create a sentence expressing an opinion or preference.",
+    "Create a time-based sentence about a daily routine.",
+    "Create a descriptive sentence about weather, food, or a place.",
+    "Create a cause and effect relationship sentence.",
+    "Create a sentence about future plans or intentions.",
+    "Create a sentence with a location expression.",
+    `Create a sentence about ${dayTime} activities.`,
+    `Create a sentence mentioning it's ${dayOfWeek}.`,
+    `Create a seasonal sentence about ${season}.`,
+    "Create a sentence with a negative statement (using 不 or 没).",
+    "Create a sentence about wanting or needing something.",
+    "Create a sentence with emotional expression (happy, sad, tired, etc)."
+  ];
+
+  // Randomly select a sentence pattern to request
+  const randomPattern = sentencePatterns[Math.floor(Math.random() * sentencePatterns.length)];
 
   try {
     const response = await openai.chat.completions.create({
@@ -256,17 +323,21 @@ export async function generateSentenceWithWord(
           Generate a grammatically correct Mandarin sentence that includes the word "${word}".
           ${difficultyGuide[difficulty]}
           
-          Use varied sentence structures, such as:
+          You must create highly varied sentence structures. Avoid repetitive patterns.
+          
+          Include different sentence types:
           - Questions (using 吗, 呢, 吧)
-          - Imperative statements
+          - Imperative statements (commands or requests)
           - Comparison sentences
           - If/then structures
           - Opinion statements
-          - Time-based sentences
+          - Time-based sentences (morning, afternoon, days of week, seasons)
           - Descriptive sentences
           - Cause and effect relationships
+          - Negative statements
+          - Emotional expressions
+          - Location expressions
           
-          Avoid generating similar sentence patterns repeatedly. Try to introduce variety.
           Provide the sentence in Chinese characters, pinyin (with proper tone marks), and an English translation.
           Format your response as a valid JSON object with 'chinese', 'pinyin', and 'english' fields.`
         },
@@ -274,7 +345,10 @@ export async function generateSentenceWithWord(
           role: "user",
           content: `Create a natural, grammatically correct sentence in Mandarin that includes the word "${word}".
           Difficulty level: ${difficulty}.
-          Make sure to use a different sentence structure than what might be typically generated. Be creative with the grammatical structure while maintaining natural Chinese expression.`
+          
+          For this specific request: ${randomPattern}
+          
+          Make it sound natural and conversational while ensuring the sentence includes "${word}".`
         }
       ],
       response_format: { type: "json_object" }

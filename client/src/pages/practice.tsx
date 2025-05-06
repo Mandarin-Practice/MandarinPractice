@@ -38,6 +38,8 @@ export default function Practice() {
   const [showConfetti, setShowConfetti] = useState(false);
   // Track recently seen sentences to avoid repetition
   const [recentSentences, setRecentSentences] = useState<string[]>([]);
+  // Track recently used sentence patterns to improve variety
+  const [recentPatterns, setRecentPatterns] = useState<Set<string>>(new Set());
   // Track the current difficulty setting
   const [currentDifficulty, setCurrentDifficulty] = useState<string>(localStorage.getItem('difficulty') || 'beginner');
   
