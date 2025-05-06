@@ -16,21 +16,21 @@ export default function Home() {
         }}
       >
         {/* Bamboo decorations */}
-        <div className="absolute left-4 md:left-12 top-1/2 transform -translate-y-1/2 z-20">
+        <div className="absolute -left-6 md:-left-12 top-1/2 transform -translate-y-1/2 z-30">
           <img 
             src="/images/bamboo.png" 
             alt="Bamboo decoration" 
             className="h-72 md:h-96"
-            style={{ filter: 'brightness(1.2) contrast(1.1)' }}
+            style={{ filter: 'drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.3))' }}
           />
         </div>
         
-        <div className="absolute right-4 md:right-12 top-1/2 transform -translate-y-1/2 scale-x-[-1] z-20">
+        <div className="absolute -right-6 md:-right-12 top-1/2 transform -translate-y-1/2 scale-x-[-1] z-30">
           <img 
             src="/images/bamboo.png" 
             alt="Bamboo decoration" 
             className="h-72 md:h-96"
-            style={{ filter: 'brightness(1.2) contrast(1.1)' }}
+            style={{ filter: 'drop-shadow(-2px 4px 6px rgba(0, 0, 0, 0.3))' }}
           />
         </div>
         
@@ -47,14 +47,11 @@ export default function Home() {
               />
             </div>
             
-            {/* Title with Chinese Label */}
+            {/* Title */}
             <div className="relative inline-block">
               <h1 className="text-5xl font-extrabold mb-8 text-red-600">
                 Mandarin Practice
               </h1>
-              <span className="absolute -top-3 -right-6 text-sm bg-red-600 text-white px-3 py-1 rounded-full transform rotate-12 font-bold shadow-md">
-                中文
-              </span>
             </div>
             
             <p className="text-xl text-gray-700 dark:text-gray-300 mb-10 font-medium max-w-xl mx-auto">
