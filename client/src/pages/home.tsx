@@ -1,7 +1,6 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import pandaDetailed from "@/assets/panda-detailed.svg";
 import chineseBg from "@/assets/chinese-bg.svg";
 
 export default function Home() {
@@ -25,9 +24,9 @@ export default function Home() {
             {/* Panda image at top */}
             <div className="mx-auto w-fit -mt-24 mb-6">
               <img 
-                src={pandaDetailed} 
-                alt="Panda with Bamboo" 
-                className="h-40 drop-shadow-xl"
+                src="/images/cute-panda.png" 
+                alt="Cute Panda Logo" 
+                className="h-32 w-32 drop-shadow-xl object-contain"
                 style={{ filter: 'drop-shadow(0px 10px 8px rgba(0, 0, 0, 0.2))' }}
               />
             </div>

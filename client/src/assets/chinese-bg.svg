@@ -1,57 +1,67 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600">
   <defs>
-    <linearGradient id="redGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#e53e3e;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#c53030;stop-opacity:1" />
-    </linearGradient>
-    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#fbbf24;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#d97706;stop-opacity:1" />
-    </linearGradient>
-    <linearGradient id="bambooGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#34d399;stop-opacity:0.9" />
-      <stop offset="100%" style="stop-color:#059669;stop-opacity:0.9" />
-    </linearGradient>
-    <pattern id="pattern1" patternUnits="userSpaceOnUse" width="50" height="50">
-      <circle cx="25" cy="25" r="12" fill="none" stroke="#fbbf24" stroke-width="1" stroke-opacity="0.3"/>
-    </pattern>
+    <!-- Pattern for the background -->
     <pattern id="bambooPattern" patternUnits="userSpaceOnUse" width="100" height="100">
-      <rect x="45" width="10" height="100" fill="url(#bambooGradient)"/>
-      <ellipse cx="50" cy="20" rx="8" ry="2" fill="#047857"/>
-      <ellipse cx="50" cy="50" rx="8" ry="2" fill="#047857"/>
-      <ellipse cx="50" cy="80" rx="8" ry="2" fill="#047857"/>
-      <path d="M55 15C75 5 85 10 80 20C70 30 55 25 55 15Z" fill="#10b981" fill-opacity="0.8"/>
-      <path d="M55 45C75 35 85 40 80 50C70 60 55 55 55 45Z" fill="#10b981" fill-opacity="0.8"/>
-      <path d="M55 75C75 65 85 70 80 80C70 90 55 85 55 75Z" fill="#10b981" fill-opacity="0.8"/>
-      <path d="M45 30C25 20 15 25 20 35C30 45 45 40 45 30Z" fill="#10b981" fill-opacity="0.8"/>
-      <path d="M45 60C25 50 15 55 20 65C30 75 45 70 45 60Z" fill="#10b981" fill-opacity="0.8"/>
+      <rect width="100" height="100" fill="#FFFBF5"/>
+      <path d="M20,10 L80,90" stroke="#4CAF50" stroke-width="1" opacity="0.1"/>
+      <path d="M80,10 L20,90" stroke="#4CAF50" stroke-width="1" opacity="0.1"/>
     </pattern>
+    
+    <!-- Chinese calligraphy brush style -->
+    <filter id="calligraphyEffect" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="5" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" result="displacedImage"/>
+    </filter>
   </defs>
-
-  <!-- Background with gradient -->
-  <rect width="800" height="500" fill="#fef2f2"/>
   
-  <!-- Pattern overlay -->
-  <rect width="800" height="500" fill="url(#pattern1)"/>
+  <!-- Background with subtle bamboo pattern -->
+  <rect width="1200" height="600" fill="url(#bambooPattern)"/>
   
-  <!-- Red circle (like Japanese flag) with golden border -->
-  <circle cx="400" cy="250" r="120" fill="url(#redGradient)" stroke="url(#goldGradient)" stroke-width="8"/>
+  <!-- Bamboo stalks on the sides -->
+  <!-- Left side bamboo group -->
+  <g transform="translate(50, 50)">
+    <rect x="0" y="0" width="15" height="500" fill="#5D9C59" rx="8" ry="8"/>
+    <ellipse cx="8" cy="80" rx="10" ry="3" fill="#4C8C54"/>
+    <ellipse cx="8" cy="160" rx="10" ry="3" fill="#4C8C54"/>
+    <ellipse cx="8" cy="240" rx="10" ry="3" fill="#4C8C54"/>
+    <ellipse cx="8" cy="320" rx="10" ry="3" fill="#4C8C54"/>
+    <ellipse cx="8" cy="400" rx="10" ry="3" fill="#4C8C54"/>
+    
+    <!-- Bamboo leaves -->
+    <path d="M15,70 C35,60 50,70 45,85 C35,95 15,85 15,70Z" fill="#8BC34A" opacity="0.9" filter="url(#calligraphyEffect)"/>
+    <path d="M15,180 C35,170 50,180 45,195 C35,205 15,195 15,180Z" fill="#8BC34A" opacity="0.9" filter="url(#calligraphyEffect)"/>
+    <path d="M15,330 C35,320 50,330 45,345 C35,355 15,345 15,330Z" fill="#8BC34A" opacity="0.9" filter="url(#calligraphyEffect)"/>
+  </g>
   
-  <!-- Chinese characters in the middle -->
-  <text x="400" y="270" font-family="'Noto Sans SC', sans-serif" font-size="90" font-weight="bold" fill="white" text-anchor="middle">汉字</text>
+  <!-- Right side bamboo group -->
+  <g transform="translate(1110, 20)">
+    <rect x="0" y="0" width="15" height="500" fill="#5D9C59" rx="8" ry="8"/>
+    <ellipse cx="8" cy="80" rx="10" ry="3" fill="#4C8C54"/>
+    <ellipse cx="8" cy="160" rx="10" ry="3" fill="#4C8C54"/>
+    <ellipse cx="8" cy="240" rx="10" ry="3" fill="#4C8C54"/>
+    <ellipse cx="8" cy="320" rx="10" ry="3" fill="#4C8C54"/>
+    <ellipse cx="8" cy="400" rx="10" ry="3" fill="#4C8C54"/>
+    
+    <!-- Bamboo leaves -->
+    <path d="M0,110 C-20,100 -35,110 -30,125 C-20,135 0,125 0,110Z" fill="#8BC34A" opacity="0.9" filter="url(#calligraphyEffect)"/>
+    <path d="M0,250 C-20,240 -35,250 -30,265 C-20,275 0,265 0,250Z" fill="#8BC34A" opacity="0.9" filter="url(#calligraphyEffect)"/>
+    <path d="M0,390 C-20,380 -35,390 -30,405 C-20,415 0,405 0,390Z" fill="#8BC34A" opacity="0.9" filter="url(#calligraphyEffect)"/>
+  </g>
   
-  <!-- Bamboo decorations on sides -->
-  <rect x="30" y="50" width="70" height="400" fill="url(#bambooPattern)" opacity="0.7"/>
-  <rect x="700" y="50" width="70" height="400" fill="url(#bambooPattern)" opacity="0.7" transform="scale(-1,1) translate(-1400,0)"/>
+  <!-- Chinese characters as decorative elements -->
+  <g opacity="0.1" transform="translate(600, 300)">
+    <text x="-350" y="-200" font-family="Arial" font-weight="bold" font-size="70" fill="#C33E2F" filter="url(#calligraphyEffect)">中</text>
+    <text x="50" y="-150" font-family="Arial" font-weight="bold" font-size="60" fill="#C33E2F" filter="url(#calligraphyEffect)">文</text>
+    <text x="-200" y="0" font-family="Arial" font-weight="bold" font-size="80" fill="#C33E2F" filter="url(#calligraphyEffect)">学</text>
+    <text x="150" y="50" font-family="Arial" font-weight="bold" font-size="70" fill="#C33E2F" filter="url(#calligraphyEffect)">习</text>
+    <text x="-300" y="150" font-family="Arial" font-weight="bold" font-size="65" fill="#C33E2F" filter="url(#calligraphyEffect)">语</text>
+    <text x="100" y="200" font-family="Arial" font-weight="bold" font-size="75" fill="#C33E2F" filter="url(#calligraphyEffect)">言</text>
+  </g>
   
-  <!-- Small decorative elements -->
-  <circle cx="160" cy="80" r="30" fill="url(#goldGradient)" opacity="0.5"/>
-  <circle cx="640" cy="80" r="30" fill="url(#goldGradient)" opacity="0.5"/>
-  <circle cx="160" cy="420" r="30" fill="url(#goldGradient)" opacity="0.5"/>
-  <circle cx="640" cy="420" r="30" fill="url(#goldGradient)" opacity="0.5"/>
-  
-  <!-- Decorative calligraphy/brush strokes -->
-  <path d="M220,140 C280,160 300,200 240,220 C180,240 160,280 220,300" stroke="#111827" stroke-width="12" stroke-linecap="round" fill="none" opacity="0.7"/>
-  <path d="M580,140 C520,160 500,200 560,220 C620,240 640,280 580,300" stroke="#111827" stroke-width="12" stroke-linecap="round" fill="none" opacity="0.7"/>
+  <!-- Chinese red seal stamp effect -->
+  <g transform="translate(950, 500)">
+    <rect x="0" y="0" width="80" height="80" fill="#C33E2F" opacity="0.1" rx="5" ry="5"/>
+    <text x="20" y="50" font-family="Arial" font-weight="bold" font-size="40" fill="#C33E2F" opacity="0.15">印</text>
+  </g>
 </svg>
