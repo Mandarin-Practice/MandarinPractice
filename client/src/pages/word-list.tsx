@@ -1605,7 +1605,7 @@ export default function WordList() {
       <Card className="mb-6 border-border overflow-hidden">
         <CardHeader>
           <CardTitle>Your Vocabulary Words</CardTitle>
-          <CardDescription>Add the Mandarin words you want to practice</CardDescription>
+          <CardDescription className="text-white">Add the Mandarin words you want to practice</CardDescription>
         </CardHeader>
         
         <CardContent>
@@ -1684,7 +1684,7 @@ export default function WordList() {
                       <circle cx="11" cy="11" r="8"></circle>
                       <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                     </svg>
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 -translate-y-2 hidden group-hover:block bg-card border border-border text-gray-800 dark:text-white text-xs rounded-md py-2 px-3 w-64 z-10 shadow-md font-medium">
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 -translate-y-2 hidden group-hover:block bg-card border border-border text-black dark:text-white text-xs rounded-md py-2 px-3 w-64 z-10 shadow-md font-medium">
                       You can search by typing either Chinese characters or pinyin. The search is smart enough to find matching words regardless of which you use.
                     </div>
                   </div>
@@ -1710,7 +1710,7 @@ export default function WordList() {
             ) : vocabulary && Array.isArray(vocabulary) && vocabulary.length > 0 ? (
               // Check if there are any results after filtering
               filterVocabulary(vocabulary).length === 0 ? (
-                <div className="text-gray-700 dark:text-white italic mb-4 font-medium">
+                <div className="text-gray-900 dark:text-white italic mb-4 font-medium">
                   No words match your search query.
                 </div>
               ) : (
@@ -1821,7 +1821,7 @@ export default function WordList() {
                   <path d="M8 16h8"></path>
                 </svg>
                 <p className="text-gray-900 dark:text-white font-semibold mb-1">No words in your vocabulary list yet.</p>
-                <p className="text-sm text-gray-700 dark:text-white/90">Add words above or import a pre-made word list below.</p>
+                <p className="text-sm text-gray-900 dark:text-white">Add words above or import a pre-made word list below.</p>
               </div>
             )}
           </div>
@@ -1939,7 +1939,7 @@ export default function WordList() {
                               </span>
                             </div>
                           </div>
-                          <p className="text-sm text-gray-800 dark:text-white/90 mb-3 font-medium">{list.description}</p>
+                          <p className="text-sm text-gray-900 dark:text-white mb-3 font-medium">{list.description}</p>
                           <div className="flex gap-3">
                             <Button 
                               variant="outline" 
