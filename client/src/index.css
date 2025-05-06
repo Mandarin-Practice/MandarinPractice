@@ -79,43 +79,116 @@
   body {
     @apply antialiased bg-background text-foreground;
     font-family: 'Nunito', sans-serif;
-    /* Red dot background pattern */
-    background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23cc0000' fill-opacity='0.05'%3E%3Ccircle cx='3' cy='3' r='1'/%3E%3Ccircle cx='13' cy='13' r='1'/%3E%3C/g%3E%3C/svg%3E");
+    /* Red dot background pattern with subtle texture */
+    background-image: 
+      url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23cc0000' fill-opacity='0.05'%3E%3Ccircle cx='3' cy='3' r='1'/%3E%3Ccircle cx='13' cy='13' r='1'/%3E%3C/g%3E%3C/svg%3E"),
+      url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23cc0000' fill-opacity='0.02' fill-rule='evenodd'/%3E%3C/svg%3E");
     background-attachment: fixed;
   }
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-bold text-foreground;
     font-family: 'Baloo 2', cursive;
-    letter-spacing: -0.01em;
-  }
-
-  /* Chinese text styling - playful */
-  .chinese-text {
-    font-family: 'Noto Sans SC', sans-serif;
-    @apply text-primary font-medium;
+    letter-spacing: -0.02em;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   }
   
-  /* Textarea styling with better vertical alignment */
+  h1 {
+    @apply text-4xl md:text-5xl leading-tight;
+    background: linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(var(--primary)/0.8) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.1));
+  }
+  
+  h2 {
+    @apply text-2xl md:text-3xl leading-snug;
+  }
+  
+  /* Enhance form elements */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  textarea {
+    @apply rounded-md border-red-200 dark:border-red-900 transition-all duration-200;
+  }
+  
+  input[type="text"]:focus,
+  input[type="email"]:focus,
+  input[type="password"]:focus,
+  textarea:focus {
+    @apply ring-2 ring-primary/50 border-primary;
+    box-shadow: 0 0 0 2px rgba(204, 0, 0, 0.1);
+  }
+
+  /* Enhanced Chinese text styling */
+  .chinese-text {
+    font-family: 'Noto Sans SC', sans-serif;
+    @apply text-primary font-medium text-3xl;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.05);
+    letter-spacing: 0.02em;
+    line-height: 1.5;
+    background: linear-gradient(90deg, #e60000 0%, #cc0000 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    position: relative;
+    display: inline-block;
+  }
+  
+  .chinese-text-large {
+    @apply text-4xl md:text-5xl tracking-wide;
+    background: linear-gradient(90deg, #cc0000 0%, #b20000 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 0.03em;
+    line-height: 1.4;
+  }
+  
+  /* Add subtle highlight effect for Chinese characters */
+  .chinese-character {
+    position: relative;
+    display: inline-block;
+    transition: transform 0.2s ease;
+    margin: 0 2px;
+  }
+  
+  .chinese-character:hover {
+    transform: scale(1.1);
+  }
+  
+  /* Textarea styling with better visual appearance */
   .chinese-textarea {
     font-family: 'Noto Sans SC', sans-serif;
     @apply text-base leading-relaxed rounded-lg;
     line-height: 1.8;
+    border: 1px solid rgba(204, 0, 0, 0.2);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
   }
   
-  /* Loading states */
+  .chinese-textarea:focus {
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05), 0 0 0 3px rgba(204, 0, 0, 0.1);
+    border-color: rgba(204, 0, 0, 0.5);
+  }
+  
+  /* Enhanced loading states */
   .loading-shimmer {
     @apply relative overflow-hidden;
+    background-color: rgba(204, 0, 0, 0.04);
+    border-radius: 4px;
   }
   
   .loading-shimmer::after {
     @apply absolute inset-0;
     content: '';
-    animation: shimmer 1.5s infinite;
+    animation: shimmer 2s infinite;
     background: linear-gradient(
       90deg,
       transparent 0%,
-      hsl(var(--primary)/0.1) 50%,
+      rgba(204, 0, 0, 0.1) 50%,
       transparent 100%
     );
     transform: translateX(-100%);
@@ -127,73 +200,273 @@
     }
   }
   
+  /* Animated spinner with red theme */
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 3px solid rgba(204, 0, 0, 0.1);
+    border-top-color: #cc0000;
+    animation: spin 1s linear infinite;
+    margin: 20px auto;
+  }
+  
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
+  /* Fade in animation for content */
+  .fade-in {
+    animation: fadeIn 0.5s ease forwards;
+    opacity: 0;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Staggered animation for lists */
+  .stagger-item {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  
+  .stagger-item:nth-child(1) { animation: staggerFade 0.5s 0.1s ease forwards; }
+  .stagger-item:nth-child(2) { animation: staggerFade 0.5s 0.2s ease forwards; }
+  .stagger-item:nth-child(3) { animation: staggerFade 0.5s 0.3s ease forwards; }
+  .stagger-item:nth-child(4) { animation: staggerFade 0.5s 0.4s ease forwards; }
+  .stagger-item:nth-child(5) { animation: staggerFade 0.5s 0.5s ease forwards; }
+  .stagger-item:nth-child(6) { animation: staggerFade 0.5s 0.6s ease forwards; }
+  
+  @keyframes staggerFade {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Pulse animation for highlights */
+  .pulse-highlight {
+    animation: pulse 1.5s infinite;
+  }
+  
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(204, 0, 0, 0.4);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(204, 0, 0, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(204, 0, 0, 0);
+    }
+  }
+  
   /* Playful badge styling (removed Chinese text) */
   .chinese-badge {
     @apply hidden;
   }
 
-  /* Chinese display text for headers */
+  /* Enhanced Chinese display text for headers */
   .chinese-display {
     font-family: 'Noto Sans SC', sans-serif;
-    @apply text-primary text-lg font-bold;
+    @apply text-xl md:text-2xl font-bold;
+    background: linear-gradient(90deg, #cc0000 0%, #e60000 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.05));
+    letter-spacing: 0.02em;
+    position: relative;
+    display: inline-block;
   }
   
-  /* Red theme button styles */
+  .chinese-display::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, 
+      rgba(204, 0, 0, 0.1) 0%, 
+      rgba(204, 0, 0, 0.7) 50%, 
+      rgba(204, 0, 0, 0.1) 100%
+    );
+  }
+  
+  /* Enhanced red theme button styles */
   .btn-red {
-    @apply bg-primary text-white font-semibold px-4 py-2 rounded-md;
+    @apply bg-primary text-white font-semibold px-5 py-2.5 rounded-md;
     border: 1px solid transparent;
-    transition: all 0.2s ease;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 4px 6px rgba(204, 0, 0, 0.25);
+    overflow: hidden;
+  }
+  
+  .btn-red::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
+    transition: opacity 0.3s ease;
   }
   
   .btn-red:hover {
     @apply bg-red-700;
-    transform: translateY(-1px);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(204, 0, 0, 0.3);
+  }
+  
+  .btn-red:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 4px rgba(204, 0, 0, 0.3);
   }
   
   .btn-red-outline {
-    @apply bg-transparent text-primary font-semibold px-4 py-2 rounded-md;
-    border: 1px solid hsl(var(--primary));
-    transition: all 0.2s ease;
+    @apply bg-transparent text-primary font-semibold px-5 py-2.5 rounded-md;
+    border: 2px solid hsl(var(--primary));
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 2px 4px rgba(204, 0, 0, 0.1);
+    overflow: hidden;
+  }
+  
+  .btn-red-outline::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, 
+      hsl(var(--primary)/0.5) 0%, 
+      hsl(var(--primary)) 50%, 
+      hsl(var(--primary)/0.5) 100%
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease;
   }
   
   .btn-red-outline:hover {
-    @apply bg-primary/10;
+    @apply bg-primary/5;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(204, 0, 0, 0.15);
   }
   
-  /* Card custom styling with red and white theme */
+  .btn-red-outline:hover::after {
+    opacity: 1;
+  }
+  
+  .btn-red-outline:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 2px rgba(204, 0, 0, 0.15);
+  }
+  
+  /* Card custom styling with enhanced red and white theme */
   .card-custom {
     @apply bg-card rounded-lg overflow-hidden;
-    box-shadow: 0 2px 0 hsl(var(--primary)), 0 4px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 0 hsl(var(--primary)/0.7), 0 8px 16px rgba(204, 0, 0, 0.1);
     border: 1px solid hsl(var(--primary)/0.2);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+  }
+  
+  .card-custom::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, 
+      hsl(var(--primary)/0.8) 0%, 
+      hsl(var(--primary)) 50%, 
+      hsl(var(--primary)/0.8) 100%
+    );
+    z-index: 1;
   }
   
   .card-custom:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 3px 0 hsl(var(--primary)), 0 6px 15px rgba(0, 0, 0, 0.12);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 0 hsl(var(--primary)/0.7), 0 12px 20px rgba(204, 0, 0, 0.15);
   }
 }
 
-/* Red theme header and footer */
+/* Enhanced red theme header and footer */
 .opaque-header {
   position: relative;
   z-index: 10;
   isolation: isolate;
-  background-color: hsl(var(--primary)) !important;
+  background: linear-gradient(to right, #b20000, #e60000, #b20000) !important;
   color: white !important;
   backdrop-filter: none !important;
-  border-bottom: 1px solid hsl(var(--primary)/0.8);
-  box-shadow: 0 2px 4px rgba(204, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 10px rgba(204, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.opaque-header::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
+  pointer-events: none;
 }
 
 .opaque-footer {
   position: relative;
   z-index: 10;
   isolation: isolate;
-  background-color: hsl(var(--primary)) !important;
+  background: linear-gradient(to right, #b20000, #e60000, #b20000) !important;
   color: white !important;
   backdrop-filter: none !important;
-  border-top: 1px solid hsl(var(--primary)/0.8);
-  box-shadow: 0 -2px 4px rgba(204, 0, 0, 0.1);
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 -4px 10px rgba(204, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.opaque-footer::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  background: linear-gradient(to top, rgba(255, 255, 255, 0.05) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+/* Add a subtle pattern overlay to backgrounds for visual interest */
+.pattern-overlay {
+  position: relative;
+}
+
+.pattern-overlay::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23cc0000' fill-opacity='0.05' fill-rule='evenodd'%3E%3Cpath d='M0 20L20 0h10L0 30v-10zm0 10L30 0h10L0 40v-10zM30 40L40 30v10H30z'/%3E%3C/g%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: -1;
 }
 
