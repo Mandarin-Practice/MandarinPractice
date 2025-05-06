@@ -1500,11 +1500,11 @@ export default function WordList() {
                 <h3 className="text-xl font-semibold">{previewList.name}</h3>
                 <div className="flex items-center text-sm mt-1">
                   {previewList.category && (
-                    <span className="px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs mr-2">
+                    <span className="px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white text-xs mr-2 font-medium">
                       {previewList.category}
                     </span>
                   )}
-                  <span className="text-gray-500">{previewList.description}</span>
+                  <span className="text-gray-700 dark:text-white">{previewList.description}</span>
                 </div>
               </div>
               <button 
@@ -1548,7 +1548,7 @@ export default function WordList() {
                 >
                   Deselect All
                 </Button>
-                <span className="ml-4 text-sm">
+                <span className="ml-4 text-sm font-medium text-gray-800 dark:text-white">
                   {Object.values(selectedWords).filter(Boolean).length} of {previewList.words.length} selected
                 </span>
               </div>
@@ -1684,7 +1684,7 @@ export default function WordList() {
                       <circle cx="11" cy="11" r="8"></circle>
                       <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                     </svg>
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 -translate-y-2 hidden group-hover:block bg-card border border-border text-foreground text-xs rounded-md py-2 px-3 w-64 z-10 shadow-md">
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 -translate-y-2 hidden group-hover:block bg-card border border-border text-gray-800 dark:text-white text-xs rounded-md py-2 px-3 w-64 z-10 shadow-md font-medium">
                       You can search by typing either Chinese characters or pinyin. The search is smart enough to find matching words regardless of which you use.
                     </div>
                   </div>
@@ -1710,7 +1710,7 @@ export default function WordList() {
             ) : vocabulary && Array.isArray(vocabulary) && vocabulary.length > 0 ? (
               // Check if there are any results after filtering
               filterVocabulary(vocabulary).length === 0 ? (
-                <div className="text-gray-500 dark:text-gray-400 italic mb-4">
+                <div className="text-gray-700 dark:text-white italic mb-4 font-medium">
                   No words match your search query.
                 </div>
               ) : (
@@ -1820,8 +1820,8 @@ export default function WordList() {
                   <path d="M8 12h8"></path>
                   <path d="M8 16h8"></path>
                 </svg>
-                <p className="text-foreground/70 mb-1">No words in your vocabulary list yet.</p>
-                <p className="text-sm text-foreground/50">Add words above or import a pre-made word list below.</p>
+                <p className="text-gray-900 dark:text-white font-semibold mb-1">No words in your vocabulary list yet.</p>
+                <p className="text-sm text-gray-700 dark:text-white/90">Add words above or import a pre-made word list below.</p>
               </div>
             )}
           </div>
@@ -1939,7 +1939,7 @@ export default function WordList() {
                               </span>
                             </div>
                           </div>
-                          <p className="text-sm text-foreground/80 mb-3">{list.description}</p>
+                          <p className="text-sm text-gray-800 dark:text-white/90 mb-3 font-medium">{list.description}</p>
                           <div className="flex gap-3">
                             <Button 
                               variant="outline" 
