@@ -140,27 +140,25 @@ export default function SentenceCard({
 
   return (
     <div className="md:col-span-2">
-      <Card className="h-full flex flex-col">
-        <CardHeader className="bg-accent/30 border-b border-border flex-row justify-between items-center py-4">
-          <h2 className="font-bold text-primary text-lg">Current Sentence</h2>
+      <div className="card-custom h-full flex flex-col">
+        <div className="flex justify-between items-center bg-primary text-white p-4 rounded-t-lg">
+          <h2 className="font-bold text-white text-lg">Current Sentence</h2>
           <div className="flex items-center space-x-3">
-            <Button
-              variant="chinese"
-              size="icon"
-              className="h-10 w-10 rounded-md"
+            <button
+              className="bg-white h-10 w-10 rounded-md flex items-center justify-center text-primary hover:bg-gray-100 disabled:opacity-50"
               onClick={onPlayAudio}
               disabled={isLoading || !sentence}
             >
               <Play className={isPlaying ? "animate-pulse" : ""} />
-            </Button>
-            <div className="text-sm bg-background px-2 py-1 rounded-md border border-border">
+            </button>
+            <div className="text-sm bg-red-800 px-2 py-1 rounded-md border border-red-700">
               <span className="font-medium">{sentence?.difficulty || "Loading..."}</span> 
-              <span className="text-foreground/70"> Difficulty</span>
+              <span className="text-white/70"> Difficulty</span>
             </div>
           </div>
-        </CardHeader>
+        </div>
         
-        <CardContent className="p-6 flex-grow">
+        <div className="p-6 flex-grow">
           {isLoading ? (
             <div className="space-y-4">
               <Skeleton className="h-8 w-full" />
@@ -172,7 +170,7 @@ export default function SentenceCard({
               {/* Chinese Text with Interactive Hover */}
               {showChinese && sentence?.chinese && (
                 <div className="mb-8 mt-2">
-                  <div className="border border-border rounded-md p-4 bg-background">
+                  <div className="border border-red-200 dark:border-red-900 rounded-md p-4 bg-background">
                     {/* After checking an answer, show the interactive component with hover info */}
                     {feedbackStatus ? (
                       <div className="relative">
@@ -211,7 +209,7 @@ export default function SentenceCard({
               {/* Pinyin */}
               {showPinyin && sentence?.pinyin && (
                 <div className="mb-6 -mt-4">
-                  <div className="border-x border-b border-border rounded-b-md p-3 bg-accent/10">
+                  <div className="border-x border-b border-red-200 dark:border-red-900 rounded-b-md p-3 bg-accent/10">
                     <div className="text-xs text-primary font-medium uppercase tracking-wider mb-1">
                       Pinyin Pronunciation
                     </div>
@@ -257,7 +255,7 @@ export default function SentenceCard({
 
                 {/* When feedback exists, show the correct answer with visual highlighting */}
                 {feedbackStatus && sentence?.english && (
-                  <div className="mt-4 p-4 border border-border rounded-md bg-accent/10">
+                  <div className="mt-4 p-4 border border-red-200 dark:border-red-900 rounded-md bg-accent/10">
                     <p className="text-sm font-medium mb-2 text-primary">
                       Correct translation:
                     </p>
@@ -270,11 +268,11 @@ export default function SentenceCard({
               </div>
             </>
           )}
-        </CardContent>
+        </div>
         
-        <CardFooter className="py-4 bg-accent/30 border-t border-border justify-between">
+        <div className="py-4 px-6 bg-primary/10 border-t border-red-200 dark:border-red-800 flex justify-between items-center">
           {feedbackStatus && (
-            <p className="text-sm bg-background px-3 py-1.5 rounded-md border border-border">
+            <p className="text-sm bg-white dark:bg-gray-800 px-3 py-1.5 rounded-md border border-red-200 dark:border-red-900">
               {sentence && sentence.chinese.length > 0 ? (
                 <span className="font-medium text-primary">{sentence.chinese.length}</span>
               ) : ''}
@@ -286,22 +284,21 @@ export default function SentenceCard({
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
-                  variant="default"
+                <button
                   onClick={onNextSentence}
                   disabled={isLoading}
-                  className="border-primary font-medium"
+                  className="btn-red"
                 >
-                  Next Sentence <SkipForward className="ml-1 h-4 w-4" />
-                </Button>
+                  Next Sentence <SkipForward className="ml-1 h-4 w-4 inline" />
+                </button>
               </TooltipTrigger>
               <TooltipContent>
                 <p>Continue to next sentence after managing words</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

@@ -106,31 +106,31 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="mt-16 bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
-        <h2 className="text-2xl font-bold mb-4">How It Works</h2>
+      <div className="mt-16 card-custom p-8 text-center">
+        <h2 className="text-2xl font-bold mb-6 text-primary">How It Works</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-left mt-6">
-          <div>
+          <div className="bg-white/50 dark:bg-gray-800/50 p-4 rounded-lg border border-red-200 dark:border-red-900">
             <h3 className="text-lg font-bold mb-2 text-primary">Smart Sentence Generation</h3>
             <p className="text-gray-900 dark:text-gray-200 font-medium">
               Our app uses AI to create grammatically correct Mandarin sentences that use
               only the vocabulary words you've provided, helping you practice with relevant content.
             </p>
           </div>
-          <div>
+          <div className="bg-white/50 dark:bg-gray-800/50 p-4 rounded-lg border border-red-200 dark:border-red-900">
             <h3 className="text-lg font-bold mb-2 text-primary">Real-time Feedback</h3>
             <p className="text-gray-900 dark:text-gray-200 font-medium">
               As you type translations, the app provides instant color-coded feedback,
               showing you what's correct, partially correct, or incorrect.
             </p>
           </div>
-          <div>
+          <div className="bg-white/50 dark:bg-gray-800/50 p-4 rounded-lg border border-red-200 dark:border-red-900">
             <h3 className="text-lg font-bold mb-2 text-primary">Progress Tracking</h3>
             <p className="text-gray-900 dark:text-gray-200 font-medium">
               Track your progress with detailed statistics on accuracy, response time,
               and vocabulary mastery to see your improvement over time.
             </p>
           </div>
-          <div>
+          <div className="bg-white/50 dark:bg-gray-800/50 p-4 rounded-lg border border-red-200 dark:border-red-900">
             <h3 className="text-lg font-bold mb-2 text-primary">Customizable Settings</h3>
             <p className="text-gray-900 dark:text-gray-200 font-medium">
               Adjust difficulty levels, speech rate, and scoring parameters to create
