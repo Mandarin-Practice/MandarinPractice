@@ -8,6 +8,10 @@ const firebaseConfig = {
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
   storageBucket: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.appspot.com`,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  // Adding measurement ID and messaging sender ID with defaults
+  // to ensure all required configuration fields are present
+  measurementId: "G-MEASUREMENT_ID",
+  messagingSenderId: "000000000000"
 };
 
 // Initialize Firebase app
