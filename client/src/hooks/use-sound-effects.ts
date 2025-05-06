@@ -10,52 +10,49 @@ export function useSoundEffects() {
       try {
         const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
         
-        // Create a xylophone/bell sound effect
+        // Create a cheerful coin/award collection sound
         const playCorrect = () => {
-          // Create oscillator for the bell sound
-          const oscillator = audioCtx.createOscillator();
+          // Create two oscillators for the coin sound (double ping)
+          const osc1 = audioCtx.createOscillator();
+          const osc2 = audioCtx.createOscillator();
           
-          // Create gain nodes for envelope shaping
-          const mainGainNode = audioCtx.createGain();
-          const delayGainNode = audioCtx.createGain();
+          // Create gain nodes
+          const gainNode1 = audioCtx.createGain();
+          const gainNode2 = audioCtx.createGain();
           
-          // Create a biquad filter for tonal shaping
-          const filter = audioCtx.createBiquadFilter();
-          filter.type = 'bandpass';
-          filter.frequency.value = 1800;
-          filter.Q.value = 2;
+          // Configure oscillators for a coin-like sound
+          // First oscillator - higher pitch for first "ping"
+          osc1.type = 'triangle';
+          osc1.frequency.setValueAtTime(880, audioCtx.currentTime); // A5
+          osc1.frequency.setValueAtTime(1320, audioCtx.currentTime + 0.05); // E6 
           
-          // Configure oscillator
-          oscillator.type = 'sine';
-          oscillator.frequency.value = 1760; // A6 - high xylophone note
+          // Second oscillator - even higher for second "ping"
+          osc2.type = 'triangle';
+          osc2.frequency.setValueAtTime(1320, audioCtx.currentTime + 0.08); // E6
+          osc2.frequency.setValueAtTime(1760, audioCtx.currentTime + 0.12); // A6
           
-          // Configure main gain node with attack and decay
-          mainGainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-          mainGainNode.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 0.01); // Sharp attack
-          mainGainNode.gain.setValueAtTime(0.2, audioCtx.currentTime + 0.02);
-          mainGainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5); // Long decay
+          // First gain - quick attack and decay for first ping
+          gainNode1.gain.setValueAtTime(0, audioCtx.currentTime);
+          gainNode1.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 0.01);
+          gainNode1.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
           
-          // Configure delay gain for nice decay
-          delayGainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-          delayGainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
-          
-          // Create a delay node for a slight echo
-          const delay = audioCtx.createDelay(0.5);
-          delay.delayTime.value = 0.1;
+          // Second gain - controls second ping which is slightly louder
+          gainNode2.gain.setValueAtTime(0, audioCtx.currentTime);
+          gainNode2.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.08); // Delay before attack
+          gainNode2.gain.linearRampToValueAtTime(0.25, audioCtx.currentTime + 0.09); 
+          gainNode2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
           
           // Connect nodes
-          oscillator.connect(filter);
-          filter.connect(mainGainNode);
-          mainGainNode.connect(audioCtx.destination);
+          osc1.connect(gainNode1);
+          osc2.connect(gainNode2);
+          gainNode1.connect(audioCtx.destination);
+          gainNode2.connect(audioCtx.destination);
           
-          // Add delay path for echo effect
-          mainGainNode.connect(delay);
-          delay.connect(delayGainNode);
-          delayGainNode.connect(audioCtx.destination);
-          
-          // Play the sound
-          oscillator.start();
-          oscillator.stop(audioCtx.currentTime + 0.8);
+          // Play sound
+          osc1.start(audioCtx.currentTime);
+          osc2.start(audioCtx.currentTime);
+          osc1.stop(audioCtx.currentTime + 0.1);
+          osc2.stop(audioCtx.currentTime + 0.25);
         };
         
         return playCorrect;
