@@ -13,13 +13,12 @@ import { Theme } from "@/lib/utils";
 
 function App() {
   const [theme, setTheme] = useState<Theme>(() => {
-    // Check localStorage or use system preference
+    // Check localStorage or default to light mode
     const savedTheme = localStorage.getItem("theme") as Theme | null;
     if (savedTheme) return savedTheme;
     
-    return window.matchMedia("(prefers-color-scheme: dark)").matches
-      ? "dark"
-      : "light";
+    // Always default to light mode
+    return "light";
   });
 
   useEffect(() => {
@@ -31,6 +30,19 @@ function App() {
     // Save to localStorage
     localStorage.setItem("theme", theme);
   }, [theme]);
+  
+  // Initialize light mode on first load
+  useEffect(() => {
+    // Set initial light mode
+    const root = window.document.documentElement;
+    root.classList.remove("dark");
+    root.classList.add("light");
+    
+    // Clear any previous theme in localStorage if app is being loaded fresh
+    if (!localStorage.getItem("theme")) {
+      localStorage.setItem("theme", "light");
+    }
+  }, []);
 
   const toggleTheme = () => {
     setTheme((prev: Theme) => (prev === "light" ? "dark" : "light"));
