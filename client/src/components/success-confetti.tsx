@@ -6,6 +6,31 @@ interface SuccessConfettiProps {
   duration?: number;
 }
 
+// Custom draw function to create star shapes
+const drawStar = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number) => {
+  // Draw a 5-point star
+  ctx.beginPath();
+  const outerRadius = size / 2;
+  const innerRadius = size / 5;
+  const spikes = 5;
+  
+  for (let i = 0; i < spikes * 2; i++) {
+    const radius = i % 2 === 0 ? outerRadius : innerRadius;
+    const angle = (Math.PI / spikes) * i;
+    const pointX = x + radius * Math.sin(angle);
+    const pointY = y - radius * Math.cos(angle);
+    
+    if (i === 0) {
+      ctx.moveTo(pointX, pointY);
+    } else {
+      ctx.lineTo(pointX, pointY);
+    }
+  }
+  
+  ctx.closePath();
+  ctx.fill();
+};
+
 export default function SuccessConfetti({ active, duration = 3000 }: SuccessConfettiProps) {
   const [windowDimensions, setWindowDimensions] = useState({
     width: window.innerWidth,
@@ -41,9 +66,13 @@ export default function SuccessConfetti({ active, duration = 3000 }: SuccessConf
     <Confetti
       width={windowDimensions.width}
       height={windowDimensions.height}
-      numberOfPieces={250}
+      numberOfPieces={150}
       recycle={false}
-      colors={['#cc0000', '#ff4444', '#ffffff', '#ffaaaa', '#ff8888']} // Red and white theme
+      colors={['#FFEB3B', '#FFC107', '#FFD700', '#F9A825', '#FDD835']} // Different shades of yellow
+      drawShape={(ctx) => {
+        const size = Math.random() * 10 + 10; // Random size between 10 and 20
+        drawStar(ctx, 0, 0, size);
+      }}
       confettiSource={{
         x: windowDimensions.width / 2,
         y: windowDimensions.height / 3,
