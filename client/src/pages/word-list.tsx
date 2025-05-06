@@ -1147,6 +1147,35 @@ export default function WordList() {
                 </Button>
               </div>
             )}
+            
+            <CardFooter className="border-t border-border pt-4 pb-2 px-0 flex justify-between">
+              <Button
+                variant="outline"
+                onClick={() => setCurrentTab('add')}
+                className="border-primary/70 text-primary hover:bg-primary/10"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                  <path d="M5 12h14"></path>
+                  <path d="M12 5v14"></path>
+                </svg>
+                Add Words
+              </Button>
+              
+              <Button
+                onClick={() => setCurrentTab('list')}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                  <path d="M9 20H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3" />
+                  <path d="M17 10h.01" />
+                  <path d="M12 10h.01" />
+                  <path d="M7 10h.01" />
+                  <path d="M7 15h.01" />
+                  <path d="M12 15h.01" />
+                  <path d="M17 15h.01" />
+                </svg>
+                View Word List
+              </Button>
+            </CardFooter>
           </CardContent>
         </Card>
       )}
@@ -1265,8 +1294,8 @@ export default function WordList() {
                 <p className="mb-4 text-foreground/70">
                   You haven't saved any words to your personal list yet. You can save words from the vocabulary lists or add your own.
                 </p>
-                <Button variant="outline" onClick={() => setCurrentTab('all')}>
-                  Browse All Words
+                <Button variant="outline" onClick={() => setCurrentTab('list')}>
+                  Browse Words
                 </Button>
               </div>
             )}
