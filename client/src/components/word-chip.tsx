@@ -16,9 +16,18 @@ interface WordChipProps {
   } | null;
   onRemove: () => void;
   onToggleActive?: () => void;
+  onSave?: () => void; // Function to save word to user's list
+  saved?: boolean; // Whether the word is saved in user's list
 }
 
-export default function WordChip({ word, proficiency, onRemove, onToggleActive }: WordChipProps) {
+export default function WordChip({ 
+  word, 
+  proficiency, 
+  onRemove, 
+  onToggleActive,
+  onSave,
+  saved = false 
+}: WordChipProps) {
   const isActive = word.active === "true";
   
   // Determine proficiency color
@@ -30,9 +39,11 @@ export default function WordChip({ word, proficiency, onRemove, onToggleActive }
   
   return (
     <div className={`inline-flex items-center px-3 py-2 rounded-md border-2 shadow-sm ${
-      isActive 
-        ? "bg-accent/40 border-primary/40 text-foreground" 
-        : "bg-accent/10 border-border text-foreground"
+      saved
+        ? "bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 text-foreground"
+        : isActive 
+          ? "bg-accent/40 border-primary/40 text-foreground" 
+          : "bg-accent/10 border-border text-foreground"
     }`}>
       <span className="chinese-text mr-1.5 font-bold text-primary">{word.chinese}</span>
       <span className="text-xs text-foreground/70 italic font-medium">({word.pinyin})</span>
@@ -56,6 +67,19 @@ export default function WordChip({ word, proficiency, onRemove, onToggleActive }
         <Info className="h-3.5 w-3.5" />
       </Link>
       
+      {/* Save button */}
+      {onSave && !saved && (
+        <button
+          onClick={onSave}
+          className="ml-2 text-emerald-600 hover:text-emerald-700 dark:text-emerald-500 dark:hover:text-emerald-600"
+          aria-label="Save word to your list"
+          title="Save to your list"
+        >
+          <Star className="h-3.5 w-3.5" />
+        </button>
+      )}
+      
+      {/* Toggle active button */}
       {onToggleActive && (
         <button
           onClick={onToggleActive}
@@ -71,10 +95,12 @@ export default function WordChip({ word, proficiency, onRemove, onToggleActive }
         </button>
       )}
       
+      {/* Remove button */}
       <button
         onClick={onRemove}
         className="ml-2 text-primary hover:text-primary/80"
         aria-label="Remove word"
+        title={saved ? "Remove from your list" : "Remove word"}
       >
         <X className="h-3.5 w-3.5" />
       </button>

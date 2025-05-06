@@ -166,20 +166,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signIn = async () => {
     try {
       setFirebaseLoading(true);
-      try {
-        // First try with popup
-        const result = await signInWithPopup(auth, googleProvider);
-        await registerOrLoginWithBackend(result.user);
-        queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
-      } catch (popupError) {
-        console.error("Popup sign in error:", popupError);
-        // If popup fails, try with redirect
-        toast({
-          title: "Trying another sign-in method",
-          description: "Redirecting to Google sign-in...",
-        });
-        await signInWithRedirect(auth, googleProvider);
-      }
+      // Use redirect method directly as it's more reliable
+      await signInWithRedirect(auth, googleProvider);
+      // Note: The redirect will take the user away from the page,
+      // and they'll be redirected back after authentication
     } catch (error) {
       console.error("Sign in error:", error);
       toast({
@@ -187,7 +177,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive",
       });
-    } finally {
       setFirebaseLoading(false);
     }
   };
