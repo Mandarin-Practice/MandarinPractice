@@ -59,7 +59,7 @@ export default function Navbar({ theme, toggleTheme }: NavbarProps) {
               variant="outline"
               size="icon"
               onClick={toggleTheme}
-              className="ml-2 rounded-md border-white text-white hover:bg-white hover:text-red-600"
+              className="ml-2 rounded-md border-primary text-primary hover:bg-white hover:text-red-600"
             >
               {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
             </Button>
@@ -92,7 +92,7 @@ export default function Navbar({ theme, toggleTheme }: NavbarProps) {
                   toggleTheme();
                   setMobileMenuOpen(false);
                 }}
-                className="rounded-md text-sm font-medium border-white text-white hover:bg-white hover:text-red-600 flex items-center"
+                className="rounded-md text-sm font-medium border-primary text-primary hover:bg-white hover:text-red-600 flex items-center bg-white"
               >
                 {theme === "dark" ? <Sun size={16} className="mr-2" /> : <Moon size={16} className="mr-2" />}
                 {theme === "dark" ? "Light Mode" : "Dark Mode"}
