@@ -9,6 +9,7 @@ import WordChip from "@/components/word-chip";
 import { Separator } from "@/components/ui/separator";
 import { LESSON11_WORDLIST } from "@/data/word-lists";
 import { LESSON12_WORDLIST } from "@/data/lesson12-wordlist";
+import { LESSON13_WORDLIST } from "@/data/lesson13-wordlist";
 
 interface WordList {
   id: string;
@@ -23,6 +24,7 @@ interface WordList {
 }
 
 const SAMPLE_WORD_LISTS: WordList[] = [
+  LESSON13_WORDLIST,
   LESSON12_WORDLIST,
   LESSON11_WORDLIST,
   {
