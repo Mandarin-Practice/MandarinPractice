@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Moon, Sun, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { Theme } from "@/lib/utils";
+import { UserProfile } from "@/components/user-profile";
 
 interface NavbarProps {
   theme: Theme;
@@ -63,6 +64,10 @@ export default function Navbar({ theme, toggleTheme }: NavbarProps) {
             >
               {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
             </Button>
+            
+            <div className="ml-2 text-white">
+              <UserProfile />
+            </div>
           </nav>
         </div>
 
