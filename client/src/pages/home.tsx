@@ -36,20 +36,20 @@ export default function Home() {
         
         {/* Content Container */}
         <div className="relative z-20 py-12 px-8">
-          <div className="max-w-2xl mx-auto transform translate-y-4">
+          <div className="max-w-2xl mx-auto bg-white/90 dark:bg-gray-800/90 p-6 rounded-xl shadow-xl backdrop-blur-sm">
             {/* Panda image at top */}
-            <div className="mx-auto w-fit -mt-24 mb-6">
+            <div className="mx-auto w-fit -mt-24 mb-6 bg-white dark:bg-gray-800 p-2 rounded-full shadow-lg">
               <img 
                 src="/images/cute-panda.png" 
                 alt="Cute Panda Logo" 
-                className="h-32 w-32 drop-shadow-xl object-contain"
+                className="h-40 w-40 drop-shadow-xl object-contain"
                 style={{ filter: 'drop-shadow(0px 10px 8px rgba(0, 0, 0, 0.2))' }}
               />
             </div>
             
             {/* Title with Chinese Label */}
             <div className="relative inline-block">
-              <h1 className="text-5xl font-extrabold mb-8 text-primary">
+              <h1 className="text-5xl font-extrabold mb-8 text-red-600">
                 Mandarin Practice
               </h1>
               <span className="absolute -top-3 -right-6 text-sm bg-red-600 text-white px-3 py-1 rounded-full transform rotate-12 font-bold shadow-md">
