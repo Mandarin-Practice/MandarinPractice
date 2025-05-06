@@ -89,7 +89,7 @@ export default function Navbar({ theme, toggleTheme }: NavbarProps) {
               </Link>
             ))}
             
-            <div className="flex items-center justify-center mt-2 pt-2 border-t border-white pb-2">
+            <div className="flex items-center justify-center gap-4 mt-2 pt-2 border-t border-white pb-2">
               <Button
                 variant="outline"
                 size="sm"
@@ -102,6 +102,10 @@ export default function Navbar({ theme, toggleTheme }: NavbarProps) {
                 {theme === "dark" ? <Sun size={16} className="mr-2" /> : <Moon size={16} className="mr-2" />}
                 {theme === "dark" ? "Light Mode" : "Dark Mode"}
               </Button>
+              
+              <div className="text-white" onClick={() => setMobileMenuOpen(false)}>
+                <UserProfile />
+              </div>
             </div>
           </nav>
         )}

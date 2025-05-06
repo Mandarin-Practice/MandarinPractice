@@ -1,19 +1,10 @@
-import { 
-  createContext, 
-  ReactNode, 
-  useContext, 
-  useState, 
-  useEffect 
-} from "react";
-import { 
-  User as FirebaseUser, 
-  onAuthStateChanged 
-} from "firebase/auth";
-import { auth, signInWithGoogle, logOut } from "@/lib/firebase";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { createContext, ReactNode, useContext, useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { auth, googleProvider } from "@/lib/firebase";
+import { signInWithPopup, signOut as firebaseSignOut, User as FirebaseUser, onAuthStateChanged } from "firebase/auth";
 
-// Define the user type from our backend
+// Backend user type from database
 interface BackendUser {
   id: number;
   username: string;
@@ -23,13 +14,13 @@ interface BackendUser {
   firebaseUid: string;
 }
 
-// Combined user type with Firebase and backend data
+// Combined auth user type with Firebase and backend data
 export interface AuthUser {
   firebaseUser: FirebaseUser;
   backendUser: BackendUser;
 }
 
-// Auth context interface
+// Auth context type definition
 interface AuthContextType {
   user: AuthUser | null;
   isLoading: boolean;
@@ -40,220 +31,254 @@ interface AuthContextType {
   removeWordFromList: (wordId: number) => Promise<void>;
 }
 
-// Create the auth context
+// Create context with null default value
 const AuthContext = createContext<AuthContextType | null>(null);
 
-// Auth provider props
+// Auth provider props type
 interface AuthProviderProps {
   children: ReactNode;
 }
 
-// Auth provider component
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<Error | null>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
+  const [firebaseLoading, setFirebaseLoading] = useState(true);
+  const [firebaseError, setFirebaseError] = useState<Error | null>(null);
 
-  // Register or login the user with our backend
+  // Listen for Firebase auth state changes
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      (user) => {
+        setFirebaseUser(user);
+        setFirebaseLoading(false);
+      },
+      (error) => {
+        setFirebaseError(error);
+        setFirebaseLoading(false);
+      }
+    );
+
+    // Cleanup subscription
+    return () => unsubscribe();
+  }, []);
+
+  // Query to get backend user data
+  const {
+    data: backendUser,
+    isLoading: backendLoading,
+    error: backendError,
+    refetch: refetchBackendUser,
+  } = useQuery<BackendUser>({
+    queryKey: ["/api/auth/user", firebaseUser?.uid],
+    queryFn: async () => {
+      if (!firebaseUser) return null;
+      
+      // Get Firebase ID token
+      const idToken = await firebaseUser.getIdToken();
+      
+      // Fetch user data from backend
+      const response = await fetch("/api/auth/user", {
+        headers: {
+          Authorization: `Bearer ${idToken}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch user data");
+      }
+      
+      return response.json();
+    },
+    enabled: !!firebaseUser,
+  });
+
+  // Register or login user with backend
   const registerOrLoginWithBackend = async (firebaseUser: FirebaseUser) => {
     try {
-      const { uid, email, displayName, photoURL } = firebaseUser;
+      // Get user token
+      const idToken = await firebaseUser.getIdToken();
       
-      const response = await apiRequest("POST", "/api/auth/firebase", {
-        firebaseUid: uid,
-        email: email || undefined,
-        displayName: displayName || undefined,
-        photoUrl: photoURL || undefined
+      // Register/login with backend
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`
+        },
+        body: JSON.stringify({
+          username: firebaseUser.displayName || firebaseUser.email?.split("@")[0] || `user${Date.now()}`,
+          email: firebaseUser.email,
+          displayName: firebaseUser.displayName,
+          photoUrl: firebaseUser.photoURL,
+          firebaseUid: firebaseUser.uid
+        })
       });
       
-      const data = await response.json();
-      
-      if (data.user) {
-        setUser({
-          firebaseUser,
-          backendUser: data.user
-        });
-        
-        // If new user, show welcome toast
-        if (data.isNewUser) {
-          toast({
-            title: "Welcome!",
-            description: "Your account has been created. You can now save words to your list.",
-            variant: "default"
-          });
-        } else {
-          // Show welcome back toast
-          toast({
-            title: "Welcome back!",
-            description: "You're now signed in.",
-            variant: "default"
-          });
-        }
+      if (!response.ok) {
+        throw new Error("Failed to register user with backend");
       }
-    } catch (err) {
-      console.error("Error registering/logging in with backend:", err);
-      setError(err instanceof Error ? err : new Error("Failed to authenticate with backend"));
+      
+      // Fetch the updated user data
+      await refetchBackendUser();
       
       toast({
-        title: "Authentication Error",
-        description: "There was a problem logging in. Please try again.",
-        variant: "destructive"
+        title: "Welcome!",
+        description: "You have successfully signed in.",
       });
+    } catch (error) {
+      console.error("Backend registration error:", error);
+      toast({
+        title: "Sign in failed",
+        description: "There was a problem signing in. Please try again.",
+        variant: "destructive",
+      });
+      throw error;
     }
   };
 
-  // Handle sign in
+  // Sign in with Google
   const signIn = async () => {
     try {
-      setIsLoading(true);
-      setError(null);
-      await signInWithGoogle();
-      // Auth state listener will handle the rest
-    } catch (err) {
-      console.error("Sign in error:", err);
-      setError(err instanceof Error ? err : new Error("Failed to sign in"));
-      setIsLoading(false);
-      
+      setFirebaseLoading(true);
+      const result = await signInWithPopup(auth, googleProvider);
+      await registerOrLoginWithBackend(result.user);
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
+    } catch (error) {
+      console.error("Sign in error:", error);
       toast({
-        title: "Sign In Failed",
-        description: "There was a problem signing in with Google. Please try again.",
-        variant: "destructive"
+        title: "Sign in failed",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
       });
+    } finally {
+      setFirebaseLoading(false);
     }
   };
 
-  // Handle sign out
+  // Sign out
   const signOut = async () => {
     try {
-      setIsLoading(true);
-      await logOut();
-      setUser(null);
-      
-      // Clear any user-specific queries
+      await firebaseSignOut(auth);
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
-      
       toast({
-        title: "Signed Out",
+        title: "Signed out",
         description: "You have been signed out successfully.",
-        variant: "default"
       });
-    } catch (err) {
-      console.error("Sign out error:", err);
-      setError(err instanceof Error ? err : new Error("Failed to sign out"));
-      
+    } catch (error) {
+      console.error("Sign out error:", error);
       toast({
-        title: "Sign Out Failed",
-        description: "There was a problem signing out. Please try again.",
-        variant: "destructive"
+        title: "Sign out failed",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
   // Save word to user's list
   const saveWordToList = async (wordId: number) => {
-    if (!user) {
+    if (!backendUser) {
       toast({
-        title: "Not Signed In",
-        description: "Please sign in to save words to your list.",
-        variant: "destructive"
+        title: "Not signed in",
+        description: "You need to sign in to save words to your list.",
+        variant: "destructive",
       });
       return;
     }
     
     try {
-      await apiRequest("POST", "/api/auth/wordlist/save", {
-        userId: user.backendUser.id,
-        wordId
+      const response = await fetch(`/api/auth/wordlist`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: backendUser.id,
+          wordId,
+        }),
       });
       
-      // Invalidate word list cache to refresh the list
+      if (!response.ok) {
+        throw new Error("Failed to save word to list");
+      }
+      
+      // Invalidate queries
       queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
       
       toast({
-        title: "Word Saved",
-        description: "The word has been added to your list.",
-        variant: "default"
+        title: "Word saved",
+        description: "Word has been added to your list.",
       });
-    } catch (err) {
-      console.error("Error saving word:", err);
-      
+    } catch (error) {
+      console.error("Save word error:", error);
       toast({
-        title: "Save Failed",
-        description: "There was a problem saving the word. Please try again.",
-        variant: "destructive"
+        title: "Failed to save word",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
       });
     }
   };
 
   // Remove word from user's list
   const removeWordFromList = async (wordId: number) => {
-    if (!user) {
+    if (!backendUser) {
+      toast({
+        title: "Not signed in",
+        description: "You need to sign in to remove words from your list.",
+        variant: "destructive",
+      });
       return;
     }
     
     try {
-      await apiRequest("POST", "/api/auth/wordlist/remove", {
-        userId: user.backendUser.id,
-        wordId
+      const response = await fetch(`/api/auth/wordlist`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: backendUser.id,
+          wordId,
+        }),
       });
       
-      // Invalidate word list cache to refresh the list
+      if (!response.ok) {
+        throw new Error("Failed to remove word from list");
+      }
+      
+      // Invalidate queries
       queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
       
       toast({
-        title: "Word Removed",
-        description: "The word has been removed from your list.",
-        variant: "default"
+        title: "Word removed",
+        description: "Word has been removed from your list.",
       });
-    } catch (err) {
-      console.error("Error removing word:", err);
-      
+    } catch (error) {
+      console.error("Remove word error:", error);
       toast({
-        title: "Remove Failed",
-        description: "There was a problem removing the word. Please try again.",
-        variant: "destructive"
+        title: "Failed to remove word",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
       });
     }
   };
 
-  // Set up auth state listener
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        if (firebaseUser) {
-          // User is signed in, register/login with backend
-          await registerOrLoginWithBackend(firebaseUser);
-        } else {
-          // User is signed out
-          setUser(null);
-        }
-      } catch (err) {
-        console.error("Auth state change error:", err);
-        setError(err instanceof Error ? err : new Error("Authentication error"));
-      } finally {
-        setIsLoading(false);
-      }
-    });
-    
-    // Clean up subscription
-    return () => unsubscribe();
-  }, []);
+  // Combine user data from Firebase and backend
+  const combinedUser = firebaseUser && backendUser
+    ? { firebaseUser, backendUser }
+    : null;
 
-  // Auth context value
+  // Create the auth context value
   const authContextValue: AuthContextType = {
-    user,
-    isLoading,
-    error,
+    user: combinedUser,
+    isLoading: firebaseLoading || backendLoading,
+    error: firebaseError || backendError || null,
     signIn,
     signOut,
     saveWordToList,
-    removeWordFromList
+    removeWordFromList,
   };
 
   return (
@@ -266,10 +291,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 // Hook to use the auth context
 export function useAuth() {
   const context = useContext(AuthContext);
-  
   if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
-  
   return context;
 }
