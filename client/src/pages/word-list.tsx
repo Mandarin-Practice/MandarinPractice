@@ -31,117 +31,16 @@ interface WordList {
 }
 
 const SAMPLE_WORD_LISTS: WordList[] = [
-  {
-    id: "ic-lesson1",
-    name: "Integrated Chinese Lesson 1",
-    description: "Greetings - 25 essential words",
-    category: "Integrated Chinese",
-    words: [
-      { chinese: "你", pinyin: "nǐ", english: "you" },
-      { chinese: "好", pinyin: "hǎo", english: "fine; good; nice; O.K.; it's settled" },
-      { chinese: "请", pinyin: "qǐng", english: "please (polite form of request); to treat or to invite" },
-      { chinese: "问", pinyin: "wèn", english: "to ask (a question)" },
-      { chinese: "贵", pinyin: "guì", english: "honorable; expensive" },
-      { chinese: "姓", pinyin: "xìng", english: "(one's) surname is...; to be surnamed" },
-      { chinese: "我", pinyin: "wǒ", english: "I; me" },
-      { chinese: "呢", pinyin: "ne", english: "(question particle)" },
-      { chinese: "小姐", pinyin: "xiǎo jiě", english: "Miss; young lady" },
-      { chinese: "叫", pinyin: "jiào", english: "to be called; to call" },
-      { chinese: "什么", pinyin: "shén me", english: "what" },
-      { chinese: "名字", pinyin: "míng zì", english: "name" },
-      { chinese: "先生", pinyin: "xiān sheng", english: "Mr.; husband; teacher" },
-      { chinese: "李友", pinyin: "Lǐ Yǒu", english: "(a personal name)" },
-      { chinese: "李", pinyin: "Lǐ", english: "(a surname); plum" },
-      { chinese: "王朋", pinyin: "Wáng Péng", english: "(a personal name)" },
-      { chinese: "王", pinyin: "Wáng", english: "(a surname); king" },
-      { chinese: "是", pinyin: "shì", english: "to be" },
-      { chinese: "老师", pinyin: "lǎo shī", english: "teacher" },
-      { chinese: "吗", pinyin: "ma", english: "(question particle)" },
-      { chinese: "不", pinyin: "bù", english: "not; no" },
-      { chinese: "学生", pinyin: "xué shēng", english: "student" },
-      { chinese: "也", pinyin: "yě", english: "too; also" },
-      { chinese: "人", pinyin: "rén", english: "people; person" },
-      { chinese: "中国", pinyin: "Zhōng guó", english: "China" }
-    ]
-  },
-  {
-    id: "ic-lesson2",
-    name: "Integrated Chinese Lesson 2",
-    description: "Family - 38 family-related words",
-    category: "Integrated Chinese",
-    words: [
-      { chinese: "那", pinyin: "nà", english: "that" },
-      { chinese: "的", pinyin: "de", english: "(a possessive or descriptive particle)" },
-      { chinese: "照片", pinyin: "zhào piàn", english: "picture; photo" },
-      { chinese: "这", pinyin: "zhè", english: "this" },
-      { chinese: "爸爸", pinyin: "bà ba", english: "father; dad" },
-      { chinese: "妈妈", pinyin: "mā ma", english: "mother; mom" },
-      { chinese: "个", pinyin: "gè", english: "(measure word for many common everyday objects)" },
-      { chinese: "女", pinyin: "nǚ", english: "female" },
-      { chinese: "孩子", pinyin: "hái zi", english: "child" },
-      { chinese: "谁", pinyin: "shéi", english: "who" },
-      { chinese: "她", pinyin: "tā", english: "she; her" },
-      { chinese: "姐姐", pinyin: "jiě jie", english: "older sister" },
-      { chinese: "男", pinyin: "nán", english: "male" },
-      { chinese: "弟弟", pinyin: "dì di", english: "younger brother" }
-    ]
-  },
-  {
-    id: "ic-lesson3",
-    name: "Integrated Chinese Lesson 3",
-    description: "Direction and location terms",
-    category: "Integrated Chinese",
-    words: LESSON13_WORDLIST.words
-  },
-  {
-    id: "ic-lesson4",
-    name: "Integrated Chinese Lesson 4",
-    description: "Family, gifts, and physical descriptions",
-    category: "Integrated Chinese",
-    words: LESSON14_WORDLIST.words
-  },
-  {
-    id: "ic-lesson5",
-    name: "Integrated Chinese Lesson 5",
-    description: "Health and medical terminology",
-    category: "Integrated Chinese",
-    words: LESSON15_WORDLIST.words
-  },
-  {
-    id: "ic-lesson6",
-    name: "Integrated Chinese Lesson 6",
-    description: "Moving, travel, and daily life vocabulary",
-    category: "Integrated Chinese",
-    words: LESSON16_WORDLIST.words
-  },
-  {
-    id: "ic-lesson7",
-    name: "Integrated Chinese Lesson 7",
-    description: "Housing, apartments, and furniture vocabulary",
-    category: "Integrated Chinese",
-    words: LESSON17_WORDLIST.words
-  },
-  {
-    id: "ic-lesson8",
-    name: "Integrated Chinese Lesson 8",
-    description: "Sports, activities, and physical fitness vocabulary",
-    category: "Integrated Chinese",
-    words: LESSON18_WORDLIST.words
-  },
-  {
-    id: "ic-lesson9",
-    name: "Integrated Chinese Lesson 9",
-    description: "Travel, vacation, and tourism vocabulary",
-    category: "Integrated Chinese",
-    words: LESSON19_WORDLIST.words
-  },
-  {
-    id: "ic-lesson10",
-    name: "Integrated Chinese Lesson 10",
-    description: "Travel, airport, and luggage vocabulary",
-    category: "Integrated Chinese",
-    words: LESSON20_WORDLIST.words
-  },
+  LESSON20_WORDLIST,
+  LESSON19_WORDLIST,
+  LESSON18_WORDLIST,
+  LESSON17_WORDLIST,
+  LESSON16_WORDLIST,
+  LESSON15_WORDLIST,
+  LESSON14_WORDLIST,
+  LESSON13_WORDLIST,
+  LESSON12_WORDLIST,
+  LESSON11_WORDLIST,
   {
     id: "hsk1",
     name: "HSK Level 1 Basics",
@@ -991,10 +890,10 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     ]
   },
   {
-    id: "ic-lesson-old",
-    name: "Integrated Chinese Old Lesson",
+    id: "ic-lesson10",
+    name: "Integrated Chinese Lesson 10",
     description: "Transportation - 45 travel and transportation terms",
-    category: "Integrated Chinese Archive",
+    category: "Integrated Chinese",
     words: [
       { chinese: "寒假", pinyin: "hán jià", english: "winter vacation" },
       { chinese: "飞机", pinyin: "fēi jī", english: "airplane" },
