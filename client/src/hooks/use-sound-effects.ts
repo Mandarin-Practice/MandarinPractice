@@ -1,40 +1,91 @@
-import { useRef } from 'react';
+import { useEffect, useState } from 'react';
 
 /**
  * Hook for playing sound effects for feedback
  */
 export function useSoundEffects() {
-  // References to audio elements
-  const correctAudioRef = useRef<HTMLAudioElement | null>(null);
-  const incorrectAudioRef = useRef<HTMLAudioElement | null>(null);
-
-  /**
-   * Initialize the audio elements 
-   */
-  const initSoundEffects = () => {
-    if (!correctAudioRef.current) {
-      correctAudioRef.current = new Audio();
-      correctAudioRef.current.src = "data:audio/mp3;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFzb25pY1N0dWRpb3MuY29tAFRYWFgAAAAhAAADY29weXJpZ2h0AENDMCBQdWJsaWMgRG9tYWluAFRJVDIAAAAHAAADSURGADMARU5DAAAABAAAAAAAAE1FVAAAAAANAAADTGF2ZjU4LjEyLjEwMABBUFBSAAAANAAAAGNvbW0ub2dncy5sYXZmNTguMTcuMTAwLmV4cGVyaW1lbnRhbC5ub190aW1lc3RhbXAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/80DAAAANWAGH+AAAP9tEkxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQMQAAANUAYPAAAAP/a5DBAABnvY7//+AQP/////y35t////5c//////fT////4G/+u///////////v3/J9J6gbyCwRsHm+xwEbB57wMdPsfnvfPe/l//+BhT//5QZa//5hnZDcTvdjUNvl99YFhv0tkG7vF0DmHcDX+a/zJ6///gYYmxYvllss3fKUv//6WplpYakV0QvS3/jqgC//s3/+WX//+vrkJb/5aX////////////43///05//////////w13////////1v////////+///vUAFAHIZM45JtjSyXiVknl1BBIp5hHMmCLkxN5qs0NuQotbvUHQKP/81DEIgJBJnRb/9l0TsyJFOqiiLEjVNfKOOXxY7uMkgSNl0M//EvhgQDVbZ+C8wWDQpBL2fl5bcFgqBwLnuCWXQOAwJxK2vhqCwVmeLJaFZc9tlQXBhiytcFgTBaYGBQCIJAu7Pj4EwhMNy+6GJplm33mEL4YWGj2hVAeHzHC6DwwGWB4aEMy0wLxYAZMXl+KqTEFNRTMuOTkuNKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//NQxCYKWYac/QxkToqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq";
-      correctAudioRef.current.volume = 0.5;
+  const [correctAudio] = useState(() => {
+    if (typeof window !== 'undefined') {
+      // Create audio context on first use
+      try {
+        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        
+        // Create oscillator for correct sound (higher pitch)
+        const playCorrect = () => {
+          const oscillator = audioCtx.createOscillator();
+          const gainNode = audioCtx.createGain();
+          
+          // Configure oscillator
+          oscillator.type = 'sine';
+          oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // A5 note
+          
+          // Configure gain (volume)
+          gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+          
+          // Connect nodes
+          oscillator.connect(gainNode);
+          gainNode.connect(audioCtx.destination);
+          
+          // Play sound
+          oscillator.start();
+          oscillator.stop(audioCtx.currentTime + 0.3);
+        };
+        
+        return playCorrect;
+      } catch (e) {
+        console.error("Could not initialize audio context:", e);
+        return () => {};
+      }
     }
-
-    if (!incorrectAudioRef.current) {
-      incorrectAudioRef.current = new Audio();
-      incorrectAudioRef.current.src = "data:audio/mp3;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFzb25pY1N0dWRpb3MuY29tAFRYWFgAAAAhAAADY29weXJpZ2h0AENDMCBQdWJsaWMgRG9tYWluAFRJVDIAAAAHAAADSURGADMAVFBFMQAAAAwAAANMYXZmNTguMTYuMTAwVEFMQgAAAAUAAABidXp6AFRDT00AAAAcAAADZW5naW5lZXIAVGVhbSBBdWRpbyBMaXRlcmFjeQBUWUVSAAAABQAAADIwMTcAVENPTgAAAAUAAABPdGhlcgBQUklWAPwzAAAAAANwYwB4AAAAAAABUFNJRAM2lwEAAAgAAIAmf///+MAHoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/84DEABv13pKXmYAAMTQdNBQEgAhAwYH6D44Q4cOHhxwcOG7gcH/h8wYQDhhA4MOHB9/B8HwcHlz+Dh/B/wP8MkiAYMOHDh+g+DD/yjlHDf//+U85RyjhheofmCwz+0ciBpk+1Uf/3v/s0jH/6r//tHeUd////6iPeL/u3iI9KjvKmvqvB38N7j31O/31FX+WvqVd4QV92t6C9a/2T8Z76n/z3r86V2zUtFuFa3DgLAoBQCgFAKAUAoBQCgFAKAUAoBQCgFAKAUAoBQCgFAKAUAoBQCgFAKAUAoBQCgFAKAUAoBQCgFAKAUAoBQCgFAKA//OAxAUoVC6A94FAAP8oBQCgFAKAUAoBQCgFAKAUAoBQCgFAKAUAoBQCgFAKAUAoBQCgFAKAUAoBQCgFAKAUAo4HBxGOIxyAMU5jnMdcCQMhMR1wOD4PB7//BxyyXfgg6Pd8uCH/Cw+XKvcH+PkBGQicmWM8vYPgyP1VXKtX/UeT/l5UrqX//Uuny8qV1L//qXUvl3Lb////////p///////9S+Xcv/////////qpQoQU1FMy45OS41qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqv/zgMQjLcwmgP+0gAKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq";
-      incorrectAudioRef.current.volume = 0.5;
+    return () => {};
+  });
+  
+  const [incorrectAudio] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        
+        // Create oscillator for incorrect sound (buzzer-like)
+        const playIncorrect = () => {
+          const oscillator = audioCtx.createOscillator();
+          const gainNode = audioCtx.createGain();
+          
+          // Configure oscillator
+          oscillator.type = 'sawtooth';
+          oscillator.frequency.setValueAtTime(220, audioCtx.currentTime); // A3 note
+          oscillator.frequency.setValueAtTime(180, audioCtx.currentTime + 0.1); // Drop pitch slightly
+          
+          // Configure gain (volume)
+          gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+          
+          // Connect nodes
+          oscillator.connect(gainNode);
+          gainNode.connect(audioCtx.destination);
+          
+          // Play sound
+          oscillator.start();
+          oscillator.stop(audioCtx.currentTime + 0.2);
+        };
+        
+        return playIncorrect;
+      } catch (e) {
+        console.error("Could not initialize audio context:", e);
+        return () => {};
+      }
     }
-  };
+    return () => {};
+  });
 
   /**
    * Play the correct answer sound
    */
   const playCorrectSound = () => {
-    initSoundEffects();
-    if (correctAudioRef.current) {
-      correctAudioRef.current.currentTime = 0;
-      correctAudioRef.current.play().catch(e => {
-        console.error("Error playing correct sound:", e);
-      });
+    try {
+      correctAudio();
+    } catch (e) {
+      console.error("Error playing correct sound:", e);
     }
   };
 
@@ -42,12 +93,10 @@ export function useSoundEffects() {
    * Play the incorrect answer sound
    */
   const playIncorrectSound = () => {
-    initSoundEffects();
-    if (incorrectAudioRef.current) {
-      incorrectAudioRef.current.currentTime = 0;
-      incorrectAudioRef.current.play().catch(e => {
-        console.error("Error playing incorrect sound:", e);
-      });
+    try {
+      incorrectAudio();
+    } catch (e) {
+      console.error("Error playing incorrect sound:", e);
     }
   };
 

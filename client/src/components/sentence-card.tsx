@@ -81,6 +81,7 @@ interface SentenceCardProps {
   onPlayAudio: () => void;
   onNextSentence: () => void;
   onKeyPress?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  onCheckAnswer?: () => void;
 }
 
 export default function SentenceCard({
@@ -95,7 +96,8 @@ export default function SentenceCard({
   onUpdateTranslation,
   onPlayAudio,
   onNextSentence,
-  onKeyPress
+  onKeyPress,
+  onCheckAnswer
 }: SentenceCardProps) {
   
   const renderFeedback = () => {
@@ -229,28 +231,38 @@ export default function SentenceCard({
                 <label htmlFor="translation-input" className="block text-sm font-medium text-primary mb-2">
                   Type the English translation:
                 </label>
-                <div className="relative">
-                  <Input
-                    id="translation-input"
-                    type="text"
-                    value={userTranslation}
-                    onChange={onUpdateTranslation}
-                    onKeyDown={onKeyPress}
-                    placeholder="Type your answer here... (Press Enter to check or go to next)"
-                    className="w-full px-4 py-6 text-base border-border bg-background focus:border-primary"
-                    disabled={isLoading || !sentence}
-                    autoComplete="off" // Disable browser autocomplete suggestions
-                    autoCorrect="off"
-                    autoCapitalize="off"
-                    spellCheck="false"
-                    data-form-type="other" // Additional attribute to help prevent autocomplete
-                    data-confetti-source="true" // Mark this element as the confetti source
-                  />
-                  <div className="absolute right-3 top-3 text-primary/60">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
+                <div className="flex gap-2">
+                  <div className="relative flex-grow">
+                    <Input
+                      id="translation-input"
+                      type="text"
+                      value={userTranslation}
+                      onChange={onUpdateTranslation}
+                      onKeyDown={onKeyPress}
+                      placeholder="Type your answer here... (Press Enter to check or go to next)"
+                      className="w-full px-4 py-6 text-base border-border bg-background focus:border-primary"
+                      disabled={isLoading || !sentence}
+                      autoComplete="off" // Disable browser autocomplete suggestions
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck="false"
+                      data-form-type="other" // Additional attribute to help prevent autocomplete
+                      data-confetti-source="true" // Mark this element as the confetti source
+                    />
+                    <div className="absolute right-3 top-3 text-primary/60">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                    </div>
                   </div>
+                  
+                  <button 
+                    onClick={onCheckAnswer}
+                    disabled={isLoading || !sentence}
+                    className="px-4 py-2 bg-primary hover:bg-primary/80 text-white rounded-md font-medium"
+                  >
+                    {feedbackStatus === null ? 'Check' : 'Next'}
+                  </button>
                 </div>
                 
                 {/* Feedback display */}

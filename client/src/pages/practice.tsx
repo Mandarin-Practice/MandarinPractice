@@ -207,6 +207,17 @@ export default function Practice() {
       }
     }
   };
+  
+  // For direct button click to check answer or move to next (ensure sounds work with user interaction)
+  const handleCheckAnswer = () => {
+    if (feedbackStatus === null) {
+      checkAnswer(userTranslation);
+    } else {
+      nextSentence();
+      setUserTranslation("");
+      setFeedbackStatus(null);
+    }
+  };
 
   // Update word proficiency in the backend
   const updateWordProficiency = useMutation<any, unknown, { wordId: number, isCorrect: boolean }>({
@@ -381,6 +392,7 @@ export default function Practice() {
           onPlayAudio={playAudio}
           onNextSentence={nextSentence}
           onKeyPress={handleKeyPress}
+          onCheckAnswer={handleCheckAnswer}
           isLoading={generateSentenceMutation.isPending}
           isPlaying={isPlaying}
           vocabularyWords={vocabularyWords}
