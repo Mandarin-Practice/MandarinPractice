@@ -1575,7 +1575,7 @@ export default function WordList() {
                       />
                       <div>
                         <div className="font-medium">{word.chinese}</div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">{word.pinyin}</div>
+                        <div className="text-xs text-gray-700 dark:text-gray-200 font-medium">{word.pinyin}</div>
                         <div className="text-sm">{word.english}</div>
                       </div>
                     </div>

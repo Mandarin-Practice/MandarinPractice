@@ -138,12 +138,12 @@ export default function InteractiveChineseText({
                       <div className="text-2xl font-bold">{charInfo.character}</div>
                     )}
                     
-                    <div className="text-sm text-gray-500">{charInfo.pinyin}</div>
-                    <div className="text-base">{charInfo.definition}</div>
+                    <div className="text-sm text-gray-700 dark:text-gray-300 font-medium">{charInfo.pinyin}</div>
+                    <div className="text-base text-gray-900 dark:text-white">{charInfo.definition}</div>
                     
                     {charInfo.wordId && (
                       <div className="flex flex-col space-y-2 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-                        <div className="text-xs text-gray-500 mb-1">
+                        <div className="text-xs text-gray-700 dark:text-white font-medium mb-1">
                           Manage this word (you can update multiple words before continuing)
                         </div>
                         <Button 

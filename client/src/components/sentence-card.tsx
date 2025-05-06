@@ -155,7 +155,7 @@ export default function SentenceCard({
             </button>
             <div className="text-sm bg-red-800 px-2 py-1 rounded-md border border-red-700">
               <span className="font-medium">{sentence?.difficulty || "Loading..."}</span> 
-              <span className="text-white/70"> Difficulty</span>
+              <span className="text-white"> Difficulty</span>
             </div>
           </div>
         </div>
@@ -184,7 +184,7 @@ export default function SentenceCard({
                           vocabularyWords={vocabularyWords}
                           feedbackStatus={feedbackStatus}
                         />
-                        <div className="mt-2 text-xs text-foreground/70 flex items-center">
+                        <div className="mt-2 text-xs text-gray-700 dark:text-white flex items-center font-medium">
                           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1 text-primary">
                             <circle cx="12" cy="12" r="10" />
                             <path d="M12 16v-4" />
@@ -295,7 +295,7 @@ export default function SentenceCard({
               ) : ''}
               <span className="mx-1 text-foreground">characters</span>
               <span className="mx-1">•</span>
-              <span className="text-foreground/70">Hover over words to manage vocabulary</span>
+              <span className="text-gray-700 dark:text-gray-200 font-medium">Hover over words to manage vocabulary</span>
             </p>
           )}
           <TooltipProvider>
@@ -310,7 +310,7 @@ export default function SentenceCard({
                 </button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>Continue to next sentence after managing words</p>
+                <p className="text-gray-800 dark:text-white font-medium">Continue to next sentence after managing words</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
