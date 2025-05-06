@@ -401,7 +401,7 @@
   position: relative;
   z-index: 10;
   isolation: isolate;
-  background: linear-gradient(to right, #b20000, #e60000, #b20000) !important;
+  background: #cc0000 !important;
   color: white !important;
   backdrop-filter: none !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
@@ -410,21 +410,14 @@
 }
 
 .opaque-header::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 100%;
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
-  pointer-events: none;
+  display: none;
 }
 
 .opaque-footer {
   position: relative;
   z-index: 10;
   isolation: isolate;
-  background: linear-gradient(to right, #b20000, #e60000, #b20000) !important;
+  background: #cc0000 !important;
   color: white !important;
   backdrop-filter: none !important;
   border-top: 1px solid rgba(255, 255, 255, 0.2);
@@ -433,14 +426,7 @@
 }
 
 .opaque-footer::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 100%;
-  background: linear-gradient(to top, rgba(255, 255, 255, 0.05) 0%, transparent 100%);
-  pointer-events: none;
+  display: none;
 }
 
 /* Add a subtle pattern overlay to backgrounds for visual interest */
