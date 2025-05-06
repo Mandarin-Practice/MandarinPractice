@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import SentenceCard from "@/components/sentence-card";
 import ScoreCard from "@/components/score-card";
+import SuccessConfetti from "@/components/success-confetti";
 import { apiRequest } from "@/lib/queryClient";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTextToSpeech } from "@/hooks/use-text-to-speech";
@@ -34,6 +35,7 @@ export default function Practice() {
   const [showPinyin, setShowPinyin] = useState(true);
   const [score, setScore] = useState(0);
   const [startTime, setStartTime] = useState<number | null>(null);
+  const [showConfetti, setShowConfetti] = useState(false);
   // Track recently seen sentences to avoid repetition
   const [recentSentences, setRecentSentences] = useState<string[]>([]);
   // Track the current difficulty setting
@@ -214,6 +216,14 @@ export default function Practice() {
       setFeedbackStatus("correct");
       calculateScore(similarity);
       
+      // Trigger confetti animation for correct answer
+      setShowConfetti(true);
+      
+      // Reset confetti after a delay to prevent it from showing continuously
+      setTimeout(() => {
+        setShowConfetti(false);
+      }, 4000);
+      
       // If we have vocabulary data and this is a correct answer,
       // update proficiency for each word in the sentence
       if (vocabularyWords && Array.isArray(vocabularyWords)) {
@@ -320,6 +330,9 @@ export default function Practice() {
 
   return (
     <div className="practice-section">
+      {/* Confetti animation when answer is correct */}
+      <SuccessConfetti active={showConfetti} duration={4000} />
+      
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <SentenceCard
           sentence={generateSentenceMutation.data}
