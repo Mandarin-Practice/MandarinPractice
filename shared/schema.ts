@@ -18,6 +18,10 @@ export const users = pgTable("users", {
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
+  firebaseUid: true,
+  email: true,
+  displayName: true,
+  photoUrl: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -72,17 +76,22 @@ export type PracticeSession = typeof practiceSession.$inferSelect;
 // Word proficiency schema to track mastery of individual words
 export const wordProficiency = pgTable("word_proficiency", {
   id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id), // Link to user account
   wordId: text("word_id").notNull(),
   correctCount: text("correct_count").default("0").notNull(),
   attemptCount: text("attempt_count").default("0").notNull(),
   lastPracticed: text("last_practiced").default("0").notNull(),
+  isSaved: boolean("is_saved").default(false), // Whether this word is saved to user's list
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const wordProficiencySchema = createInsertSchema(wordProficiency).pick({
+  userId: true,
   wordId: true,
   correctCount: true,
   attemptCount: true,
   lastPracticed: true,
+  isSaved: true,
 });
 
 export type InsertWordProficiency = z.infer<typeof wordProficiencySchema>;
@@ -155,6 +164,18 @@ export type InsertLearnedDefinition = z.infer<typeof learnedDefinitionSchema>;
 export type LearnedDefinition = typeof learnedDefinitions.$inferSelect;
 
 // Set up relations
+export const usersRelations = relations(users, ({ many }) => ({
+  wordProficiencies: many(wordProficiency),
+  learnedDefinitions: many(learnedDefinitions),
+}));
+
+export const wordProficiencyRelations = relations(wordProficiency, ({ one }) => ({
+  user: one(users, {
+    fields: [wordProficiency.userId],
+    references: [users.id]
+  }),
+}));
+
 export const charactersRelations = relations(characters, ({ many }) => ({
   definitions: many(characterDefinitions),
 }));

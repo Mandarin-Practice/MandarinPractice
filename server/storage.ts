@@ -12,11 +12,14 @@ import {
   type InsertLearnedDefinition,
   type CharacterCompound,
   type InsertCharacterCompound,
+  type User,
+  type InsertUser,
   characters,
   characterDefinitions,
   learnedDefinitions,
   characterCompounds,
-  wordProficiency
+  wordProficiency,
+  users
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, like, desc, asc, and, or, sql, inArray, not } from "drizzle-orm";
@@ -24,6 +27,13 @@ import { convertNumericPinyinToTonal, isNumericPinyin } from './utils/pinyin-con
 
 // Interface for CRUD operations on vocabulary
 export interface IStorage {
+  // User authentication methods
+  getUserById(id: number): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByFirebaseUid(firebaseUid: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
+  updateUser(id: number, updates: Partial<InsertUser>): Promise<User>;
+  
   // Vocabulary methods
   getAllVocabulary(): Promise<Vocabulary[]>;
   getVocabulary(id: number): Promise<Vocabulary | undefined>;
@@ -34,8 +44,11 @@ export interface IStorage {
   
   // Word proficiency methods
   getWordProficiency(wordId: number): Promise<WordProficiency | undefined>;
-  updateWordProficiency(wordId: number, isCorrect: boolean): Promise<WordProficiency>;
+  getUserWordProficiencies(userId: number): Promise<WordProficiency[]>;
+  updateWordProficiency(wordId: number, isCorrect: boolean, userId?: number): Promise<WordProficiency>;
   resetWordProficiency(wordId: number): Promise<void>;
+  saveWordToUserList(userId: number, wordId: number): Promise<WordProficiency>;
+  removeWordFromUserList(userId: number, wordId: number): Promise<void>;
   
   // Chinese character dictionary methods
   searchCharacters(query: string): Promise<Character[]>;
@@ -186,6 +199,56 @@ export class MemStorage implements IStorage {
 
 // Database storage implementation
 export class DatabaseStorage implements IStorage {
+  // User authentication methods
+  async getUserById(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+  
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
+  }
+  
+  async getUserByFirebaseUid(firebaseUid: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.firebaseUid, firebaseUid));
+    return user;
+  }
+  
+  async createUser(user: InsertUser): Promise<User> {
+    // Check if user already exists with the same firebase UID
+    if (user.firebaseUid) {
+      const existingUser = await this.getUserByFirebaseUid(user.firebaseUid);
+      if (existingUser) {
+        return existingUser;
+      }
+    }
+    
+    // Check if username is taken
+    if (user.username) {
+      const existingUser = await this.getUserByUsername(user.username);
+      if (existingUser) {
+        throw new Error("Username already exists");
+      }
+    }
+    
+    // Create the new user
+    const [newUser] = await db.insert(users).values(user).returning();
+    return newUser;
+  }
+  
+  async updateUser(id: number, updates: Partial<InsertUser>): Promise<User> {
+    const [updatedUser] = await db.update(users)
+      .set(updates)
+      .where(eq(users.id, id))
+      .returning();
+      
+    if (!updatedUser) {
+      throw new Error(`User with ID ${id} not found`);
+    }
+    
+    return updatedUser;
+  }
   // Vocabulary methods
   async getAllVocabulary(): Promise<Vocabulary[]> {
     return await db.select().from(vocabulary);
