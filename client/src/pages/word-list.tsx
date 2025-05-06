@@ -234,7 +234,15 @@ export default function WordList() {
   // Import word list mutation
   const importWordListMutation = useMutation({
     mutationFn: async (data: { wordList: { chinese: string; pinyin: string; english: string }[] }) => {
-      const response = await apiRequest('POST', '/api/vocabulary/import', data);
+      // Change the data structure to match what the server expects
+      const words = data.wordList.map(word => ({
+        chinese: word.chinese,
+        pinyin: word.pinyin,
+        english: word.english,
+        active: "true"
+      }));
+      
+      const response = await apiRequest('POST', '/api/vocabulary/import', { words });
       if (!response.ok) {
         throw new Error('Failed to import word list');
       }
@@ -242,10 +250,13 @@ export default function WordList() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/vocabulary'] });
-      setImportResults(data);
+      setImportResults({
+        total: data.length,
+        imported: data.length
+      });
       toast({
         title: 'Words imported successfully',
-        description: `${data.imported} out of ${data.total} words were added to your vocabulary`,
+        description: `${data.length} words were added to your vocabulary`,
       });
       handleClosePreview();
     },
