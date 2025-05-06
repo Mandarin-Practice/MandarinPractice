@@ -27,7 +27,7 @@ export default function Home() {
         
         <div className="absolute -right-6 md:-right-12 top-1/2 transform -translate-y-1/2 scale-x-[-1] z-30">
           <img 
-            src="/images/bamboo-new.png" 
+            src="/images/bamboo-new2.png" 
             alt="Bamboo decoration" 
             className="h-96 md:h-[28rem]"
             style={{ filter: 'drop-shadow(-2px 4px 6px rgba(0, 0, 0, 0.3))' }}
