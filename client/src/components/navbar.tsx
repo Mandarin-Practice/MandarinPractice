@@ -29,11 +29,11 @@ export default function Navbar({ theme, toggleTheme }: NavbarProps) {
       <div className="container mx-auto px-4 py-4 max-w-5xl">
         <div className="flex justify-between items-center">
           <Link href="/" className="flex items-center">
-            <h1 className="text-2xl font-bold text-white flex items-center">
+            <h1 className="text-2xl font-bold flex items-center">
               <span className="hidden sm:inline">
-                <span className="bg-white text-red-600 px-3 py-1 rounded-md">Mandarin Practice</span>
+                <span className="bg-white text-red-600 px-3 py-1 rounded-md font-bold shadow-md">Mandarin Practice</span>
               </span>
-              <span className="sm:hidden bg-white text-red-600 px-3 py-1 rounded-md">Mandarin</span>
+              <span className="sm:hidden bg-white text-red-600 px-3 py-1 rounded-md font-bold shadow-md">Mandarin</span>
             </h1>
           </Link>
 
