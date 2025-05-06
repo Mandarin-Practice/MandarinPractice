@@ -1,5 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 
 // Define the WordListItem type
 export interface WordListItem {
@@ -23,6 +24,8 @@ export interface WordListItem {
 
 export function useUserWordList() {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   // Query for the user's word list
   const {
@@ -38,12 +41,18 @@ export function useUserWordList() {
         return []; // Return empty array if not logged in
       }
       
-      const response = await fetch(`/api/auth/wordlist?userId=${user.backendUser.id}`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch word list");
+      try {
+        const response = await fetch(`/api/auth/wordlist?userId=${user.backendUser.id}`);
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => null);
+          throw new Error(errorData?.error || "Failed to fetch word list");
+        }
+        
+        return response.json();
+      } catch (error) {
+        console.error("Error fetching user word list:", error);
+        throw error;
       }
-      
-      return response.json();
     },
     // Only run the query if the user is logged in
     enabled: !!user,
@@ -51,11 +60,103 @@ export function useUserWordList() {
     refetchOnWindowFocus: true
   });
 
+  // Add a word to the user's list
+  const addWordToList = async (wordId: number) => {
+    if (!user) {
+      toast({
+        title: "Not signed in",
+        description: "You need to sign in to save words to your list.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Call the API directly rather than through the user object
+      const response = await fetch(`/api/auth/wordlist`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: user.backendUser.id,
+          wordId,
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to save word to list");
+      }
+      
+      // Invalidate queries
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist", user.backendUser.id] });
+      
+      toast({
+        title: "Word saved",
+        description: "Word has been added to your list.",
+      });
+    } catch (error: any) {
+      console.error("Error adding word to list:", error);
+      toast({
+        title: "Failed to save word",
+        description: error.message || "An unknown error occurred",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Remove a word from the user's list
+  const removeWordFromList = async (wordId: number) => {
+    if (!user) {
+      toast({
+        title: "Not signed in",
+        description: "You need to sign in to remove words from your list.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Call the API directly rather than through the user object
+      const response = await fetch(`/api/auth/wordlist`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: user.backendUser.id,
+          wordId,
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to remove word from list");
+      }
+      
+      // Invalidate queries
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist", user.backendUser.id] });
+      
+      toast({
+        title: "Word removed",
+        description: "Word has been removed from your list.",
+      });
+    } catch (error: any) {
+      console.error("Error removing word from list:", error);
+      toast({
+        title: "Failed to remove word",
+        description: error.message || "An unknown error occurred",
+        variant: "destructive",
+      });
+    }
+  };
+
   return {
     wordList: wordList || [],
     isLoading,
     isError,
     error,
-    refetch
+    refetch,
+    addWordToList,
+    removeWordFromList
   };
 }

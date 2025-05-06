@@ -994,10 +994,13 @@ export default function WordList() {
   const { wordList: userWordList, isLoading: userWordListLoading } = useUserWordList();
 
   // Fetch user's vocabulary
-  const { data: vocabulary, isLoading } = useQuery({
+  const { data: vocabulary, isLoading: vocabularyLoading } = useQuery({
     queryKey: ['/api/vocabulary'],
     refetchOnWindowFocus: false,
   });
+  
+  // Combine loading states
+  const isLoading = vocabularyLoading || userWordListLoading;
   
   // Fetch word proficiency data for all words
   const [proficiencyData, setProficiencyData] = useState<Record<number, any>>({});
