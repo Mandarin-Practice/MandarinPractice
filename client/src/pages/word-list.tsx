@@ -55,7 +55,7 @@ export default function WordList() {
   const [groupByHomophones, setGroupByHomophones] = useState(false);
   const [previewList, setPreviewList] = useState<WordList | null>(null);
   const [selectedWords, setSelectedWords] = useState<Record<number, boolean>>({});
-  const [currentTab, setCurrentTab] = useState<'lists' | 'all' | 'mywords'>('lists');
+  const [currentTab, setCurrentTab] = useState<'add' | 'list' | 'proficiency'>('add');
   
   // Hooks
   const { toast } = useToast();
@@ -319,6 +319,31 @@ export default function WordList() {
       });
     }
   };
+  
+  // Function to clear all vocabulary
+  const clearAllVocabulary = async () => {
+    if (!confirm('Are you sure you want to delete ALL vocabulary words? This cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      const response = await apiRequest('DELETE', '/api/vocabulary');
+      if (!response.ok) {
+        throw new Error('Failed to clear vocabulary');
+      }
+      queryClient.invalidateQueries({ queryKey: ['/api/vocabulary'] });
+      toast({
+        title: 'Vocabulary cleared',
+        description: 'All words have been removed from your vocabulary',
+      });
+    } catch (error) {
+      toast({
+        title: 'Failed to clear vocabulary',
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
+        variant: 'destructive',
+      });
+    }
+  };
 
   // Function to toggle active status of a word
   const handleToggleActive = async (wordId: number, currentActive: string) => {
@@ -449,39 +474,34 @@ export default function WordList() {
       {/* Tab Navigation */}
       <div className="flex space-x-2 mb-6 border-b border-border pb-4">
         <button
-          onClick={() => setCurrentTab('lists')}
+          onClick={() => setCurrentTab('add')}
           className={`px-4 py-2 rounded-md font-medium transition-colors ${
-            currentTab === 'lists'
+            currentTab === 'add'
               ? 'bg-primary text-primary-foreground'
               : 'bg-secondary hover:bg-secondary/80'
           }`}
         >
-          Word Lists
+          Add Words
         </button>
         <button
-          onClick={() => setCurrentTab('all')}
+          onClick={() => setCurrentTab('list')}
           className={`px-4 py-2 rounded-md font-medium transition-colors ${
-            currentTab === 'all'
+            currentTab === 'list'
               ? 'bg-primary text-primary-foreground'
               : 'bg-secondary hover:bg-secondary/80'
           }`}
         >
-          All Words
+          Word List
         </button>
         <button
-          onClick={() => setCurrentTab('mywords')}
-          className={`px-4 py-2 rounded-md font-medium transition-colors flex items-center gap-2 ${
-            currentTab === 'mywords'
+          onClick={() => setCurrentTab('proficiency')}
+          className={`px-4 py-2 rounded-md font-medium transition-colors ${
+            currentTab === 'proficiency'
               ? 'bg-primary text-primary-foreground'
               : 'bg-secondary hover:bg-secondary/80'
           }`}
         >
-          <span>My Saved Words</span>
-          {user && (
-            <span className="bg-accent text-accent-foreground text-xs px-2 py-0.5 rounded-full">
-              {userWordList?.length || 0}
-            </span>
-          )}
+          Proficiency
         </button>
       </div>
       
@@ -597,14 +617,51 @@ export default function WordList() {
       )}
     
       {/* Tab Content */}
-      {currentTab === 'lists' && (
+      {currentTab === 'add' && (
         <Card className="mb-6 border-border overflow-hidden">
           <CardHeader className="sticky top-0 opaque-header">
-            <CardTitle>Word Lists</CardTitle>
-            <CardDescription className="text-white">Browse and import pre-made vocabulary lists</CardDescription>
+            <CardTitle>Add Words</CardTitle>
+            <CardDescription className="text-white">Add new words or import pre-made vocabulary lists</CardDescription>
           </CardHeader>
           
           <CardContent>
+            {/* Custom Word Input */}
+            <div className="mb-6">
+              <h3 className="text-lg font-bold mb-3 border-b border-border pb-2">
+                Add Custom Words
+              </h3>
+              <label htmlFor="word-input" className="block text-sm font-bold mb-2">
+                Add Words (one per line)
+              </label>
+              <div className="relative">
+                <Textarea
+                  id="word-input"
+                  value={wordInput}
+                  onChange={(e) => setWordInput(e.target.value)}
+                  rows={6}
+                  placeholder="学习 (xuéxí) - to study"
+                  className="w-full px-4 py-3 rounded-md bg-background border-2 border-border focus:border-primary focus:ring-1 focus:ring-primary/50 font-medium leading-normal"
+                />
+              </div>
+              <p className="text-sm text-foreground/70 mt-2 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1 text-primary">
+                  <path d="M12 9v4"></path>
+                  <path d="M12 17h.01"></path>
+                  <path d="M12 3c-1.2 0-2.4.6-3 1.7A4 4 0 0 0 9 12a4 4 0 0 1 1 7.3A4 4 0 0 0 12 21a4 4 0 0 0 2-7.3A4 4 0 0 1 15 6a4 4 0 0 0-.1-1.3c-.5-1.1-1.7-1.7-2.9-1.7Z"></path>
+                </svg>
+                Format: Chinese characters (pinyin) - English meaning
+              </p>
+              <div className="mt-3">
+                <Button onClick={handleAddWord} disabled={!wordInput.trim()}>
+                  Add Word
+                </Button>
+              </div>
+            </div>
+            
+            <h3 className="text-lg font-bold mb-3 border-b border-border pb-2">
+              Word Lists
+            </h3>
+            
             {/* Word lists content */}
             <div>
               {/* Group word lists by category */}
@@ -691,37 +748,25 @@ export default function WordList() {
         </Card>
       )}
       
-      {currentTab === 'all' && (
+      {currentTab === 'list' && (
         <Card className="mb-6 border-border overflow-hidden">
           <CardHeader className="sticky top-0 opaque-header">
-            <CardTitle>Your Vocabulary Words</CardTitle>
-            <CardDescription className="text-white">Add the Mandarin words you want to practice</CardDescription>
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle>Word List</CardTitle>
+                <CardDescription className="text-white">All the words you've added for practice</CardDescription>
+              </div>
+              <Button 
+                variant="destructive" 
+                size="sm" 
+                onClick={clearAllVocabulary}
+              >
+                Clear All Words
+              </Button>
+            </div>
           </CardHeader>
           
           <CardContent>
-            <div className="mb-6">
-              <label htmlFor="word-input" className="block text-sm font-bold mb-2">
-                Add Words (one per line)
-              </label>
-              <div className="relative">
-                <Textarea
-                  id="word-input"
-                  value={wordInput}
-                  onChange={(e) => setWordInput(e.target.value)}
-                  rows={6}
-                  placeholder="学习 (xuéxí) - to study"
-                  className="w-full px-4 py-3 rounded-md bg-background border-2 border-border focus:border-primary focus:ring-1 focus:ring-primary/50 font-medium leading-normal"
-                />
-              </div>
-              <p className="text-sm text-foreground/70 mt-2 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1 text-primary">
-                  <path d="M12 9v4"></path>
-                  <path d="M12 17h.01"></path>
-                  <path d="M12 3c-1.2 0-2.4.6-3 1.7A4 4 0 0 0 9 12a4 4 0 0 1 1 7.3A4 4 0 0 0 12 21a4 4 0 0 0 2-7.3A4 4 0 0 1 15 6a4 4 0 0 0-.1-1.3c-.5-1.1-1.7-1.7-2.9-1.7Z"></path>
-                </svg>
-                Format: Chinese characters (pinyin) - English meaning
-              </p>
-            </div>
             
             <div>
               <div className="flex justify-between items-center mb-4 border-b border-border pb-3">
