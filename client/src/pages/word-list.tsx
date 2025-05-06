@@ -31,8 +31,9 @@ interface WordList {
 }
 
 const SAMPLE_WORD_LISTS: WordList[] = [
+  // Integrated Chinese Word Lists (Lesson 1-20)
   {
-    id: "ic-lesson1",
+    id: "ic-lesson01",
     name: "Integrated Chinese Lesson 1",
     description: "Greetings - 25 essential words",
     category: "Integrated Chinese",
@@ -68,7 +69,7 @@ const SAMPLE_WORD_LISTS: WordList[] = [
     ]
   },
   {
-    id: "ic-lesson2",
+    id: "ic-lesson02",
     name: "Integrated Chinese Lesson 2",
     description: "Family - 38 family-related words",
     category: "Integrated Chinese",
@@ -111,6 +112,201 @@ const SAMPLE_WORD_LISTS: WordList[] = [
       { chinese: "法文", pinyin: "Fǎ wén", english: "French (language)" },
       { chinese: "法国", pinyin: "Fǎ guó", english: "France" },
       { chinese: "英国", pinyin: "Yīng guó", english: "Britain; England" }
+    ]
+  },
+  {
+    id: "ic-lesson03",
+    name: "Integrated Chinese Lesson 3",
+    description: "Dates and time vocabulary",
+    category: "Integrated Chinese",
+    words: [
+      { chinese: "日", pinyin: "rì", english: "day; sun" },
+      { chinese: "月", pinyin: "yuè", english: "month; moon" },
+      { chinese: "星期", pinyin: "xīng qī", english: "week" },
+      { chinese: "点", pinyin: "diǎn", english: "o'clock; point" },
+      { chinese: "分钟", pinyin: "fēn zhōng", english: "minute" },
+      { chinese: "现在", pinyin: "xiàn zài", english: "now" },
+      { chinese: "今天", pinyin: "jīn tiān", english: "today" },
+      { chinese: "明天", pinyin: "míng tiān", english: "tomorrow" },
+      { chinese: "昨天", pinyin: "zuó tiān", english: "yesterday" },
+      { chinese: "上午", pinyin: "shàng wǔ", english: "morning" },
+      { chinese: "中午", pinyin: "zhōng wǔ", english: "noon" },
+      { chinese: "下午", pinyin: "xià wǔ", english: "afternoon" },
+      { chinese: "晚上", pinyin: "wǎn shang", english: "evening" },
+      { chinese: "号", pinyin: "hào", english: "date; number" },
+      { chinese: "年", pinyin: "nián", english: "year" },
+      { chinese: "课", pinyin: "kè", english: "lesson; class" },
+      { chinese: "电影", pinyin: "diàn yǐng", english: "movie" },
+      { chinese: "看", pinyin: "kàn", english: "to watch; to see" },
+      { chinese: "去", pinyin: "qù", english: "to go" },
+      { chinese: "想", pinyin: "xiǎng", english: "to want; to think" }
+    ]
+  },
+  {
+    id: "ic-lesson04",
+    name: "Integrated Chinese Lesson 4",
+    description: "Hobbies and activities vocabulary",
+    category: "Integrated Chinese",
+    words: [
+      { chinese: "学习", pinyin: "xué xí", english: "to study" },
+      { chinese: "喜欢", pinyin: "xǐ huān", english: "to like" },
+      { chinese: "爱好", pinyin: "ài hào", english: "hobby; interest" },
+      { chinese: "运动", pinyin: "yùn dòng", english: "to exercise; sports" },
+      { chinese: "踢足球", pinyin: "tī zú qiú", english: "to play soccer" },
+      { chinese: "打篮球", pinyin: "dǎ lán qiú", english: "to play basketball" },
+      { chinese: "游泳", pinyin: "yóu yǒng", english: "to swim" },
+      { chinese: "唱歌", pinyin: "chàng gē", english: "to sing" },
+      { chinese: "跳舞", pinyin: "tiào wǔ", english: "to dance" },
+      { chinese: "听音乐", pinyin: "tīng yīn yuè", english: "to listen to music" },
+      { chinese: "看书", pinyin: "kàn shū", english: "to read books" },
+      { chinese: "打电话", pinyin: "dǎ diàn huà", english: "to make a phone call" },
+      { chinese: "玩电脑游戏", pinyin: "wán diàn nǎo yóu xì", english: "to play computer games" },
+      { chinese: "上网", pinyin: "shàng wǎng", english: "to surf the internet" },
+      { chinese: "做饭", pinyin: "zuò fàn", english: "to cook" },
+      { chinese: "休息", pinyin: "xiū xi", english: "to rest" }
+    ]
+  },
+  {
+    id: "ic-lesson05",
+    name: "Integrated Chinese Lesson 5",
+    description: "Visiting friends vocabulary",
+    category: "Integrated Chinese",
+    words: [
+      { chinese: "认识", pinyin: "rèn shi", english: "to know (someone)" },
+      { chinese: "介绍", pinyin: "jiè shào", english: "to introduce" },
+      { chinese: "高兴", pinyin: "gāo xìng", english: "happy" },
+      { chinese: "见面", pinyin: "jiàn miàn", english: "to meet" },
+      { chinese: "进", pinyin: "jìn", english: "to enter" },
+      { chinese: "坐", pinyin: "zuò", english: "to sit" },
+      { chinese: "请坐", pinyin: "qǐng zuò", english: "please sit" },
+      { chinese: "喝茶", pinyin: "hē chá", english: "to drink tea" },
+      { chinese: "咖啡", pinyin: "kā fēi", english: "coffee" },
+      { chinese: "水果", pinyin: "shuǐ guǒ", english: "fruit" },
+      { chinese: "苹果", pinyin: "píng guǒ", english: "apple" },
+      { chinese: "香蕉", pinyin: "xiāng jiāo", english: "banana" },
+      { chinese: "吃", pinyin: "chī", english: "to eat" },
+      { chinese: "喝", pinyin: "hē", english: "to drink" }
+    ]
+  },
+  {
+    id: "ic-lesson06",
+    name: "Integrated Chinese Lesson 6",
+    description: "Making appointments vocabulary",
+    category: "Integrated Chinese",
+    words: [
+      { chinese: "约会", pinyin: "yuē huì", english: "appointment; date" },
+      { chinese: "等", pinyin: "děng", english: "to wait" },
+      { chinese: "迟到", pinyin: "chí dào", english: "to be late" },
+      { chinese: "早", pinyin: "zǎo", english: "early" },
+      { chinese: "早到", pinyin: "zǎo dào", english: "to arrive early" },
+      { chinese: "准时", pinyin: "zhǔn shí", english: "on time" },
+      { chinese: "几点", pinyin: "jǐ diǎn", english: "what time" },
+      { chinese: "应该", pinyin: "yīng gāi", english: "should; ought to" },
+      { chinese: "会", pinyin: "huì", english: "will; can" },
+      { chinese: "知道", pinyin: "zhī dào", english: "to know" },
+      { chinese: "对不起", pinyin: "duì bù qǐ", english: "sorry" },
+      { chinese: "没关系", pinyin: "méi guān xi", english: "it doesn't matter" },
+      { chinese: "真", pinyin: "zhēn", english: "really; truly" },
+      { chinese: "事情", pinyin: "shì qing", english: "matter; affair" }
+    ]
+  },
+  {
+    id: "ic-lesson07",
+    name: "Integrated Chinese Lesson 7",
+    description: "Studying Chinese vocabulary",
+    category: "Integrated Chinese",
+    words: [
+      { chinese: "学校", pinyin: "xué xiào", english: "school" },
+      { chinese: "大学", pinyin: "dà xué", english: "university" },
+      { chinese: "专业", pinyin: "zhuān yè", english: "major" },
+      { chinese: "中文", pinyin: "zhōng wén", english: "Chinese language" },
+      { chinese: "汉语", pinyin: "hàn yǔ", english: "Chinese language" },
+      { chinese: "课", pinyin: "kè", english: "class; lesson" },
+      { chinese: "难", pinyin: "nán", english: "difficult" },
+      { chinese: "容易", pinyin: "róng yì", english: "easy" },
+      { chinese: "有意思", pinyin: "yǒu yì si", english: "interesting" },
+      { chinese: "没意思", pinyin: "méi yì si", english: "boring" },
+      { chinese: "汉字", pinyin: "hàn zì", english: "Chinese character" },
+      { chinese: "语法", pinyin: "yǔ fǎ", english: "grammar" },
+      { chinese: "发音", pinyin: "fā yīn", english: "pronunciation" },
+      { chinese: "写", pinyin: "xiě", english: "to write" },
+      { chinese: "读", pinyin: "dú", english: "to read" },
+      { chinese: "说", pinyin: "shuō", english: "to speak" }
+    ]
+  },
+  {
+    id: "ic-lesson08",
+    name: "Integrated Chinese Lesson 8",
+    description: "School life vocabulary",
+    category: "Integrated Chinese",
+    words: [
+      { chinese: "教室", pinyin: "jiào shì", english: "classroom" },
+      { chinese: "食堂", pinyin: "shí táng", english: "dining hall" },
+      { chinese: "宿舍", pinyin: "sù shè", english: "dormitory" },
+      { chinese: "图书馆", pinyin: "tú shū guǎn", english: "library" },
+      { chinese: "上课", pinyin: "shàng kè", english: "to attend class" },
+      { chinese: "下课", pinyin: "xià kè", english: "class is over" },
+      { chinese: "考试", pinyin: "kǎo shì", english: "to take an exam" },
+      { chinese: "复习", pinyin: "fù xí", english: "to review" },
+      { chinese: "练习", pinyin: "liàn xí", english: "to practice" },
+      { chinese: "问题", pinyin: "wèn tí", english: "question; problem" },
+      { chinese: "回答", pinyin: "huí dá", english: "to answer" },
+      { chinese: "懂", pinyin: "dǒng", english: "to understand" },
+      { chinese: "不懂", pinyin: "bù dǒng", english: "to not understand" }
+    ]
+  },
+  {
+    id: "ic-lesson09",
+    name: "Integrated Chinese Lesson 9",
+    description: "Shopping vocabulary",
+    category: "Integrated Chinese",
+    words: [
+      { chinese: "商店", pinyin: "shāng diàn", english: "store" },
+      { chinese: "超市", pinyin: "chāo shì", english: "supermarket" },
+      { chinese: "买东西", pinyin: "mǎi dōng xi", english: "to shop" },
+      { chinese: "衣服", pinyin: "yī fu", english: "clothes" },
+      { chinese: "裤子", pinyin: "kù zi", english: "pants" },
+      { chinese: "衬衫", pinyin: "chèn shān", english: "shirt" },
+      { chinese: "鞋", pinyin: "xié", english: "shoes" },
+      { chinese: "颜色", pinyin: "yán sè", english: "color" },
+      { chinese: "红", pinyin: "hóng", english: "red" },
+      { chinese: "蓝", pinyin: "lán", english: "blue" },
+      { chinese: "黄", pinyin: "huáng", english: "yellow" },
+      { chinese: "白", pinyin: "bái", english: "white" },
+      { chinese: "黑", pinyin: "hēi", english: "black" },
+      { chinese: "好看", pinyin: "hǎo kàn", english: "good-looking" },
+      { chinese: "漂亮", pinyin: "piào liang", english: "pretty" },
+      { chinese: "多少钱", pinyin: "duō shǎo qián", english: "how much" },
+      { chinese: "便宜", pinyin: "pián yi", english: "inexpensive" },
+      { chinese: "贵", pinyin: "guì", english: "expensive" }
+    ]
+  },
+  {
+    id: "ic-lesson10",
+    name: "Integrated Chinese Lesson 10",
+    description: "Transportation vocabulary",
+    category: "Integrated Chinese",
+    words: [
+      { chinese: "怎么", pinyin: "zěn me", english: "how" },
+      { chinese: "去", pinyin: "qù", english: "to go" },
+      { chinese: "走", pinyin: "zǒu", english: "to walk" },
+      { chinese: "坐", pinyin: "zuò", english: "to take (transportation)" },
+      { chinese: "开车", pinyin: "kāi chē", english: "to drive" },
+      { chinese: "骑自行车", pinyin: "qí zì xíng chē", english: "to ride a bike" },
+      { chinese: "公共汽车", pinyin: "gōng gòng qì chē", english: "bus" },
+      { chinese: "出租车", pinyin: "chū zū chē", english: "taxi" },
+      { chinese: "地铁", pinyin: "dì tiě", english: "subway" },
+      { chinese: "火车", pinyin: "huǒ chē", english: "train" },
+      { chinese: "飞机", pinyin: "fēi jī", english: "airplane" },
+      { chinese: "慢", pinyin: "màn", english: "slow" },
+      { chinese: "快", pinyin: "kuài", english: "fast" },
+      { chinese: "近", pinyin: "jìn", english: "near" },
+      { chinese: "远", pinyin: "yuǎn", english: "far" },
+      { chinese: "路", pinyin: "lù", english: "road" },
+      { chinese: "右边", pinyin: "yòu bian", english: "right side" },
+      { chinese: "左边", pinyin: "zuǒ bian", english: "left side" },
+      { chinese: "前面", pinyin: "qián miàn", english: "front" },
+      { chinese: "后面", pinyin: "hòu miàn", english: "behind" }
     ]
   },
   {
