@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import WordChip from "@/components/word-chip";
 import { Separator } from "@/components/ui/separator";
+import { LESSON11_WORDLIST } from "@/data/word-lists";
 
 interface WordList {
   id: string;
@@ -21,6 +22,7 @@ interface WordList {
 }
 
 const SAMPLE_WORD_LISTS: WordList[] = [
+  LESSON11_WORDLIST,
   {
     id: "hsk1",
     name: "HSK Level 1 Basics",
