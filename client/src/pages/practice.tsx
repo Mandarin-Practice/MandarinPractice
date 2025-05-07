@@ -638,7 +638,7 @@ export default function Practice() {
   return (
     <div className="practice-section">
       {/* Confetti animation when answer is correct */}
-      <SuccessConfetti active={showConfetti} duration={1500} />
+      <SuccessConfetti active={showConfetti} duration={600} />
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <SentenceCard

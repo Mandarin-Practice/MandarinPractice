@@ -31,7 +31,7 @@ const drawStar = (ctx: CanvasRenderingContext2D, x: number, y: number, size: num
   ctx.fill();
 };
 
-export default function SuccessConfetti({ active, duration = 1500 }: SuccessConfettiProps) {
+export default function SuccessConfetti({ active, duration = 600 }: SuccessConfettiProps) {
   const [windowDimensions, setWindowDimensions] = useState({
     width: window.innerWidth,
     height: window.innerHeight,
@@ -101,7 +101,7 @@ export default function SuccessConfetti({ active, duration = 1500 }: SuccessConf
       <Confetti
         width={windowDimensions.width}
         height={windowDimensions.height}
-        numberOfPieces={250}
+        numberOfPieces={150}
         recycle={false}
         colors={['#FFEB3B', '#FFC107', '#FFD700', '#F9A825', '#FDD835']} // Different shades of yellow
         drawShape={(ctx) => {
