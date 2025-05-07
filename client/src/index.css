@@ -471,13 +471,9 @@
   --z-maximum: 999;
 }
 
-/* Fix for character popups - be aggressive with selectors to ensure it works in all environments */
-[data-radix-hover-card-content],
-[data-state="open"],
-.top-layer,
-div[style*="z-index: 9999"] {
-  z-index: 9999 !important;
-  position: fixed !important;
+/* Fix for character popups */
+.top-layer {
+  z-index: 999;
 }
 
 /* Ensure proper stacking of important elements */

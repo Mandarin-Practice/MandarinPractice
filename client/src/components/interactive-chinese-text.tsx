@@ -117,7 +117,7 @@ export default function InteractiveChineseText({
                     {charInfo.character}
                   </span>
                 </HoverCardTrigger>
-                <HoverCardContent className="w-64 p-4" style={{ zIndex: 9999, isolation: 'isolate' }}>
+                <HoverCardContent className="w-64 p-4">
                   <div className="space-y-2">
                     {/* Display full word with the current character highlighted */}
                     {charInfo.fullWord && charInfo.positionInWord !== undefined ? (
