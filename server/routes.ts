@@ -103,27 +103,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Words must be an array" });
       }
       
-      console.log(`Import request received with ${words.length} words${userId ? ` for user ${userId}` : ''}`);
+      console.log(`[IMPORT DEBUG] Request received with ${words.length} words${userId ? ` for user ${userId}` : ''}`);
+      console.log(`[IMPORT DEBUG] Input words array:`, JSON.stringify(words));
       
       // Instead of validating all words at once (which stops on first error),
       // validate each word individually and proceed with valid ones
       const validatedWords = [];
       const validationErrors = [];
       
-      for (const word of words) {
+      for (let i = 0; i < words.length; i++) {
+        const word = words[i];
         try {
+          console.log(`[IMPORT DEBUG] Validating word ${i}:`, JSON.stringify(word));
           const validWord = vocabularySchema.parse(word);
           validatedWords.push(validWord);
+          console.log(`[IMPORT DEBUG] Word ${i} passed validation:`, JSON.stringify(validWord));
         } catch (error) {
           if (error instanceof ZodError) {
             const errorMsg = `Invalid word format: ${error.errors.map(e => e.message).join(', ')}`;
-            console.error(`Validation error for word "${JSON.stringify(word)}": ${errorMsg}`);
+            console.error(`[IMPORT DEBUG] Validation error for word ${i} "${JSON.stringify(word)}": ${errorMsg}`);
             validationErrors.push({
+              index: i,
               word: word.chinese || "unknown",
               error: errorMsg
             });
           } else {
+            console.error(`[IMPORT DEBUG] Non-validation error for word ${i}:`, error);
             validationErrors.push({
+              index: i,
               word: word.chinese || "unknown",
               error: error instanceof Error ? error.message : String(error)
             });
@@ -131,9 +138,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      console.log(`Successfully validated ${validatedWords.length} out of ${words.length} words`);
+      console.log(`[IMPORT DEBUG] Successfully validated ${validatedWords.length} out of ${words.length} words`);
+      console.log(`[IMPORT DEBUG] Validated words array:`, JSON.stringify(validatedWords));
+      
       if (validationErrors.length > 0) {
-        console.log(`Found ${validationErrors.length} validation errors`);
+        console.log(`[IMPORT DEBUG] Found ${validationErrors.length} validation errors:`, JSON.stringify(validationErrors));
       }
       
       // Process each validated word individually and track results
@@ -141,31 +150,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const wordErrors = [];
       
       // First, add all words to the global dictionary
-      for (const word of validatedWords) {
+      for (let i = 0; i < validatedWords.length; i++) {
+        const word = validatedWords[i];
         try {
+          console.log(`[IMPORT DEBUG] Processing word ${i}:`, JSON.stringify(word));
+          
           // Check if word already exists to avoid duplicates
           let existingWord = null;
           try {
             // Try to find by exact match first
+            console.log(`[IMPORT DEBUG] Checking if word ${i} exists:`, word.chinese, word.pinyin);
             existingWord = await storage.getVocabularyByChineseAndPinyin(word.chinese, word.pinyin);
+            console.log(`[IMPORT DEBUG] Existing word check result:`, existingWord ? "Found" : "Not found");
           } catch (err) {
-            // If the search method doesn't exist, just proceed with adding
+            console.error(`[IMPORT DEBUG] Error checking if word exists:`, err);
           }
           
           // Add the word if it doesn't exist
           let savedWord;
           if (existingWord) {
             savedWord = existingWord;
-            console.log(`Word "${word.chinese}" already exists, skipping add`);
+            console.log(`[IMPORT DEBUG] Word "${word.chinese}" (${i}) already exists, using existing word:`, JSON.stringify(existingWord));
           } else {
+            console.log(`[IMPORT DEBUG] Adding new word ${i}:`, JSON.stringify(word));
             savedWord = await storage.addVocabulary(word);
+            console.log(`[IMPORT DEBUG] Word ${i} added successfully:`, JSON.stringify(savedWord));
           }
           
           savedWords.push(savedWord);
+          console.log(`[IMPORT DEBUG] Added word ${i} to savedWords array. Current saved count: ${savedWords.length}`);
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : String(error);
-          console.error(`Error adding word "${word.chinese}": ${errorMessage}`);
+          console.error(`[IMPORT DEBUG] Error adding word ${i} "${word.chinese}": ${errorMessage}`);
           wordErrors.push({
+            index: i,
             word: word.chinese,
             error: errorMessage
           });
@@ -175,25 +193,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // If userId is provided, also add these words to the user's personal list
       if (userId && !isNaN(parseInt(userId))) {
         const userIdNum = parseInt(userId);
-        console.log(`Adding ${savedWords.length} words to user ${userIdNum}'s personal list`);
+        console.log(`[IMPORT DEBUG] Adding ${savedWords.length} words to user ${userIdNum}'s personal list`);
         
         // Add each word to the user's list
-        for (const word of savedWords) {
+        for (let i = 0; i < savedWords.length; i++) {
+          const word = savedWords[i];
           try {
+            console.log(`[IMPORT DEBUG] Adding word ${i} (id: ${word.id}) to user ${userIdNum}'s list`);
             await storage.saveWordToUserList(userIdNum, word.id);
+            console.log(`[IMPORT DEBUG] Added word ${i} to user's list successfully`);
           } catch (error) {
-            console.error(`Error adding word ${word.id} to user ${userIdNum}'s list: ${error}`);
+            console.error(`[IMPORT DEBUG] Error adding word ${i} (id: ${word.id}) to user ${userIdNum}'s list: ${error}`);
           }
         }
       }
       
-      console.log(`Successfully saved ${savedWords.length} words out of ${words.length} total`);
+      console.log(`[IMPORT DEBUG] Successfully saved ${savedWords.length} words out of ${words.length} total`);
+      console.log(`[IMPORT DEBUG] Final savedWords array:`, JSON.stringify(savedWords.map(w => ({ id: w.id, chinese: w.chinese }))));
+      
       if (wordErrors.length > 0) {
-        console.log(`Encountered ${wordErrors.length} errors during import`);
-        console.log(wordErrors);
+        console.log(`[IMPORT DEBUG] Encountered ${wordErrors.length} errors during import:`, JSON.stringify(wordErrors));
       }
       
       // Return all the saved words, including validation stats
+      console.log(`[IMPORT DEBUG] Sending response with ${savedWords.length} saved words`);
       res.status(201).json({
         savedWords,
         stats: {
@@ -205,7 +228,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
     } catch (error) {
-      console.error(`Import failed: ${error instanceof Error ? error.message : String(error)}`);
+      console.error(`[IMPORT DEBUG] Import failed with unhandled error: ${error instanceof Error ? error.message : String(error)}`);
+      console.error(error);
       res.status(400).json({ message: error instanceof Error ? error.message : "Failed to import vocabulary" });
     }
   });

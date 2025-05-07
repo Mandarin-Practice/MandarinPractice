@@ -276,15 +276,61 @@ export default function WordList() {
         active: "true"
       }));
       
+      console.log('[IMPORT CLIENT] Preparing import of', words.length, 'words');
+      console.log('[IMPORT CLIENT] First few words:', words.slice(0, 3));
+      
       // If user is logged in, include userId to add words to their list
       const userId = user?.backendUser?.id;
-      const payload = userId ? { words, userId } : { words };
       
-      const response = await apiRequest('POST', '/api/vocabulary/import', payload);
-      if (!response.ok) {
-        throw new Error('Failed to import word list');
+      // Split words into smaller batches to avoid issues with large imports
+      const BATCH_SIZE = 10;
+      const allResults = {
+        savedWords: [],
+        stats: {
+          totalRequested: words.length,
+          validWords: 0,
+          savedWords: 0,
+          validationErrors: 0,
+          saveErrors: 0
+        }
+      };
+      
+      // Process words in batches
+      for (let i = 0; i < words.length; i += BATCH_SIZE) {
+        const batch = words.slice(i, i + BATCH_SIZE);
+        const batchPayload = userId ? { words: batch, userId } : { words: batch };
+        
+        console.log(`[IMPORT CLIENT] Sending batch ${i/BATCH_SIZE + 1} with ${batch.length} words (${i+1} to ${Math.min(i+BATCH_SIZE, words.length)} of ${words.length})`);
+        
+        const response = await apiRequest('POST', '/api/vocabulary/import', batchPayload);
+        if (!response.ok) {
+          throw new Error(`Failed to import batch ${i/BATCH_SIZE + 1}`);
+        }
+        
+        const batchResult = await response.json();
+        console.log(`[IMPORT CLIENT] Batch ${i/BATCH_SIZE + 1} result:`, batchResult);
+        
+        // Add this batch's saved words to the combined results
+        if (batchResult.savedWords) {
+          allResults.savedWords = [...allResults.savedWords, ...batchResult.savedWords];
+          
+          // Update the stats
+          if (batchResult.stats) {
+            allResults.stats.validWords += batchResult.stats.validWords;
+            allResults.stats.savedWords += batchResult.stats.savedWords;
+            allResults.stats.validationErrors += batchResult.stats.validationErrors;
+            allResults.stats.saveErrors += batchResult.stats.saveErrors;
+          }
+        } else {
+          // Handle old response format
+          allResults.savedWords = [...allResults.savedWords, ...batchResult];
+          allResults.stats.savedWords += batchResult.length;
+          allResults.stats.validWords += batchResult.length;
+        }
       }
-      return response.json();
+      
+      console.log('[IMPORT CLIENT] All batches processed, combined results:', allResults);
+      return allResults;
     },
     onSuccess: (data) => {
       // Invalidate both general vocabulary and user-specific word list queries
