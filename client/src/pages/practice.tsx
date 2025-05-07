@@ -61,7 +61,7 @@ export default function Practice() {
   const { playCorrectSound, playIncorrectSound } = useSoundEffects();
 
   // Fetch vocabulary words from user's word list
-  const { userWordList: vocabularyWords, isLoading: isLoadingVocabulary } = useUserWordList();
+  const { wordList: vocabularyWords, isLoading: isLoadingVocabulary } = useUserWordList();
 
   // Get toast hook for notifications
   const { toast } = useToast();
@@ -135,6 +135,41 @@ export default function Practice() {
       });
     }
   });
+  
+  // Helper function to track incorrect answers for stats
+  const trackIncorrectAnswer = () => {
+    if (startTime === null) return;
+    
+    const timeTaken = (Date.now() - startTime) / 1000; // in seconds
+    
+    // Update stats for incorrect answers
+    setStats(prev => {
+      const completed = prev.completed + 1;
+      // Calculate accuracy based on correct answers / total attempts
+      const accuracy = `${Math.round((completed > 0 ? 100 * prev.correctAnswers / completed : 0))}%`;
+      
+      // Debug accuracy calculation
+      console.log('Incorrect answer tracking:', {
+        correctAnswers: prev.correctAnswers,
+        completed,
+        accuracyPercentage: Math.round((completed > 0 ? 100 * prev.correctAnswers / completed : 0))
+      });
+      
+      // Update average time
+      const prevAvgTime = parseFloat(prev.avgTime) || 0;
+      const avgTime = `${Math.round((prevAvgTime * (completed - 1) + timeTaken) / completed * 10) / 10}s`;
+      
+      return {
+        completed,
+        accuracy,
+        avgTime,
+        masteryPercent: prev.masteryPercent,
+        masteredWords: prev.masteredWords,
+        totalWords: prev.totalWords,
+        correctAnswers: prev.correctAnswers // Keep the same count, don't increment
+      };
+    });
+  };
   
   // Check for difficulty changes from localStorage
   useEffect(() => {
@@ -230,6 +265,60 @@ export default function Practice() {
     }
   });
 
+  // Calculate score based on accuracy and speed
+  const calculateScore = (similarity: number) => {
+    if (startTime === null) return;
+    
+    const timeWeight = Number(localStorage.getItem('timeWeight') || 3);
+    const timeTaken = (Date.now() - startTime) / 1000; // in seconds
+    const timeScore = Math.max(1, 10 - Math.floor(timeTaken / 3) * (timeWeight / 3));
+    const accuracyScore = Math.round(similarity * 90);
+    
+    const newPoints = accuracyScore + timeScore;
+    setScore(prev => prev + newPoints);
+    
+    // Update stats
+    setStats(prev => {
+      // Always increment completed when calculating score
+      const completed = prev.completed + 1;
+      
+      // Track mastered words (very good answers)
+      const newMasteredWords = prev.masteredWords + (similarity > 0.9 ? 1 : 0);
+      
+      // Track correct answers separately from mastered
+      // Only increment for answers that meet our correctness threshold (>=0.7 similarity)
+      const correctAnswers = prev.correctAnswers + 1; // We know it's correct because we're only calling calculateScore on correct answers
+      
+      // Calculate accuracy based on correct answers / total attempts
+      const accuracy = `${Math.round((completed > 0 ? 100 * correctAnswers / completed : 0))}%`;
+      
+      // Debug accuracy calculation
+      console.log('Accuracy calculation:', {
+        correctAnswers,
+        completed,
+        accuracyPercentage: Math.round((completed > 0 ? 100 * correctAnswers / completed : 0)) 
+      });
+      
+      // Handle first completion
+      const prevAvgTime = parseFloat(prev.avgTime) || 0;
+      const avgTime = `${Math.round((prevAvgTime * (completed - 1) + timeTaken) / completed * 10) / 10}s`;
+      
+      // Calculate mastery percentage based on total words
+      const totalWords = prev.totalWords || 1;
+      const masteryPercent = Math.min(100, Math.round((newMasteredWords / totalWords) * 100));
+      
+      return {
+        completed,
+        accuracy,
+        avgTime,
+        masteryPercent,
+        masteredWords: newMasteredWords,
+        totalWords: prev.totalWords,
+        correctAnswers
+      };
+    });
+  };
+
   // Check answer similarity with correct translation
   const checkAnswer = (input: string) => {
     if (!generateSentenceMutation.data || !input.trim()) {
@@ -266,7 +355,7 @@ export default function Practice() {
     // Threshold adjustments with special case handling:
     if (similarity >= 0.7 && !temporalWordsConflict) {
       setFeedbackStatus("correct");
-      calculateScore(similarity, temporalWordsConflict);
+      calculateScore(similarity);
       
       // Play correct answer sound
       playCorrectSound();
@@ -300,10 +389,14 @@ export default function Practice() {
       setFeedbackStatus("partial");
       // Play incorrect sound for partial matches too
       playIncorrectSound();
+      // Track this as incorrect for stats
+      trackIncorrectAnswer();
     } else {
       setFeedbackStatus("incorrect");
       // Play incorrect answer sound
       playIncorrectSound();
+      // Track this as incorrect for stats
+      trackIncorrectAnswer();
       
       // If answer is incorrect, update proficiency for words in the sentence
       if (vocabularyWords && Array.isArray(vocabularyWords)) {
@@ -320,49 +413,6 @@ export default function Practice() {
         });
       }
     }
-  };
-
-  // Calculate score based on accuracy and speed
-  const calculateScore = (similarity: number, temporalWordsConflict: boolean = false) => {
-    if (startTime === null) return;
-    
-    const timeWeight = Number(localStorage.getItem('timeWeight') || 3);
-    const timeTaken = (Date.now() - startTime) / 1000; // in seconds
-    const timeScore = Math.max(1, 10 - Math.floor(timeTaken / 3) * (timeWeight / 3));
-    const accuracyScore = Math.round(similarity * 90);
-    
-    const newPoints = accuracyScore + timeScore;
-    setScore(prev => prev + newPoints);
-    
-    // Update stats
-    setStats(prev => {
-      const completed = prev.completed + 1;
-      // Track mastered words (very good answers)
-      const newMasteredWords = prev.masteredWords + (similarity > 0.9 ? 1 : 0);
-      // Track correct answers (separate from mastered), only increment for correct answers
-      const correctAnswers = prev.correctAnswers + (similarity >= 0.7 && !temporalWordsConflict ? 1 : 0);
-      
-      // Calculate accuracy based on correct answers / total attempts
-      const accuracy = `${Math.round((completed > 0 ? 100 * correctAnswers / completed : 0))}%`;
-      
-      // Handle first completion
-      const prevAvgTime = parseFloat(prev.avgTime) || 0;
-      const avgTime = `${Math.round((prevAvgTime * (completed - 1) + timeTaken) / completed * 10) / 10}s`;
-      
-      // Calculate mastery percentage based on total words
-      const totalWords = prev.totalWords || 1;
-      const masteryPercent = Math.min(100, Math.round((newMasteredWords / totalWords) * 100));
-      
-      return {
-        completed,
-        accuracy,
-        avgTime,
-        masteryPercent,
-        masteredWords: newMasteredWords,
-        totalWords: prev.totalWords,
-        correctAnswers
-      };
-    });
   };
 
   // Move to next sentence
