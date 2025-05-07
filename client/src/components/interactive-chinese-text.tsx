@@ -170,8 +170,33 @@ export default function InteractiveChineseText({
     );
   };
   
+  // Created fixed popup content for testing
+  const testContent = (
+    <div className="absolute top-full left-0 mt-1 w-64 p-4 bg-white dark:bg-gray-800 rounded shadow-lg border z-[9999]">
+      <div className="space-y-2">
+        <div className="text-2xl font-bold mt-2">Test Popup</div>
+        <div className="text-sm text-gray-700 dark:text-gray-300 font-medium">This is a test popup</div>
+        <div className="text-base text-gray-900 dark:text-white">Does this appear?</div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="text-3xl font-['Noto_Sans_SC',sans-serif] leading-relaxed font-bold overflow-visible">
+      {/* Debug info displayed at the top to help troubleshooting */}
+      <div className="fixed top-0 left-0 right-0 bg-white dark:bg-gray-900 p-2 text-sm border-b z-50">
+        <div>Feedback: {feedbackStatus || 'none'}</div>  
+        <div>Words matched: {processedText.filter(c => c.definition).length}</div>
+        <div>Active char: {activeCharId || 'none'}</div>
+        <button 
+          className="bg-blue-500 text-white px-2 py-1 rounded mt-1"
+          onClick={() => setActiveCharId('test')}
+        >
+          Test Popup
+        </button>
+        {activeCharId === 'test' && testContent}
+      </div>
+      
       {feedbackStatus ? (
         // Display with interactive functionality after checking answer
         <span className={
@@ -187,10 +212,13 @@ export default function InteractiveChineseText({
             return charInfo.definition ? (
               <span key={index} className="relative inline-block">
                 <span 
-                  className="cursor-help border-b border-dotted border-gray-400 hover:bg-blue-50 dark:hover:bg-blue-900 px-1 py-0.5 mx-0.5 rounded transition-colors"
+                  className="cursor-help border-b-2 border-dotted border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900 px-1 py-0.5 mx-0.5 rounded transition-colors"
                   onClick={() => setActiveCharId(activeCharId === charId ? null : charId)}
                   onMouseEnter={() => setActiveCharId(charId)}
-                  onMouseLeave={() => setTimeout(() => setActiveCharId(null), 500)}
+                  onMouseLeave={() => {
+                    console.log('Mouse leave', charId);
+                    setTimeout(() => setActiveCharId(null), 300);
+                  }}
                 >
                   {charInfo.character}
                 </span>
