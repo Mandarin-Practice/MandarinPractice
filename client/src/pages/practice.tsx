@@ -268,7 +268,7 @@ export default function Practice() {
     // Threshold adjustments with special case handling:
     if (similarity >= 0.7 && !temporalWordsConflict) {
       setFeedbackStatus("correct");
-      calculateScore(similarity);
+      calculateScore(similarity, temporalWordsConflict);
       
       // Play correct answer sound
       playCorrectSound();
@@ -325,7 +325,7 @@ export default function Practice() {
   };
 
   // Calculate score based on accuracy and speed
-  const calculateScore = (similarity: number) => {
+  const calculateScore = (similarity: number, temporalWordsConflict: boolean = false) => {
     if (startTime === null) return;
     
     const timeWeight = Number(localStorage.getItem('timeWeight') || 3);
@@ -341,8 +341,8 @@ export default function Practice() {
       const completed = prev.completed + 1;
       // Track mastered words (very good answers)
       const newMasteredWords = prev.masteredWords + (similarity > 0.9 ? 1 : 0);
-      // Track correct answers (separate from mastered)
-      const correctAnswers = prev.correctAnswers + 1;
+      // Track correct answers (separate from mastered), only increment for correct answers
+      const correctAnswers = prev.correctAnswers + (similarity >= 0.7 && !temporalWordsConflict ? 1 : 0);
       
       // Calculate accuracy based on correct answers / total attempts
       const accuracy = `${Math.round((completed > 0 ? 100 * correctAnswers / completed : 0))}%`;
