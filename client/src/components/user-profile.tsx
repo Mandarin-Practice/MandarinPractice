@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -18,10 +18,18 @@ import {
 } from "@/components/ui/dialog";
 import { Loader2, LogIn, LogOut, User2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 
 export function UserProfile() {
   const { user, isLoading, signIn, signOut } = useAuth();
+  const { toast } = useToast();
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  
+  // Debug state for development
+  useEffect(() => {
+    console.log("Auth state:", { user, isLoading });
+  }, [user, isLoading]);
 
   // Handle sign in click
   const handleSignIn = async () => {
@@ -30,15 +38,30 @@ export function UserProfile() {
       setLoginDialogOpen(false);
     } catch (error) {
       console.error("Login error:", error);
+      toast({
+        title: "Login failed",
+        description: "There was a problem signing in. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
   // Handle sign out click
   const handleSignOut = async () => {
     try {
+      setDropdownOpen(false); // Close dropdown first
       await signOut();
+      toast({
+        title: "Signed out",
+        description: "You have been signed out successfully.",
+      });
     } catch (error) {
       console.error("Logout error:", error);
+      toast({
+        title: "Sign out failed",
+        description: "There was a problem signing out. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -111,48 +134,32 @@ export function UserProfile() {
     );
   }
 
-  // If logged in, show user profile dropdown
+  // Simple sign out button instead of dropdown to avoid issues
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="rounded-full bg-white text-red-600 hover:bg-gray-100 border-2 border-white p-0 overflow-hidden"
-        >
-          <Avatar className="h-8 w-8">
-            <AvatarImage 
-              src={user.firebaseUser.photoURL || undefined} 
-              alt={user.backendUser.displayName || user.backendUser.username}
-            />
-            <AvatarFallback className="bg-white text-red-600 font-bold">
-              {(user.backendUser.displayName || user.backendUser.username || "")
-                .charAt(0)
-                .toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuLabel>
-          <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">
-              {user.backendUser.displayName || user.backendUser.username}
-            </p>
-            <p className="text-xs leading-none text-muted-foreground">
-              {user.backendUser.email}
-            </p>
-          </div>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          className="text-destructive focus:text-destructive cursor-pointer"
-          onClick={handleSignOut}
-        >
-          <LogOut className="mr-2 h-4 w-4" />
-          <span>Sign out</span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div className="flex items-center gap-2">
+      {/* User avatar */}
+      <Avatar className="h-8 w-8 bg-white border-2 border-white">
+        <AvatarImage 
+          src={user.firebaseUser.photoURL || undefined} 
+          alt={user.backendUser.displayName || user.backendUser.username || "User"}
+        />
+        <AvatarFallback className="bg-white text-red-600 font-bold">
+          {(user.backendUser.displayName || user.backendUser.username || "U")
+            .charAt(0)
+            .toUpperCase()}
+        </AvatarFallback>
+      </Avatar>
+      
+      {/* Sign out button */}
+      <Button 
+        variant="outline" 
+        size="sm" 
+        onClick={handleSignOut}
+        className="bg-white text-red-600 hover:bg-gray-100 border border-white"
+      >
+        <LogOut className="h-4 w-4 mr-1" />
+        <span className="text-xs">Sign out</span>
+      </Button>
+    </div>
   );
 }

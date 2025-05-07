@@ -103,7 +103,7 @@ export default function Navbar({ theme, toggleTheme }: NavbarProps) {
                 {theme === "dark" ? "Light Mode" : "Dark Mode"}
               </Button>
               
-              <div onClick={() => setMobileMenuOpen(false)}>
+              <div onClick={() => setMobileMenuOpen(false)} className="flex-grow">
                 <UserProfile />
               </div>
             </div>
