@@ -1,9 +1,8 @@
-import { createContext, ReactNode, useContext, useEffect, useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { createContext, ReactNode, useContext, useEffect, useState, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { auth, googleProvider } from "@/lib/firebase";
 import { 
-  signInWithPopup, 
   signInWithRedirect,
   getRedirectResult,
   signOut as firebaseSignOut, 
@@ -60,57 +59,48 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [firebaseLoading, setFirebaseLoading] = useState(true);
   const [firebaseError, setFirebaseError] = useState<Error | null>(null);
 
-  // Listen for Firebase auth state changes
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(
-      auth,
-      (user) => {
-        setFirebaseUser(user);
-        setFirebaseLoading(false);
-      },
-      (error) => {
-        setFirebaseError(error);
-        setFirebaseLoading(false);
-      }
-    );
-
-    // Cleanup subscription
-    return () => unsubscribe();
-  }, []);
-
   // Query to get backend user data
   const {
     data: backendUser,
     isLoading: backendLoading,
     error: backendError,
     refetch: refetchBackendUser,
-  } = useQuery<BackendUser>({
+  } = useQuery<BackendUser | null>({
     queryKey: ["/api/auth/user", firebaseUser?.uid],
     queryFn: async () => {
       if (!firebaseUser) return null;
       
-      // Get Firebase ID token
-      const idToken = await firebaseUser.getIdToken();
-      
-      // Fetch user data from backend
-      const response = await fetch("/api/auth/user", {
-        headers: {
-          Authorization: `Bearer ${idToken}`
+      try {
+        // Get Firebase ID token
+        const idToken = await firebaseUser.getIdToken();
+        
+        // Fetch user data from backend
+        const response = await fetch("/api/auth/user", {
+          headers: {
+            Authorization: `Bearer ${idToken}`
+          }
+        });
+        
+        if (!response.ok) {
+          if (response.status === 401) {
+            return null; // Not authenticated with backend yet
+          }
+          throw new Error("Failed to fetch user data");
         }
-      });
-      
-      if (!response.ok) {
-        throw new Error("Failed to fetch user data");
+        
+        return response.json();
+      } catch (error) {
+        console.error("Error fetching backend user:", error);
+        return null;
       }
-      
-      return response.json();
     },
     enabled: !!firebaseUser,
   });
 
   // Register or login user with backend
-  const registerOrLoginWithBackend = async (firebaseUser: FirebaseUser) => {
+  const registerOrLoginWithBackend = useCallback(async (firebaseUser: FirebaseUser) => {
     try {
+      console.log("Registering user with backend:", firebaseUser.email);
       // Get user token
       const idToken = await firebaseUser.getIdToken();
       
@@ -134,6 +124,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         throw new Error("Failed to register user with backend");
       }
       
+      console.log("Successfully registered with backend, refreshing data");
+      
       // Fetch the updated user data
       await refetchBackendUser();
       
@@ -141,6 +133,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         title: "Welcome!",
         description: "You have successfully signed in.",
       });
+      
+      return true;
     } catch (error) {
       console.error("Backend registration error:", error);
       toast({
@@ -150,16 +144,55 @@ export function AuthProvider({ children }: AuthProviderProps) {
       });
       throw error;
     }
-  };
+  }, [refetchBackendUser, toast]);
+
+  // Listen for Firebase auth state changes
+  useEffect(() => {
+    console.log("Setting up Firebase auth state listener");
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      (user) => {
+        console.log("Firebase auth state changed:", user ? "User authenticated" : "No user");
+        setFirebaseUser(user);
+        setFirebaseLoading(false);
+        
+        // If user is authenticated, immediately refetch backend data
+        if (user) {
+          console.log("User authenticated, refreshing data");
+          setTimeout(() => {
+            refetchBackendUser();
+            queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
+          }, 500); // Small delay to ensure Firebase auth is fully processed
+        }
+      },
+      (error) => {
+        console.error("Firebase auth error:", error);
+        setFirebaseError(error);
+        setFirebaseLoading(false);
+      }
+    );
+
+    // Cleanup subscription
+    return () => unsubscribe();
+  }, [queryClient, refetchBackendUser]);
 
   // Check for redirect result on component mount
   useEffect(() => {
     const checkRedirectResult = async () => {
       try {
+        console.log("Checking redirect result...");
         const result = await getRedirectResult(auth);
+        console.log("Redirect result:", result);
         if (result && result.user) {
+          console.log("Got user from redirect:", result.user);
           await registerOrLoginWithBackend(result.user);
           queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
+          // Force refresh user data
+          await refetchBackendUser();
+          console.log("User data refreshed after redirect");
+          
+          // Force page reload to ensure we have the latest state
+          window.location.reload();
         }
       } catch (error) {
         console.error("Redirect sign in error:", error);
@@ -167,11 +200,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     };
     
     checkRedirectResult();
-  }, []);
+  }, [queryClient, refetchBackendUser, registerOrLoginWithBackend]);
   
   // Sign in with Google
   const signIn = async () => {
     try {
+      console.log("Starting Google sign in with redirect");
       setFirebaseLoading(true);
       // Use redirect method directly as it's more reliable
       await signInWithRedirect(auth, googleProvider);
@@ -191,6 +225,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Sign out
   const signOut = async () => {
     try {
+      console.log("Signing out...");
       await firebaseSignOut(auth);
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
@@ -296,11 +331,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  // Combine user data from Firebase and backend
-  const combinedUser = firebaseUser && backendUser
-    ? { firebaseUser, backendUser }
-    : null;
-
   // Update user profile
   const updateUserProfile = async (updates: ProfileUpdate) => {
     if (!firebaseUser || !backendUser) {
@@ -351,6 +381,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  // Combine user data from Firebase and backend
+  const combinedUser = firebaseUser && backendUser
+    ? { firebaseUser, backendUser }
+    : null;
+
   // Create the auth context value
   const authContextValue: AuthContextType = {
     user: combinedUser,
@@ -362,6 +397,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     removeWordFromList,
     updateUserProfile,
   };
+
+  // Log auth state for debugging
+  useEffect(() => {
+    console.log("Auth context updated:", {
+      user: combinedUser ? "authenticated" : "unauthenticated",
+      firebaseUser: firebaseUser ? "authenticated" : "unauthenticated",
+      backendUser: backendUser ? "found" : "not found",
+      isLoading: firebaseLoading || backendLoading,
+    });
+  }, [combinedUser, firebaseUser, backendUser, firebaseLoading, backendLoading]);
 
   return (
     <AuthContext.Provider value={authContextValue}>

@@ -16,6 +16,21 @@ export default function ProfilePage() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [redirect, setRedirect] = useState(false);
 
+  // Debug user state
+  useEffect(() => {
+    console.log("Profile page - Auth state:", { user, isLoading });
+    
+    // Force refetch when the profile page loads
+    if (!user && !isLoading) {
+      console.log("No user detected in profile, attempting to refresh auth state");
+      const refreshTimer = setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+      
+      return () => clearTimeout(refreshTimer);
+    }
+  }, [user, isLoading]);
+
   // Load user display name when user data changes
   useEffect(() => {
     if (user?.backendUser?.displayName) {
