@@ -238,7 +238,32 @@ authRouter.get('/user', verifyFirebaseToken, async (req: Request, res: Response)
   }
 });
 
-// Update user profile
+// Get user by ID (used for local authentication)
+authRouter.get('/user/:id', async (req: Request, res: Response) => {
+  try {
+    const userId = parseInt(req.params.id);
+    
+    if (isNaN(userId)) {
+      return res.status(400).json({ error: 'Invalid user ID' });
+    }
+    
+    const user = await storage.getUserById(userId);
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    // Remove password from response
+    const { password: _, ...userWithoutPassword } = user;
+    
+    res.status(200).json(userWithoutPassword);
+  } catch (error: any) {
+    console.error('Error getting user data:', error);
+    res.status(500).json({ error: error.message || 'Failed to get user data' });
+  }
+});
+
+// Update user profile for Firebase users
 authRouter.patch('/user', verifyFirebaseToken, async (req: Request, res: Response) => {
   if (!req.user) {
     return res.status(401).json({ error: 'User authentication required' });
@@ -255,6 +280,34 @@ authRouter.patch('/user', verifyFirebaseToken, async (req: Request, res: Respons
     const updatedUser = await storage.updateUser(user.id, req.body);
     
     res.status(200).json(updatedUser);
+  } catch (error: any) {
+    console.error('Error updating user data:', error);
+    res.status(500).json({ error: error.message || 'Failed to update user data' });
+  }
+});
+
+// Update user profile for local authentication users
+authRouter.patch('/user/:id', async (req: Request, res: Response) => {
+  try {
+    const userId = parseInt(req.params.id);
+    
+    if (isNaN(userId)) {
+      return res.status(400).json({ error: 'Invalid user ID' });
+    }
+    
+    const user = await storage.getUserById(userId);
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    // Update user data
+    const updatedUser = await storage.updateUser(userId, req.body);
+    
+    // Remove password from response
+    const { password: _, ...userWithoutPassword } = updatedUser;
+    
+    res.status(200).json(userWithoutPassword);
   } catch (error: any) {
     console.error('Error updating user data:', error);
     res.status(500).json({ error: error.message || 'Failed to update user data' });
