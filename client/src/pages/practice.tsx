@@ -250,10 +250,20 @@ export default function Practice() {
       matchStrictness
     });
 
-    // Threshold adjustments:
-    // - With semantic matching, we're now much more flexible with thresholds for "correct"
-    // - Significantly lowered threshold to be very lenient with translations that have the same meaning
-    if (similarity >= 0.55) {
+    // Additional checks for critical temporal words that can't be mixed up
+    const userLower = input.toLowerCase().trim();
+    const correctLower = correctAnswer.toLowerCase().trim();
+    
+    // Special checks for temporal words that shouldn't be confused
+    const temporalWordsConflict = (
+      (userLower.includes("today") && correctLower.includes("tomorrow")) ||
+      (userLower.includes("tomorrow") && correctLower.includes("today")) ||
+      (userLower.includes("yesterday") && correctLower.includes("today")) ||
+      (userLower.includes("today") && correctLower.includes("yesterday"))
+    );
+    
+    // Threshold adjustments with special case handling:
+    if (similarity >= 0.7 && !temporalWordsConflict) {
       setFeedbackStatus("correct");
       calculateScore(similarity);
       

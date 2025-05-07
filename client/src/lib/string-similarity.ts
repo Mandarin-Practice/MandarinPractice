@@ -82,9 +82,10 @@ const equivalentPhrases: Array<string[]> = [
   // Time expressions
   ["now", "at the moment", "currently", "at present", "right now"],
   ["later", "afterwards", "after that"],
-  ["today", "this day"],
-  ["yesterday", "the day before"],
-  ["tomorrow", "the next day"],
+  // Critical temporal words - these should be kept separate and never mixed up
+  ["today", "this day", "the current day"],
+  ["yesterday", "the previous day", "the day before", "last day"],
+  ["tomorrow", "the next day", "the following day", "the day after"],
   ["every day", "daily", "each day"],
   ["morning", "in the morning", "during the morning", "a.m."],
   ["afternoon", "in the afternoon", "during the afternoon", "p.m."],
@@ -398,6 +399,13 @@ function areWordsEquivalent(word1: string, word2: string): boolean {
   // Check Chinese homophones
   const lowerWord1 = word1.toLowerCase();
   const lowerWord2 = word2.toLowerCase();
+  
+  // Critical temporal words should never be equivalent to each other
+  // This ensures "today", "tomorrow", and "yesterday" are never treated as equivalent
+  const temporalWords = ["today", "tomorrow", "yesterday"];
+  if (temporalWords.includes(lowerWord1) && temporalWords.includes(lowerWord2) && lowerWord1 !== lowerWord2) {
+    return false;
+  }
   
   // Check English alternatives (he/she/it)
   if (englishAlternatives[lowerWord1] && englishAlternatives[lowerWord1].includes(lowerWord2)) {
