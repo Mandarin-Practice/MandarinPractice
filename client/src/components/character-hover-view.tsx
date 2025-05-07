@@ -117,6 +117,21 @@ const commonCharacters: Record<string, { pinyin: string, definition: string }> =
   '电': { pinyin: 'diàn', definition: 'electricity' },
   '影': { pinyin: 'yǐng', definition: 'shadow/movie' },
   '吗': { pinyin: 'ma', definition: 'question particle' },
+  '喜': { pinyin: 'xǐ', definition: 'to like/to enjoy' },
+  '欢': { pinyin: 'huān', definition: 'happy/pleased' },
+  '饺': { pinyin: 'jiǎo', definition: 'dumpling' },
+  '子': { pinyin: 'zǐ', definition: 'child/seed/suffix' },
+  '星': { pinyin: 'xīng', definition: 'star' },
+  '期': { pinyin: 'qī', definition: 'period/phase' },
+  '三': { pinyin: 'sān', definition: 'three' },
+  '因': { pinyin: 'yīn', definition: 'cause/reason' },
+  '为': { pinyin: 'wèi', definition: 'for/because' },
+  '病': { pinyin: 'bìng', definition: 'illness/disease' },
+  '能': { pinyin: 'néng', definition: 'can/able' },
+  '校': { pinyin: 'xiào', definition: 'school' },
+  '这': { pinyin: 'zhè', definition: 'this' },
+  '个': { pinyin: 'gè', definition: 'measure word' },
+  '菜': { pinyin: 'cài', definition: 'food/dish' },
 };
 
 // Phrase dictionary for multi-character words
@@ -137,6 +152,25 @@ const commonPhrases: Record<string, { pinyin: string, definition: string }> = {
   '一起': { pinyin: 'yī qǐ', definition: 'together' },
   '电影': { pinyin: 'diàn yǐng', definition: 'movie' },
   '东西': { pinyin: 'dōng xi', definition: 'thing/stuff' },
+  '喜欢': { pinyin: 'xǐ huan', definition: 'to like/to enjoy' },
+  '饺子': { pinyin: 'jiǎo zi', definition: 'dumpling' },
+  '星期': { pinyin: 'xīng qī', definition: 'week' },
+  '星期一': { pinyin: 'xīng qī yī', definition: 'Monday' },
+  '星期二': { pinyin: 'xīng qī èr', definition: 'Tuesday' },
+  '星期三': { pinyin: 'xīng qī sān', definition: 'Wednesday' },
+  '星期四': { pinyin: 'xīng qī sì', definition: 'Thursday' },
+  '星期五': { pinyin: 'xīng qī wǔ', definition: 'Friday' },
+  '星期六': { pinyin: 'xīng qī liù', definition: 'Saturday' },
+  '星期日': { pinyin: 'xīng qī rì', definition: 'Sunday' },
+  '星期天': { pinyin: 'xīng qī tiān', definition: 'Sunday' },
+  '因为': { pinyin: 'yīn wèi', definition: 'because' },
+  '学校': { pinyin: 'xué xiào', definition: 'school' },
+  '生病': { pinyin: 'shēng bìng', definition: 'to fall ill' },
+  '所以': { pinyin: 'suǒ yǐ', definition: 'so/therefore' },
+  '不能': { pinyin: 'bù néng', definition: 'cannot' },
+  '觉得': { pinyin: 'jué de', definition: 'to think/feel' },
+  '这个': { pinyin: 'zhè ge', definition: 'this (one)' },
+  '好吃': { pinyin: 'hǎo chī', definition: 'delicious' },
 };
 
 export default function CharacterHoverView({
@@ -159,25 +193,45 @@ export default function CharacterHoverView({
     pinyin: string;
     definition: string;
   }[] {
-    const results = [];
+    const results: {
+      startIndex: number;
+      endIndex: number;
+      phrase: string;
+      pinyin: string;
+      definition: string;
+    }[] = [];
+    
+    const phrasePairs = Object.entries(commonPhrases);
+    
+    // Sort phrases by length (longest first) to prioritize longer phrase matches
+    const sortedPhrases = phrasePairs.sort((a, b) => b[0].length - a[0].length);
     
     // Check for phrases in our dictionary
-    for (const [phrase, info] of Object.entries(commonPhrases)) {
+    for (const [phrase, info] of sortedPhrases) {
       // Skip one-character phrases
       if (phrase.length <= 1) continue;
       
       let startIndex = 0;
-      let foundIndex;
+      let foundIndex: number = -1;
       
       // Find all occurrences of the phrase
       while ((foundIndex = text.indexOf(phrase, startIndex)) !== -1) {
-        results.push({
-          startIndex: foundIndex,
-          endIndex: foundIndex + phrase.length - 1,
-          phrase,
-          pinyin: info.pinyin,
-          definition: info.definition
-        });
+        // Check if this position is already covered by another phrase
+        const isOverlapping = results.some(r => 
+          (foundIndex >= r.startIndex && foundIndex <= r.endIndex) ||
+          (foundIndex + phrase.length - 1 >= r.startIndex && foundIndex + phrase.length - 1 <= r.endIndex)
+        );
+        
+        if (!isOverlapping) {
+          results.push({
+            startIndex: foundIndex,
+            endIndex: foundIndex + phrase.length - 1,
+            phrase,
+            pinyin: info.pinyin,
+            definition: info.definition
+          });
+        }
+        
         startIndex = foundIndex + 1;
       }
     }
