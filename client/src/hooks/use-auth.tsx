@@ -299,7 +299,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Save word to user's list
   const saveWordToList = async (wordId: number) => {
-    if (!backendUser) {
+    const effectiveBackendUser = devMode ? devUser : backendUser;
+    
+    if (!effectiveBackendUser) {
       toast({
         title: "Not signed in",
         description: "You need to sign in to save words to your list.",
@@ -309,13 +311,39 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
     
     try {
+      // In dev mode, just simulate API success and store word in local storage
+      if (devMode) {
+        console.log(`[Dev mode] Saving word ${wordId} to user's list`);
+        
+        // Get current saved words from localStorage
+        const savedWordsStr = localStorage.getItem('dev_saved_words') || '[]';
+        const savedWords = JSON.parse(savedWordsStr);
+        
+        // Add new word if not already saved
+        if (!savedWords.includes(wordId)) {
+          savedWords.push(wordId);
+          localStorage.setItem('dev_saved_words', JSON.stringify(savedWords));
+        }
+        
+        // Invalidate queries to refresh the UI
+        queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
+        
+        toast({
+          title: "Word saved",
+          description: "Word has been added to your list (dev mode).",
+        });
+        
+        return;
+      }
+      
+      // Regular API call for non-dev mode
       const response = await fetch(`/api/auth/wordlist`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          userId: backendUser.id,
+          userId: effectiveBackendUser.id,
           wordId,
         }),
       });
@@ -343,7 +371,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Remove word from user's list
   const removeWordFromList = async (wordId: number) => {
-    if (!backendUser) {
+    const effectiveBackendUser = devMode ? devUser : backendUser;
+    
+    if (!effectiveBackendUser) {
       toast({
         title: "Not signed in",
         description: "You need to sign in to remove words from your list.",
@@ -353,13 +383,37 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
     
     try {
+      // In dev mode, just simulate API success and update localStorage
+      if (devMode) {
+        console.log(`[Dev mode] Removing word ${wordId} from user's list`);
+        
+        // Get current saved words from localStorage
+        const savedWordsStr = localStorage.getItem('dev_saved_words') || '[]';
+        let savedWords = JSON.parse(savedWordsStr);
+        
+        // Remove word if it exists
+        savedWords = savedWords.filter((id: number) => id !== wordId);
+        localStorage.setItem('dev_saved_words', JSON.stringify(savedWords));
+        
+        // Invalidate queries to refresh the UI
+        queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
+        
+        toast({
+          title: "Word removed",
+          description: "Word has been removed from your list (dev mode).",
+        });
+        
+        return;
+      }
+      
+      // Regular API call for non-dev mode
       const response = await fetch(`/api/auth/wordlist`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          userId: backendUser.id,
+          userId: effectiveBackendUser.id,
           wordId,
         }),
       });
@@ -387,7 +441,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Update user profile
   const updateUserProfile = async (updates: ProfileUpdate) => {
-    if (!firebaseUser || !backendUser) {
+    const effectiveFirebaseUser = firebaseUser;
+    const effectiveBackendUser = devMode ? devUser : backendUser;
+    
+    if ((!effectiveFirebaseUser && !devMode) || !effectiveBackendUser) {
       toast({
         title: "Not signed in",
         description: "You need to sign in to update your profile.",
@@ -397,8 +454,34 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
     
     try {
+      // Handle dev mode profile updates
+      if (devMode && devUser) {
+        console.log("[Dev mode] Updating profile:", updates);
+        
+        // Update the dev user state with the new display name
+        const updatedDevUser = {
+          ...devUser,
+          displayName: updates.displayName || devUser.displayName,
+          photoUrl: updates.photoUrl || devUser.photoUrl
+        };
+        
+        // Save to localStorage for persistence
+        localStorage.setItem('dev_user_name', updatedDevUser.displayName || 'Dev User');
+        
+        // Update state
+        setDevUser(updatedDevUser);
+        
+        toast({
+          title: "Profile updated",
+          description: "Your profile has been updated successfully (dev mode).",
+        });
+        
+        return;
+      }
+      
+      // Normal flow for Firebase users
       // Get Firebase ID token
-      const idToken = await firebaseUser.getIdToken();
+      const idToken = await effectiveFirebaseUser!.getIdToken();
       
       // Update user profile in backend
       const response = await fetch("/api/auth/user", {

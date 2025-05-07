@@ -40,7 +40,7 @@ export function UserProfile() {
       >
         <Avatar className="h-8 w-8">
           <AvatarImage 
-            src={user.firebaseUser.photoURL || undefined} 
+            src={user.firebaseUser?.photoURL || undefined} 
             alt={user.backendUser.displayName || user.backendUser.username || "User"}
           />
           <AvatarFallback className="bg-white text-red-600 font-bold">

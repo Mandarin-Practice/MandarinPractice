@@ -41,6 +41,61 @@ export function useUserWordList() {
         return []; // Return empty array if not logged in
       }
       
+      // Check if we're in development mode
+      const isDevMode = localStorage.getItem('dev_auth') === 'true';
+      
+      if (isDevMode) {
+        console.log("[Dev mode] Fetching saved words from localStorage");
+        
+        try {
+          // Get saved word IDs from localStorage
+          const savedWordsStr = localStorage.getItem('dev_saved_words') || '[]';
+          const savedWordIds = JSON.parse(savedWordsStr) as number[];
+          
+          if (savedWordIds.length === 0) {
+            console.log("[Dev mode] No saved words found");
+            return [];
+          }
+          
+          // Fetch each word by ID
+          const wordListItems: WordListItem[] = [];
+          
+          for (const wordId of savedWordIds) {
+            try {
+              const response = await fetch(`/api/vocabulary/${wordId}`);
+              if (response.ok) {
+                const word = await response.json();
+                
+                // Create mock proficiency data
+                const wordWithProficiency: WordListItem = {
+                  ...word,
+                  proficiency: {
+                    id: 9000 + wordId,
+                    wordId: String(wordId),
+                    correctCount: "0",
+                    attemptCount: "0",
+                    lastPracticed: new Date().toISOString(),
+                    userId: 9999, // Dev user ID
+                    isSaved: true
+                  }
+                };
+                
+                wordListItems.push(wordWithProficiency);
+              }
+            } catch (err) {
+              console.error(`[Dev mode] Failed to fetch word ${wordId}:`, err);
+            }
+          }
+          
+          console.log(`[Dev mode] Loaded ${wordListItems.length} saved words`);
+          return wordListItems;
+        } catch (error) {
+          console.error("[Dev mode] Error fetching word list:", error);
+          throw error;
+        }
+      }
+      
+      // Regular API call for non-dev mode
       try {
         const response = await fetch(`/api/auth/wordlist?userId=${user.backendUser.id}`);
         if (!response.ok) {
