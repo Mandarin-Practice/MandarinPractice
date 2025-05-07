@@ -27,6 +27,7 @@ interface Stats {
   masteryPercent: number;
   masteredWords: number;
   totalWords: number;
+  correctAnswers: number; // Track separate from masteredWords
 }
 
 export default function Practice() {
@@ -51,7 +52,8 @@ export default function Practice() {
     avgTime: "0s",
     masteryPercent: 0,
     masteredWords: 0,
-    totalWords: 0
+    totalWords: 0,
+    correctAnswers: 0
   });
   
   const { speak, isPlaying } = useTextToSpeech();
@@ -167,7 +169,8 @@ export default function Practice() {
       // Update the total words count when vocabulary is loaded
       setStats(prev => ({
         ...prev,
-        totalWords: vocabularyWords.length
+        totalWords: vocabularyWords.length,
+        correctAnswers: prev.correctAnswers
       }));
     }
   }, [isLoadingVocabulary, vocabularyWords]);
@@ -336,10 +339,13 @@ export default function Practice() {
     // Update stats
     setStats(prev => {
       const completed = prev.completed + 1;
+      // Track mastered words (very good answers)
       const newMasteredWords = prev.masteredWords + (similarity > 0.9 ? 1 : 0);
+      // Track correct answers (separate from mastered)
+      const correctAnswers = prev.correctAnswers + 1;
       
       // Calculate accuracy based on correct answers / total attempts
-      const accuracy = `${Math.round((completed > 0 ? 100 * newMasteredWords / completed : 0))}%`;
+      const accuracy = `${Math.round((completed > 0 ? 100 * correctAnswers / completed : 0))}%`;
       
       // Handle first completion
       const prevAvgTime = parseFloat(prev.avgTime) || 0;
@@ -355,7 +361,8 @@ export default function Practice() {
         avgTime,
         masteryPercent,
         masteredWords: newMasteredWords,
-        totalWords: prev.totalWords
+        totalWords: prev.totalWords,
+        correctAnswers
       };
     });
   };
