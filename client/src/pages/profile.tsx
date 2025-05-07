@@ -167,6 +167,33 @@ export default function ProfilePage() {
                   <FiLogIn className="mr-2 h-4 w-4" />
                   Sign in with Google
                 </Button>
+                
+                {/* Development bypass for authentication */}
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">
+                      Or use development mode
+                    </span>
+                  </div>
+                </div>
+                
+                <Button
+                  className="w-full"
+                  variant="outline"
+                  onClick={() => {
+                    console.log("Using development authentication");
+                    localStorage.setItem("dev_auth", "true");
+                    localStorage.setItem("dev_user_name", "Dev User");
+                    window.location.reload();
+                  }}
+                >
+                  <FiUser className="mr-2 h-4 w-4" />
+                  Use Development Mode
+                </Button>
+                
                 <p className="text-xs text-muted-foreground text-center">
                   Note: Make sure this application's URL is added to your 
                   Firebase project's authorized domains list to enable sign-in

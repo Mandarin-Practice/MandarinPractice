@@ -58,6 +58,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [firebaseLoading, setFirebaseLoading] = useState(true);
   const [firebaseError, setFirebaseError] = useState<Error | null>(null);
+  
+  // Development mode authentication
+  const [devMode, setDevMode] = useState(false);
+  const [devUser, setDevUser] = useState<BackendUser | null>(null);
 
   // Query to get backend user data
   const {
@@ -436,13 +440,77 @@ export function AuthProvider({ children }: AuthProviderProps) {
     ? { firebaseUser, backendUser }
     : null;
 
-  // Create the auth context value
+  // Check for development auth mode
+  useEffect(() => {
+    const isDevAuth = localStorage.getItem('dev_auth') === 'true';
+    const devUserName = localStorage.getItem('dev_user_name') || 'Dev User';
+    
+    if (isDevAuth && !devUser) {
+      console.log("Using development authentication mode");
+      setDevMode(true);
+      
+      // Create a mock development user
+      const mockUser: BackendUser = {
+        id: 9999,
+        username: "dev_user",
+        email: "dev@example.com",
+        displayName: devUserName,
+        photoUrl: null,
+        firebaseUid: "dev-firebase-uid",
+      };
+      
+      setDevUser(mockUser);
+      
+      toast({
+        title: "Development Mode Active",
+        description: "Using development authentication for testing.",
+      });
+    }
+  }, [devUser, toast]);
+  
+  // Development mode is now handled by the async devSignOut function
+  
+  // Create the combined user for dev mode
+  const effectiveUser = devMode && devUser 
+    ? { 
+        backendUser: devUser,
+        firebaseUser: null as any // Type workaround for dev mode
+      } 
+    : (combinedUser || null);
+    
+  // Dev mode alternative functions
+  const devSignIn = async (): Promise<void> => {
+    console.log("Dev mode sign in - no action needed");
+    return Promise.resolve();
+  };
+  
+  const devSignOut = async (): Promise<void> => {
+    console.log("Dev mode sign out");
+    localStorage.removeItem('dev_auth');
+    localStorage.removeItem('dev_user_name');
+    setDevMode(false);
+    setDevUser(null);
+    
+    // Clear any data
+    queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
+    
+    toast({
+      title: "Signed out",
+      description: "Development mode deactivated.",
+    });
+    
+    window.location.reload();
+    return Promise.resolve();
+  };
+  
+  // Create the auth context value with dev mode support
   const authContextValue: AuthContextType = {
-    user: combinedUser,
-    isLoading: firebaseLoading || backendLoading,
+    user: effectiveUser,
+    isLoading: !devMode && (firebaseLoading || backendLoading),
     error: firebaseError || backendError || null,
-    signIn,
-    signOut,
+    signIn: devMode ? devSignIn : signIn,
+    signOut: devMode ? devSignOut : signOut,
     saveWordToList,
     removeWordFromList,
     updateUserProfile,
@@ -451,12 +519,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Log auth state for debugging
   useEffect(() => {
     console.log("Auth context updated:", {
-      user: combinedUser ? "authenticated" : "unauthenticated",
+      user: effectiveUser ? "authenticated" : "unauthenticated",
       firebaseUser: firebaseUser ? "authenticated" : "unauthenticated",
       backendUser: backendUser ? "found" : "not found",
-      isLoading: firebaseLoading || backendLoading,
+      devMode: devMode ? "active" : "inactive",
+      devUser: devUser ? "active" : "inactive",
+      isLoading: !devMode && (firebaseLoading || backendLoading),
     });
-  }, [combinedUser, firebaseUser, backendUser, firebaseLoading, backendLoading]);
+  }, [effectiveUser, firebaseUser, backendUser, devMode, devUser, firebaseLoading, backendLoading]);
 
   return (
     <AuthContext.Provider value={authContextValue}>
