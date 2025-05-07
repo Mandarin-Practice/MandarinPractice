@@ -39,28 +39,19 @@ export default function InteractiveChineseText({
     const char = chinese[i];
     const charInfo: CharacterInfo = { character: char };
     
-    // Find if this character is part of a word in our vocabulary
-    // We check multi-character words first, from longest to shortest
-    const matchedWord = vocabularyWords
-      .filter(word => word.chinese.includes(char))
-      .sort((a, b) => b.chinese.length - a.chinese.length) // Sort by length descending
-      .find(word => {
-        const startIndex = chinese.indexOf(word.chinese, Math.max(0, i - word.chinese.length + 1));
-        return startIndex !== -1 && i >= startIndex && i < startIndex + word.chinese.length;
-      });
+    // SIMPLIFIED MATCHING FOR DEBUGGING
+    // Just check if this character appears anywhere in any vocabulary word
+    const matchedWord = vocabularyWords.find(word => word.chinese.includes(char));
     
     if (matchedWord) {
       charInfo.definition = matchedWord.english;
       charInfo.pinyin = matchedWord.pinyin;
       charInfo.wordId = matchedWord.id;
+      charInfo.fullWord = matchedWord.chinese;
+      charInfo.positionInWord = matchedWord.chinese.indexOf(char);
       
-      // Store the full word and the position of this character within the word
-      const startIndex = chinese.indexOf(matchedWord.chinese, Math.max(0, i - matchedWord.chinese.length + 1));
-      if (startIndex !== -1) {
-        const positionInWord = i - startIndex;
-        charInfo.fullWord = matchedWord.chinese;
-        charInfo.positionInWord = positionInWord;
-      }
+      // Force debug info to console
+      console.log('Matched character:', char, 'to word:', matchedWord.chinese);
     }
     
     processedText.push(charInfo);
@@ -100,7 +91,7 @@ export default function InteractiveChineseText({
   // Function to render popup content
   const renderPopupContent = (charInfo: CharacterInfo) => {
     return (
-      <div className="absolute top-full left-0 mt-1 w-64 p-4 bg-white dark:bg-gray-800 rounded shadow-lg border z-[9999]">
+      <div className="fixed top-10 left-10 mt-1 w-64 p-4 bg-white dark:bg-gray-800 rounded shadow-lg border z-[9999]">
         <div className="space-y-2">
           {/* Close button */}
           <button 
@@ -172,7 +163,7 @@ export default function InteractiveChineseText({
   
   // Created fixed popup content for testing
   const testContent = (
-    <div className="absolute top-full left-0 mt-1 w-64 p-4 bg-white dark:bg-gray-800 rounded shadow-lg border z-[9999]">
+    <div className="fixed top-10 left-10 mt-1 w-64 p-4 bg-white dark:bg-gray-800 rounded shadow-lg border z-[9999]">
       <div className="space-y-2">
         <div className="text-2xl font-bold mt-2">Test Popup</div>
         <div className="text-sm text-gray-700 dark:text-gray-300 font-medium">This is a test popup</div>
