@@ -58,9 +58,10 @@ const ToggleSwitch = React.forwardRef<
         {...props}
       >
         <span 
-          className="absolute block h-8 w-8 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out left-0 top-0 -mt-1 -ml-1" 
+          className="absolute block h-8 w-8 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out left-0 top-50 -translate-y-1/2" 
           style={{
-            transform: props.pressed ? 'translateX(40px)' : 'translateX(0)'
+            transform: props.pressed ? 'translateX(40px)' : 'translateX(0)',
+            top: '50%'
           }}
         />
       </TogglePrimitive.Root>
