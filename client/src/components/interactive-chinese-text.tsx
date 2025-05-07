@@ -1,6 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from './ui/button';
-import { HoverCard, HoverCardContent, HoverCardTrigger } from './ui/hover-card';
 import { apiRequest } from '@/lib/queryClient';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -96,10 +95,108 @@ export default function InteractiveChineseText({
     }
   });
   
+  const [selectedCharId, setSelectedCharId] = useState<string | null>(null);
+  
+  // Function to close popup when clicking outside
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      const popup = document.getElementById('char-popup');
+      if (popup && !popup.contains(e.target as Node)) {
+        setSelectedCharId(null);
+      }
+    }
+    
+    if (selectedCharId) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [selectedCharId]);
+  
+  // Function to render popup content
+  const renderPopupContent = (charInfo: CharacterInfo) => {
+    return (
+      <div id="char-popup" className="absolute z-[9999] w-64 rounded-md border bg-popover p-4 text-popover-foreground shadow-md">
+        <div className="space-y-2">
+          {/* Close button */}
+          <button 
+            className="absolute top-1 right-1 text-gray-500 hover:text-gray-700"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedCharId(null);
+            }}
+          >
+            ×
+          </button>
+          
+          {/* Display full word with the current character highlighted */}
+          {charInfo.fullWord && charInfo.positionInWord !== undefined ? (
+            <div className="text-2xl font-bold mt-3">
+              {Array.from(charInfo.fullWord).map((char, i) => (
+                <span 
+                  key={i} 
+                  className={i === charInfo.positionInWord 
+                    ? "bg-secondary/25 text-secondary-foreground/90 px-0.5 rounded" 
+                    : ""
+                  }
+                >
+                  {char}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <div className="text-2xl font-bold mt-3">{charInfo.character}</div>
+          )}
+          
+          <div className="text-sm text-gray-700 dark:text-gray-300 font-medium">{charInfo.pinyin}</div>
+          <div className="text-base text-gray-900 dark:text-white">{charInfo.definition}</div>
+          
+          {charInfo.wordId && (
+            <div className="flex flex-col space-y-2 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+              <div className="text-xs text-gray-700 dark:text-white font-medium mb-1">
+                Manage this word (you can update multiple words before continuing)
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleWordActive.mutate(charInfo.wordId as number);
+                  setSelectedCharId(null);
+                }}
+                className="text-xs justify-start"
+              >
+                {vocabularyWords.find(w => w.id === charInfo.wordId)?.active === 'true' 
+                  ? 'Mark as Inactive' 
+                  : 'Mark as Active'}
+              </Button>
+              <Button 
+                variant="destructive" 
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (window.confirm('Are you sure you want to delete this word?')) {
+                    deleteWord.mutate(charInfo.wordId as number);
+                    setSelectedCharId(null);
+                  }
+                }}
+                className="text-xs justify-start"
+              >
+                Delete Word
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+  
   return (
     <div className="text-3xl font-['Noto_Sans_SC',sans-serif] leading-relaxed font-bold overflow-visible">
       {feedbackStatus ? (
-        // Display with hover functionality after checking answer
+        // Display with click functionality after checking answer
         <span className={
           feedbackStatus === "correct" 
             ? "text-green-600 dark:text-green-400" 
@@ -107,76 +204,26 @@ export default function InteractiveChineseText({
               ? "text-red-600 dark:text-red-400" 
               : ""
         }>
-          {processedText.map((charInfo, index) => (
-            charInfo.definition ? (
-              <HoverCard key={index} openDelay={100} closeDelay={200}>
-                <HoverCardTrigger asChild>
-                  <span 
-                    className="cursor-help hover:bg-gray-100 dark:hover:bg-gray-800 px-1 py-0.5 mx-0.5 rounded transition-colors"
-                  >
-                    {charInfo.character}
-                  </span>
-                </HoverCardTrigger>
-                <HoverCardContent className="w-64 p-4">
-                  <div className="space-y-2">
-                    {/* Display full word with the current character highlighted */}
-                    {charInfo.fullWord && charInfo.positionInWord !== undefined ? (
-                      <div className="text-2xl font-bold">
-                        {Array.from(charInfo.fullWord).map((char, i) => (
-                          <span 
-                            key={i} 
-                            className={i === charInfo.positionInWord 
-                              ? "bg-secondary/25 text-secondary-foreground/90 px-0.5 rounded" 
-                              : ""
-                            }
-                          >
-                            {char}
-                          </span>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-2xl font-bold">{charInfo.character}</div>
-                    )}
-                    
-                    <div className="text-sm text-gray-700 dark:text-gray-300 font-medium">{charInfo.pinyin}</div>
-                    <div className="text-base text-gray-900 dark:text-white">{charInfo.definition}</div>
-                    
-                    {charInfo.wordId && (
-                      <div className="flex flex-col space-y-2 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-                        <div className="text-xs text-gray-700 dark:text-white font-medium mb-1">
-                          Manage this word (you can update multiple words before continuing)
-                        </div>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => toggleWordActive.mutate(charInfo.wordId as number)}
-                          className="text-xs justify-start"
-                        >
-                          {vocabularyWords.find(w => w.id === charInfo.wordId)?.active === 'true' 
-                            ? 'Mark as Inactive' 
-                            : 'Mark as Active'}
-                        </Button>
-                        <Button 
-                          variant="destructive" 
-                          size="sm"
-                          onClick={() => {
-                            if (window.confirm('Are you sure you want to delete this word?')) {
-                              deleteWord.mutate(charInfo.wordId as number);
-                            }
-                          }}
-                          className="text-xs justify-start"
-                        >
-                          Delete Word
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </HoverCardContent>
-              </HoverCard>
+          {processedText.map((charInfo, index) => {
+            const charId = `char-${index}`;
+            return charInfo.definition ? (
+              <span key={index} className="relative">
+                <span 
+                  id={charId}
+                  className="cursor-help hover:bg-gray-100 dark:hover:bg-gray-800 px-1 py-0.5 mx-0.5 rounded transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedCharId(selectedCharId === charId ? null : charId);
+                  }}
+                >
+                  {charInfo.character}
+                </span>
+                {selectedCharId === charId && renderPopupContent(charInfo)}
+              </span>
             ) : (
               <span key={index} className="px-1 mx-0.5">{charInfo.character}</span>
-            )
-          ))}
+            );
+          })}
         </span>
       ) : (
         // Normal display when no feedback with better spacing and readability

@@ -472,8 +472,14 @@
 }
 
 /* Fix for character popups */
-.top-layer {
-  z-index: 999;
+.character-popup {
+  z-index: 9999 !important;
+  position: relative;
+}
+
+#char-popup {
+  z-index: 9999 !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 /* Ensure proper stacking of important elements */
