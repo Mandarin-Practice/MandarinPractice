@@ -28,8 +28,20 @@ export function useTextToSpeech() {
           MANDARIN_LANG_CODES.some(code => voice.lang.includes(code))
         );
         setMandarinVoices(mandarinVoicesResult);
+        
+        // Look for Google Taiwan voice as preferred default
+        const googleTWVoice = availableVoices.find(v => 
+          v.name.includes('Google') && v.lang.includes('zh-TW')
+        );
+        
+        if (googleTWVoice) {
+          // Set Google TW voice as default in localStorage
+          localStorage.setItem('selectedVoiceURI', googleTWVoice.voiceURI);
+          setPreferredVoice(googleTWVoice);
+          console.log('Set default voice to Google Taiwan:', googleTWVoice.name);
+        }
 
-        // Check for saved voice preference
+        // Check for saved voice preference (this will override only if user has explicitly set a preference)
         const savedVoiceURI = localStorage.getItem('selectedVoiceURI');
         if (savedVoiceURI) {
           const savedVoice = availableVoices.find(v => v.voiceURI === savedVoiceURI);
