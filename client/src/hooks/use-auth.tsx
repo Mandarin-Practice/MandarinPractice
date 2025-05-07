@@ -572,6 +572,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     console.log("Dev mode sign out");
     localStorage.removeItem('dev_auth');
     localStorage.removeItem('dev_user_name');
+    localStorage.removeItem('dev_username');
+    localStorage.removeItem('dev_saved_words');
     setDevMode(false);
     setDevUser(null);
     
