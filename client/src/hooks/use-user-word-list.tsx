@@ -112,7 +112,13 @@ export function useUserWordList() {
     // Only run the query if the user is logged in
     enabled: !!user,
     // Refetch on window focus, useful when user returns to the app
-    refetchOnWindowFocus: true
+    refetchOnWindowFocus: true,
+    // Critical for the practice page issue - increase staleTime 
+    // to prevent refetching on new tab which causes flashing
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    // Ensure we retry when there are errors or network issues
+    retry: 3,
+    retryDelay: 1000
   });
 
   // Add a word to the user's list

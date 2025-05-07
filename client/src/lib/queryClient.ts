@@ -17,6 +17,8 @@ export async function apiRequest(
     headers: data ? { "Content-Type": "application/json" } : {},
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
+    // Add cache control headers to prevent caching and race conditions
+    cache: "no-cache",
   });
 
   await throwIfResNotOk(res);
@@ -31,6 +33,8 @@ export const getQueryFn: <T>(options: {
   async ({ queryKey }) => {
     const res = await fetch(queryKey[0] as string, {
       credentials: "include",
+      // Add cache control headers to prevent caching and race conditions in production
+      cache: "no-cache",
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
@@ -47,11 +51,15 @@ export const queryClient = new QueryClient({
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
       refetchOnWindowFocus: false,
-      staleTime: Infinity,
-      retry: false,
+      // Change staleTime from Infinity to a more reasonable value
+      // This helps prevent cache issues in production
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      // Add retry to improve reliability
+      retry: 2,
+      retryDelay: 1000,
     },
     mutations: {
-      retry: false,
+      retry: 1, // Add some retry capability to mutations
     },
   },
 });
