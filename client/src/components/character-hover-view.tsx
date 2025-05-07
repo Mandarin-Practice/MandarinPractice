@@ -378,7 +378,11 @@ export default function CharacterHoverView({
                 {charData.character}
               </span>
             </HoverCardTrigger>
-            <HoverCardContent className="w-80 p-4" style={{ zIndex: 9999 }}>
+            <HoverCardContent 
+              align="center"
+              side="bottom"
+              className="w-80 p-4 overflow-visible" 
+              style={{ zIndex: 9999 }}>
               <div className="space-y-2">
                 <div className="text-2xl font-bold">{charData.character}</div>
                 <div className="text-sm text-gray-700 dark:text-gray-300 font-medium">
