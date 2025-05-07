@@ -194,18 +194,24 @@ export default function SentenceCard({
                         </div>
                       </div>
                     ) : (
-                      // Normal display when no feedback yet
+                      // Interactive display even before feedback
                       <div>
                         <div className="text-xs text-primary font-medium uppercase tracking-wider mb-2">
-                          Chinese Text
+                          Chinese Text - Interactive
                         </div>
-                        <p className="text-3xl font-bold leading-relaxed" style={{ color: '#cc0000' }}>
-                          {sentence.chinese.split('').map((char, index) => (
-                            <span key={index} className="chinese-character">
-                              {char}
-                            </span>
-                          ))}
-                        </p>
+                        <InteractiveChineseText 
+                          chinese={sentence.chinese}
+                          vocabularyWords={vocabularyWords}
+                          feedbackStatus={null}
+                        />
+                        <div className="mt-2 text-xs text-gray-700 dark:text-white flex items-center font-medium">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1 text-primary">
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M12 16v-4" />
+                            <path d="M12 8h.01" />
+                          </svg>
+                          Hover over any character to see details
+                        </div>
                       </div>
                     )}
                   </div>
@@ -288,14 +294,19 @@ export default function SentenceCard({
         </div>
         
         <div className="py-4 px-6 bg-primary/10 border-t border-red-200 dark:border-red-800 flex justify-between items-center">
-          {feedbackStatus && (
+          {sentence && (
             <p className="text-sm bg-white dark:bg-gray-800 px-3 py-1.5 rounded-md border border-red-200 dark:border-red-900">
-              {sentence && sentence.chinese.length > 0 ? (
+              {sentence.chinese.length > 0 ? (
                 <span className="font-medium text-primary">{sentence.chinese.length}</span>
               ) : ''}
               <span className="mx-1 text-foreground">characters</span>
               <span className="mx-1">•</span>
-              <span className="text-gray-700 dark:text-gray-200 font-medium">Hover over words to manage vocabulary</span>
+              <span className="text-gray-700 dark:text-gray-200 font-medium">
+                {feedbackStatus 
+                  ? "Hover over words to manage vocabulary"
+                  : "Hover over characters to see details"
+                }
+              </span>
             </p>
           )}
           <TooltipProvider>
