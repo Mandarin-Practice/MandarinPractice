@@ -27,6 +27,12 @@ export interface AuthUser {
   backendUser: BackendUser;
 }
 
+// Profile update type
+interface ProfileUpdate {
+  displayName?: string;
+  photoUrl?: string;
+}
+
 // Auth context type definition
 interface AuthContextType {
   user: AuthUser | null;
@@ -36,6 +42,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   saveWordToList: (wordId: number) => Promise<void>;
   removeWordFromList: (wordId: number) => Promise<void>;
+  updateUserProfile: (updates: ProfileUpdate) => Promise<void>;
 }
 
 // Create context with null default value
@@ -294,6 +301,56 @@ export function AuthProvider({ children }: AuthProviderProps) {
     ? { firebaseUser, backendUser }
     : null;
 
+  // Update user profile
+  const updateUserProfile = async (updates: ProfileUpdate) => {
+    if (!firebaseUser || !backendUser) {
+      toast({
+        title: "Not signed in",
+        description: "You need to sign in to update your profile.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      // Get Firebase ID token
+      const idToken = await firebaseUser.getIdToken();
+      
+      // Update user profile in backend
+      const response = await fetch("/api/auth/user", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify(updates),
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to update profile");
+      }
+      
+      // Refetch user data
+      await refetchBackendUser();
+      
+      // Invalidate related queries
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been updated successfully.",
+      });
+    } catch (error) {
+      console.error("Update profile error:", error);
+      toast({
+        title: "Failed to update profile",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
   // Create the auth context value
   const authContextValue: AuthContextType = {
     user: combinedUser,
@@ -303,6 +360,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     signOut,
     saveWordToList,
     removeWordFromList,
+    updateUserProfile,
   };
 
   return (

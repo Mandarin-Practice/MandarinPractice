@@ -6,6 +6,7 @@ import WordDetail from "@/pages/word-detail";
 import Settings from "@/pages/settings";
 import CharacterDictionary from "@/pages/character-dictionary";
 import DictionaryAdmin from "@/pages/dictionary-admin";
+import Profile from "@/pages/profile";
 import Navbar from "@/components/navbar";
 import NotFound from "@/pages/not-found";
 import { useEffect, useState } from "react";
@@ -62,6 +63,7 @@ function App() {
             <Route path="/dictionary" component={CharacterDictionary} />
             <Route path="/dictionary/admin" component={DictionaryAdmin} />
             <Route path="/settings" component={Settings} />
+            <Route path="/profile" component={Profile} />
             <Route component={NotFound} />
           </Switch>
         </main>
