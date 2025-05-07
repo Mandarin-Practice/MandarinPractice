@@ -6,15 +6,17 @@ import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { FiLogOut, FiUser, FiSave, FiLogIn } from "react-icons/fi";
+import { FiLogOut, FiUser, FiSave, FiLogIn, FiUserPlus } from "react-icons/fi";
 import { useLocation } from "wouter";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function ProfilePage() {
-  const { user, isLoading, signIn, signOut, updateUserProfile } = useAuth();
+  const { user, isLoading, signIn, signOut, updateUserProfile, loginWithCredentials, registerWithCredentials } = useAuth();
   const { toast } = useToast();
   const [displayName, setDisplayName] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
   const [redirect, setRedirect] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Debug user state
   useEffect(() => {
@@ -28,8 +30,8 @@ export default function ProfilePage() {
     }
   }, [user]);
 
-  // Handle sign in
-  const handleSignIn = async () => {
+  // Handle Google sign in
+  const handleGoogleSignIn = async () => {
     try {
       await signIn();
       toast({
@@ -43,6 +45,59 @@ export default function ProfilePage() {
         description: "There was a problem signing in. Please try again.",
         variant: "destructive",
       });
+    }
+  };
+
+  // Handle username/password sign in
+  const handleCredentialSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsProcessing(true);
+    
+    try {
+      const formData = new FormData(e.currentTarget);
+      const username = formData.get('username') as string;
+      const password = formData.get('password') as string;
+      
+      await loginWithCredentials({ username, password });
+    } catch (error) {
+      console.error("Login error:", error);
+      toast({
+        title: "Login failed",
+        description: "Invalid username or password. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Handle new user registration
+  const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsProcessing(true);
+    
+    try {
+      const formData = new FormData(e.currentTarget);
+      const username = formData.get('reg_username') as string;
+      const password = formData.get('reg_password') as string;
+      const email = formData.get('reg_email') as string || undefined;
+      const displayName = formData.get('reg_display_name') as string || undefined;
+      
+      await registerWithCredentials({ 
+        username, 
+        password,
+        email,
+        displayName
+      });
+    } catch (error) {
+      console.error("Registration error:", error);
+      toast({
+        title: "Registration failed",
+        description: "This username may already be taken. Please try another.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -162,7 +217,7 @@ export default function ProfilePage() {
                 <Button
                   className="w-full"
                   size="lg"
-                  onClick={handleSignIn}
+                  onClick={handleGoogleSignIn}
                 >
                   <FiLogIn className="mr-2 h-4 w-4" />
                   Sign in with Google
@@ -175,70 +230,106 @@ export default function ProfilePage() {
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
                     <span className="bg-background px-2 text-muted-foreground">
-                      Or use email and password
+                      Or use username and password
                     </span>
                   </div>
                 </div>
                 
-                <form 
-                  className="space-y-3" 
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    
-                    // Get the username from the form
-                    const formData = new FormData(e.currentTarget);
-                    const username = formData.get('username') as string;
-                    const nickname = formData.get('nickname') as string;
-                    
-                    // Store in localStorage
-                    console.log("Using standard authentication");
-                    localStorage.setItem("dev_auth", "true");
-                    localStorage.setItem("dev_user_name", nickname || username);
-                    localStorage.setItem("dev_username", username);
-                    window.location.reload();
-                  }}
-                >
-                  <div className="space-y-1">
-                    <Label htmlFor="username">Email or Username</Label>
-                    <Input 
-                      id="username" 
-                      name="username" 
-                      placeholder="Enter your email or username" 
-                      required 
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="nickname">Display Name (optional)</Label>
-                    <Input 
-                      id="nickname" 
-                      name="nickname" 
-                      placeholder="Enter your preferred display name" 
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="password">Password</Label>
-                    <Input 
-                      id="password" 
-                      name="password" 
-                      type="password" 
-                      placeholder="Enter your password" 
-                      required 
-                    />
-                  </div>
-                  <Button 
-                    className="w-full" 
-                    variant="outline"
-                    type="submit"
-                  >
-                    <FiUser className="mr-2 h-4 w-4" />
-                    Sign in with Username
-                  </Button>
-                </form>
-                
-                <p className="text-xs text-muted-foreground text-center">
-                  Note: Make sure this application's URL is added to your 
-                  Firebase project's authorized domains list to enable sign-in
-                </p>
+                <Tabs defaultValue="login" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="login">Login</TabsTrigger>
+                    <TabsTrigger value="register">Register</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="login" className="mt-4">
+                    <form className="space-y-3" onSubmit={handleCredentialSignIn}>
+                      <div className="space-y-1">
+                        <Label htmlFor="username">Username</Label>
+                        <Input 
+                          id="username" 
+                          name="username" 
+                          placeholder="Enter your username" 
+                          required 
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="password">Password</Label>
+                        <Input 
+                          id="password" 
+                          name="password" 
+                          type="password" 
+                          placeholder="Enter your password" 
+                          required 
+                        />
+                      </div>
+                      <Button 
+                        className="w-full" 
+                        type="submit"
+                        disabled={isProcessing}
+                      >
+                        {isProcessing ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <FiUser className="mr-2 h-4 w-4" />
+                        )}
+                        Sign in
+                      </Button>
+                    </form>
+                  </TabsContent>
+                  
+                  <TabsContent value="register" className="mt-4">
+                    <form className="space-y-3" onSubmit={handleRegister}>
+                      <div className="space-y-1">
+                        <Label htmlFor="reg_username">Username</Label>
+                        <Input 
+                          id="reg_username" 
+                          name="reg_username" 
+                          placeholder="Choose a username" 
+                          required 
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="reg_email">Email (optional)</Label>
+                        <Input 
+                          id="reg_email" 
+                          name="reg_email" 
+                          type="email"
+                          placeholder="Enter your email" 
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="reg_display_name">Display Name</Label>
+                        <Input 
+                          id="reg_display_name" 
+                          name="reg_display_name" 
+                          placeholder="How others will see you" 
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="reg_password">Password</Label>
+                        <Input 
+                          id="reg_password" 
+                          name="reg_password" 
+                          type="password" 
+                          placeholder="Choose a secure password" 
+                          required 
+                        />
+                      </div>
+                      <Button 
+                        className="w-full" 
+                        type="submit"
+                        disabled={isProcessing}
+                      >
+                        {isProcessing ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <FiUserPlus className="mr-2 h-4 w-4" />
+                        )}
+                        Create Account
+                      </Button>
+                    </form>
+                  </TabsContent>
+                </Tabs>
               </div>
             </div>
           )}

@@ -73,9 +73,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [firebaseLoading, setFirebaseLoading] = useState(true);
   const [firebaseError, setFirebaseError] = useState<Error | null>(null);
   
-  // Development mode authentication
-  const [devMode, setDevMode] = useState(false);
-  const [devUser, setDevUser] = useState<BackendUser | null>(null);
+  // Local authentication state
+  const [localUser, setLocalUser] = useState<BackendUser | null>(null);
+  const [localUserLoading, setLocalUserLoading] = useState(false);
 
   // Query to get backend user data
   const {
@@ -253,6 +253,112 @@ export function AuthProvider({ children }: AuthProviderProps) {
     checkRedirectResult();
   }, [queryClient, refetchBackendUser, registerOrLoginWithBackend]);
   
+  // Login with username and password (local auth)
+  const loginWithCredentials = async (credentials: LoginCredentials) => {
+    try {
+      setLocalUserLoading(true);
+      console.log("Logging in with username and password");
+      
+      const response = await fetch('/api/auth/login/local', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: credentials.username,
+          password: credentials.password,
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Login failed');
+      }
+      
+      // Save user data
+      const userData = await response.json();
+      setLocalUser(userData);
+      
+      // Store user authentication token
+      localStorage.setItem('auth_type', 'local');
+      localStorage.setItem('auth_user_id', userData.id.toString());
+      
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
+      
+      toast({
+        title: "Login successful",
+        description: `Welcome back, ${userData.displayName || userData.username}!`,
+      });
+      
+      return userData;
+    } catch (error) {
+      console.error("Login failed:", error);
+      toast({
+        title: "Login failed",
+        description: error instanceof Error ? error.message : "Invalid username or password",
+        variant: "destructive",
+      });
+      throw error;
+    } finally {
+      setLocalUserLoading(false);
+    }
+  };
+  
+  // Register a new user with username and password
+  const registerWithCredentials = async (credentials: RegisterCredentials) => {
+    try {
+      setLocalUserLoading(true);
+      console.log("Registering new user with username and password");
+      
+      const response = await fetch('/api/auth/register/local', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: credentials.username,
+          password: credentials.password,
+          email: credentials.email,
+          displayName: credentials.displayName || credentials.username,
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Registration failed');
+      }
+      
+      // Save user data
+      const userData = await response.json();
+      setLocalUser(userData);
+      
+      // Store user authentication info
+      localStorage.setItem('auth_type', 'local');
+      localStorage.setItem('auth_user_id', userData.id.toString());
+      
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
+      
+      toast({
+        title: "Registration successful",
+        description: `Welcome, ${userData.displayName || userData.username}!`,
+      });
+      
+      return userData;
+    } catch (error) {
+      console.error("Registration failed:", error);
+      toast({
+        title: "Registration failed",
+        description: error instanceof Error ? error.message : "Registration error",
+        variant: "destructive",
+      });
+      throw error;
+    } finally {
+      setLocalUserLoading(false);
+    }
+  };
+  
   // Sign in with Google
   const signIn = async () => {
     try {
@@ -313,7 +419,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Save word to user's list
   const saveWordToList = async (wordId: number) => {
-    const effectiveBackendUser = devMode ? devUser : backendUser;
+    // Get user ID from either Firebase or local auth
+    const effectiveBackendUser = localUser || backendUser;
     
     if (!effectiveBackendUser) {
       toast({
@@ -325,32 +432,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
     
     try {
-      // In dev mode, just simulate API success and store word in local storage
-      if (devMode) {
-        console.log(`[Dev mode] Saving word ${wordId} to user's list`);
-        
-        // Get current saved words from localStorage
-        const savedWordsStr = localStorage.getItem('dev_saved_words') || '[]';
-        const savedWords = JSON.parse(savedWordsStr);
-        
-        // Add new word if not already saved
-        if (!savedWords.includes(wordId)) {
-          savedWords.push(wordId);
-          localStorage.setItem('dev_saved_words', JSON.stringify(savedWords));
-        }
-        
-        // Invalidate queries to refresh the UI
-        queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
-        
-        toast({
-          title: "Word saved",
-          description: "Word has been added to your list (dev mode).",
-        });
-        
-        return;
-      }
-      
-      // Regular API call for non-dev mode
+      // Regular API call to save word
       const response = await fetch(`/api/auth/wordlist`, {
         method: "POST",
         headers: {
@@ -385,7 +467,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Remove word from user's list
   const removeWordFromList = async (wordId: number) => {
-    const effectiveBackendUser = devMode ? devUser : backendUser;
+    // Get user ID from either Firebase or local auth
+    const effectiveBackendUser = localUser || backendUser;
     
     if (!effectiveBackendUser) {
       toast({
@@ -397,30 +480,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
     
     try {
-      // In dev mode, just simulate API success and update localStorage
-      if (devMode) {
-        console.log(`[Dev mode] Removing word ${wordId} from user's list`);
-        
-        // Get current saved words from localStorage
-        const savedWordsStr = localStorage.getItem('dev_saved_words') || '[]';
-        let savedWords = JSON.parse(savedWordsStr);
-        
-        // Remove word if it exists
-        savedWords = savedWords.filter((id: number) => id !== wordId);
-        localStorage.setItem('dev_saved_words', JSON.stringify(savedWords));
-        
-        // Invalidate queries to refresh the UI
-        queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
-        
-        toast({
-          title: "Word removed",
-          description: "Word has been removed from your list (dev mode).",
-        });
-        
-        return;
-      }
-      
-      // Regular API call for non-dev mode
+      // Regular API call to remove word
       const response = await fetch(`/api/auth/wordlist`, {
         method: "DELETE",
         headers: {
@@ -455,10 +515,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Update user profile
   const updateUserProfile = async (updates: ProfileUpdate) => {
-    const effectiveFirebaseUser = firebaseUser;
-    const effectiveBackendUser = devMode ? devUser : backendUser;
+    // Check if we have a local or Firebase user
+    const isLocalAuth = !!localUser;
+    const effectiveUser = localUser || backendUser;
     
-    if ((!effectiveFirebaseUser && !devMode) || !effectiveBackendUser) {
+    if (!effectiveUser) {
       toast({
         title: "Not signed in",
         description: "You need to sign in to update your profile.",
@@ -468,34 +529,41 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
     
     try {
-      // Handle dev mode profile updates
-      if (devMode && devUser) {
-        console.log("[Dev mode] Updating profile:", updates);
+      // Handle local authentication
+      if (isLocalAuth) {
+        console.log("Updating local user profile:", updates);
         
-        // Update the dev user state with the new display name
-        const updatedDevUser = {
-          ...devUser,
-          displayName: updates.displayName || devUser.displayName,
-          photoUrl: updates.photoUrl || devUser.photoUrl
-        };
+        // Update user profile in backend with local auth
+        const response = await fetch(`/api/auth/user/${effectiveUser.id}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(updates),
+        });
         
-        // Save to localStorage for persistence
-        localStorage.setItem('dev_user_name', updatedDevUser.displayName || 'Dev User');
+        if (!response.ok) {
+          throw new Error("Failed to update profile");
+        }
         
-        // Update state
-        setDevUser(updatedDevUser);
+        // Get updated user data
+        const userData = await response.json();
+        setLocalUser(userData);
+        
+        // Invalidate related queries
+        queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
         
         toast({
           title: "Profile updated",
-          description: "Your profile has been updated successfully (dev mode).",
+          description: "Your profile has been updated successfully.",
         });
         
         return;
       }
       
-      // Normal flow for Firebase users
+      // If we're here, it's a Firebase user
       // Get Firebase ID token
-      const idToken = await effectiveFirebaseUser!.getIdToken();
+      const idToken = await firebaseUser!.getIdToken();
       
       // Update user profile in backend
       const response = await fetch("/api/auth/user", {
@@ -537,80 +605,94 @@ export function AuthProvider({ children }: AuthProviderProps) {
     ? { firebaseUser, backendUser }
     : null;
 
-  // Check for development auth mode
+  // Check for local authentication persistence
   useEffect(() => {
-    const isDevAuth = localStorage.getItem('dev_auth') === 'true';
-    const devUserName = localStorage.getItem('dev_user_name') || 'Dev User';
-    const devUsername = localStorage.getItem('dev_username') || 'dev_user';
+    const authType = localStorage.getItem('auth_type');
+    const userId = localStorage.getItem('auth_user_id');
     
-    if (isDevAuth && !devUser) {
-      console.log("Using development authentication mode");
-      setDevMode(true);
+    if (authType === 'local' && userId && !localUser) {
+      console.log("Restoring local authentication session");
       
-      // Create a mock development user
-      const mockUser: BackendUser = {
-        id: 9999,
-        username: devUsername,
-        email: devUsername.includes('@') ? devUsername : `${devUsername}@example.com`,
-        displayName: devUserName,
-        photoUrl: null,
-        firebaseUid: "dev-firebase-uid",
+      // Fetch user data based on stored ID
+      const fetchLocalUser = async () => {
+        try {
+          setLocalUserLoading(true);
+          
+          const response = await fetch(`/api/auth/user/${userId}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            }
+          });
+          
+          if (response.ok) {
+            const userData = await response.json();
+            setLocalUser(userData);
+            console.log("Local user session restored", userData);
+          } else {
+            console.log("Failed to restore local user session, clearing stored data");
+            localStorage.removeItem('auth_type');
+            localStorage.removeItem('auth_user_id');
+          }
+        } catch (error) {
+          console.error("Error restoring local user session:", error);
+          localStorage.removeItem('auth_type');
+          localStorage.removeItem('auth_user_id');
+        } finally {
+          setLocalUserLoading(false);
+        }
       };
       
-      setDevUser(mockUser);
+      fetchLocalUser();
+    }
+  }, [localUser, setLocalUserLoading]);
+  
+  // Handle both local and Firebase authentication
+  
+  // Create the combined user
+  const effectiveUser = localUser 
+    ? { 
+        // Local authentication user
+        backendUser: localUser,
+        firebaseUser: null as any // Local auth doesn't have Firebase user
+      } 
+    : (combinedUser || null); // Fall back to Firebase auth if available
+    
+  // Update signOut to handle local authentication
+  const effectiveSignOut = async (): Promise<void> => {
+    // Check if we're using local authentication
+    if (localStorage.getItem('auth_type') === 'local') {
+      console.log("Signing out local user");
+      localStorage.removeItem('auth_type');
+      localStorage.removeItem('auth_user_id');
+      setLocalUser(null);
+      
+      // Clear any data
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
       
       toast({
-        title: "Development Mode Active",
-        description: "Using development authentication for testing.",
+        title: "Signed out",
+        description: "You have been signed out successfully.",
       });
+      
+      return Promise.resolve();
+    } 
+    // Otherwise use Firebase signout
+    else {
+      return signOut();
     }
-  }, [devUser, toast]);
-  
-  // Development mode is now handled by the async devSignOut function
-  
-  // Create the combined user for dev mode
-  const effectiveUser = devMode && devUser 
-    ? { 
-        backendUser: devUser,
-        firebaseUser: null as any // Type workaround for dev mode
-      } 
-    : (combinedUser || null);
-    
-  // Dev mode alternative functions
-  const devSignIn = async (): Promise<void> => {
-    console.log("Dev mode sign in - no action needed");
-    return Promise.resolve();
   };
   
-  const devSignOut = async (): Promise<void> => {
-    console.log("Dev mode sign out");
-    localStorage.removeItem('dev_auth');
-    localStorage.removeItem('dev_user_name');
-    localStorage.removeItem('dev_username');
-    localStorage.removeItem('dev_saved_words');
-    setDevMode(false);
-    setDevUser(null);
-    
-    // Clear any data
-    queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-    queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
-    
-    toast({
-      title: "Signed out",
-      description: "Development mode deactivated.",
-    });
-    
-    window.location.reload();
-    return Promise.resolve();
-  };
-  
-  // Create the auth context value with dev mode support
+  // Create the auth context value with local authentication support
   const authContextValue: AuthContextType = {
     user: effectiveUser,
-    isLoading: !devMode && (firebaseLoading || backendLoading),
+    isLoading: firebaseLoading || backendLoading || localUserLoading,
     error: firebaseError || backendError || null,
-    signIn: devMode ? devSignIn : signIn,
-    signOut: devMode ? devSignOut : signOut,
+    signIn, // Google sign in
+    loginWithCredentials, // Username/password login
+    registerWithCredentials, // Register new user
+    signOut: effectiveSignOut,
     saveWordToList,
     removeWordFromList,
     updateUserProfile,
@@ -622,11 +704,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       user: effectiveUser ? "authenticated" : "unauthenticated",
       firebaseUser: firebaseUser ? "authenticated" : "unauthenticated",
       backendUser: backendUser ? "found" : "not found",
-      devMode: devMode ? "active" : "inactive",
-      devUser: devUser ? "active" : "inactive",
-      isLoading: !devMode && (firebaseLoading || backendLoading),
+      localUser: localUser ? "active" : "inactive",
+      isLoading: firebaseLoading || backendLoading || localUserLoading,
     });
-  }, [effectiveUser, firebaseUser, backendUser, devMode, devUser, firebaseLoading, backendLoading]);
+  }, [effectiveUser, firebaseUser, backendUser, localUser, firebaseLoading, backendLoading, localUserLoading]);
 
   return (
     <AuthContext.Provider value={authContextValue}>
