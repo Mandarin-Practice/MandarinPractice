@@ -212,7 +212,7 @@ export const LESSON9_WORDLIST: WordList = {
       english: "style"
     },
     {
-      chinese: "廷",
+      chinese: "挺",
       pinyin: "tǐng",
       english: "very, rather"
     },

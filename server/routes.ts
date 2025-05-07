@@ -115,7 +115,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const word = words[i];
         try {
           console.log(`[IMPORT DEBUG] Validating word ${i}:`, JSON.stringify(word));
-          const validWord = vocabularySchema.parse(word);
+          
+          // Pre-process the word data before validation
+          const processedWord = {
+            chinese: word.chinese?.trim() || '',
+            pinyin: word.pinyin?.trim() || '',
+            english: word.english?.trim() || '',
+            active: word.active || 'true'
+          };
+          
+          // Log preprocessing result
+          console.log(`[IMPORT DEBUG] Preprocessed word ${i}:`, JSON.stringify(processedWord));
+          
+          const validWord = vocabularySchema.parse(processedWord);
           validatedWords.push(validWord);
           console.log(`[IMPORT DEBUG] Word ${i} passed validation:`, JSON.stringify(validWord));
         } catch (error) {
@@ -155,12 +167,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           console.log(`[IMPORT DEBUG] Processing word ${i}:`, JSON.stringify(word));
           
+          // Helper function to normalize pinyin for comparison
+          const normalizePinyin = (pinyin: string) => {
+            if (!pinyin) return '';
+            return pinyin.normalize('NFD')
+              .replace(/[\u0300-\u036f]/g, '') // Remove diacritical marks
+              .toLowerCase()
+              .replace(/\s+/g, ''); // Remove spaces
+          };
+          
           // Check if word already exists to avoid duplicates
           let existingWord = null;
           try {
             // Try to find by exact match first
             console.log(`[IMPORT DEBUG] Checking if word ${i} exists:`, word.chinese, word.pinyin);
             existingWord = await storage.getVocabularyByChineseAndPinyin(word.chinese, word.pinyin);
+            
+            // If not found by exact match, try with normalized pinyin
+            if (!existingWord) {
+              // Get all vocabulary and check for close matches
+              const allVocab = await storage.getAllVocabulary();
+              
+              // For now just log normalized values to debug
+              const normalizedInputPinyin = normalizePinyin(word.pinyin);
+              console.log(`[IMPORT DEBUG] Normalized input pinyin: "${normalizedInputPinyin}"`);
+              
+              // Find potential match with same Chinese character and similar pinyin
+              const potentialMatch = allVocab.find(v => 
+                v.chinese === word.chinese && 
+                normalizePinyin(v.pinyin) === normalizedInputPinyin
+              );
+              
+              if (potentialMatch) {
+                console.log(`[IMPORT DEBUG] Found similar match with normalized pinyin:`, potentialMatch);
+                existingWord = potentialMatch;
+              }
+            }
+            
             console.log(`[IMPORT DEBUG] Existing word check result:`, existingWord ? "Found" : "Not found");
           } catch (err) {
             console.error(`[IMPORT DEBUG] Error checking if word exists:`, err);

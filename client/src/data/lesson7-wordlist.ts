@@ -127,7 +127,7 @@ export const LESSON7_WORDLIST: WordList = {
       english: "many, much"
     },
     {
-      chinese: "汉子",
+      chinese: "汉字",
       pinyin: "Hànzì",
       english: "Chinese characters"
     },
