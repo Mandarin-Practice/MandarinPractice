@@ -328,15 +328,15 @@ export default function Practice() {
       const completed = prev.completed + 1;
       const newMasteredWords = prev.masteredWords + (similarity > 0.9 ? 1 : 0);
       
-      // Prevent division by zero
-      const totalWords = prev.totalWords || 1;
-      const accuracy = `${Math.round((newMasteredWords / totalWords) * 100)}%`;
+      // Calculate accuracy based on correct answers / total attempts
+      const accuracy = `${Math.round((completed > 0 ? 100 * newMasteredWords / completed : 0))}%`;
       
       // Handle first completion
       const prevAvgTime = parseFloat(prev.avgTime) || 0;
       const avgTime = `${Math.round((prevAvgTime * (completed - 1) + timeTaken) / completed * 10) / 10}s`;
       
-      // Calculate mastery percentage safely
+      // Calculate mastery percentage based on total words
+      const totalWords = prev.totalWords || 1;
       const masteryPercent = Math.min(100, Math.round((newMasteredWords / totalWords) * 100));
       
       return {
