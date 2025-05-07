@@ -171,6 +171,13 @@ const commonPhrases: Record<string, { pinyin: string, definition: string }> = {
   '觉得': { pinyin: 'jué de', definition: 'to think/feel' },
   '这个': { pinyin: 'zhè ge', definition: 'this (one)' },
   '好吃': { pinyin: 'hǎo chī', definition: 'delicious' },
+  '学生': { pinyin: 'xué shēng', definition: 'student' },
+  '看书': { pinyin: 'kàn shū', definition: 'to read a book' },
+  '书店': { pinyin: 'shū diàn', definition: 'bookstore' },
+  '旁边': { pinyin: 'páng biān', definition: 'beside/next to' },
+  '打算': { pinyin: 'dǎ suàn', definition: 'to plan' },
+  '打球': { pinyin: 'dǎ qiú', definition: 'to play ball' },
+  '看电影': { pinyin: 'kàn diàn yǐng', definition: 'to watch a movie' },
 };
 
 export default function CharacterHoverView({
@@ -269,7 +276,7 @@ export default function CharacterHoverView({
       if (matchingPhrase) {
         // Character is part of a phrase
         charData.pinyin = matchingPhrase.pinyin.split(' ')[index - matchingPhrase.startIndex];
-        charData.definition = `${char} (in ${matchingPhrase.phrase}: ${matchingPhrase.definition})`;
+        charData.definition = matchingPhrase.definition;  // Show just the phrase definition
         charData.fullWord = matchingPhrase.phrase;
         charData.positionInWord = index - matchingPhrase.startIndex;
       } else {
