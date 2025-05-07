@@ -8,11 +8,57 @@ import dictionaryAdminRoutes from "./routes/dictionary-admin";
 import authRoutes from "./routes/auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Get all vocabulary words
-  app.get("/api/vocabulary", async (req, res) => {
+  // Get dictionary vocabulary words (not user specific)
+  app.get("/api/vocabulary/dictionary", async (req, res) => {
     try {
       const vocabulary = await storage.getAllVocabulary();
       res.json(vocabulary);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch vocabulary" });
+    }
+  });
+  
+  // Get user's vocabulary words (for authenticated users)
+  app.get("/api/vocabulary", async (req, res) => {
+    try {
+      const userId = req.query.userId ? parseInt(req.query.userId as string) : undefined;
+      
+      if (!userId) {
+        // If no user ID provided, return global vocabulary (for non-logged-in users)
+        const vocabulary = await storage.getAllVocabulary();
+        return res.json(vocabulary);
+      }
+      
+      // Get user's word proficiencies
+      const proficiencies = await storage.getUserWordProficiencies(userId);
+      
+      // Filter only saved words
+      const savedWords = proficiencies.filter(prof => prof.isSaved);
+      
+      // If user has no saved words, return empty array
+      if (savedWords.length === 0) {
+        return res.json([]);
+      }
+      
+      // Get vocabulary details for each saved word
+      const wordList = await Promise.all(savedWords.map(async (prof) => {
+        const wordId = parseInt(prof.wordId);
+        const word = await storage.getVocabulary(wordId);
+        
+        if (!word) {
+          return null;
+        }
+        
+        return {
+          ...word,
+          proficiency: prof
+        };
+      }));
+      
+      // Filter out any null values
+      const filteredWordList = wordList.filter(word => word !== null);
+      
+      res.json(filteredWordList);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch vocabulary" });
     }
@@ -51,13 +97,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Import a list of vocabulary words
   app.post("/api/vocabulary/import", async (req, res) => {
     try {
-      const { words } = req.body;
+      const { words, userId } = req.body;
       
       if (!Array.isArray(words)) {
         return res.status(400).json({ message: "Words must be an array" });
       }
       
-      console.log(`Import request received with ${words.length} words`);
+      console.log(`Import request received with ${words.length} words${userId ? ` for user ${userId}` : ''}`);
       
       // First, validate all words using the schema
       const validatedWords = words.map(word => {
@@ -80,6 +126,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const savedWords = [];
       const wordErrors = [];
       
+      // First, add all words to the global dictionary
       for (const word of validatedWords) {
         try {
           const savedWord = await storage.addVocabulary(word);
@@ -91,6 +138,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
             word: word.chinese,
             error: errorMessage
           });
+        }
+      }
+      
+      // If userId is provided, also add these words to the user's personal list
+      if (userId && !isNaN(parseInt(userId))) {
+        const userIdNum = parseInt(userId);
+        console.log(`Adding ${savedWords.length} words to user ${userIdNum}'s personal list`);
+        
+        // Add each word to the user's list
+        for (const word of savedWords) {
+          try {
+            await storage.saveWordToUserList(userIdNum, word.id);
+          } catch (error) {
+            console.error(`Error adding word ${word.id} to user ${userIdNum}'s list: ${error}`);
+          }
         }
       }
       

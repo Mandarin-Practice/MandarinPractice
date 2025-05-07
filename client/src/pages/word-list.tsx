@@ -88,9 +88,23 @@ export default function WordList() {
     removeWordFromList
   } = useUserWordList();
 
-  // Fetch vocabulary data
+  // Fetch vocabulary data based on user login status
   const { data: vocabulary, isLoading: vocabularyLoading } = useQuery({
-    queryKey: ['/api/vocabulary'],
+    queryKey: ['/api/vocabulary', user?.backendUser?.id],
+    queryFn: async () => {
+      let url = '/api/vocabulary';
+      
+      // If user is logged in, fetch their personal word list
+      if (user?.backendUser?.id) {
+        url = `${url}?userId=${user.backendUser.id}`;
+      }
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Failed to fetch vocabulary');
+      }
+      return response.json();
+    },
     refetchOnWindowFocus: false,
   });
 
@@ -262,21 +276,34 @@ export default function WordList() {
         active: "true"
       }));
       
-      const response = await apiRequest('POST', '/api/vocabulary/import', { words });
+      // If user is logged in, include userId to add words to their list
+      const userId = user?.backendUser?.id;
+      const payload = userId ? { words, userId } : { words };
+      
+      const response = await apiRequest('POST', '/api/vocabulary/import', payload);
       if (!response.ok) {
         throw new Error('Failed to import word list');
       }
       return response.json();
     },
     onSuccess: (data) => {
+      // Invalidate both general vocabulary and user-specific word list queries
       queryClient.invalidateQueries({ queryKey: ['/api/vocabulary'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/wordlist'] });
+      
       setImportResults({
         total: data.length,
         imported: data.length
       });
+      
+      // Customize message based on whether user is logged in
+      const message = user?.backendUser?.id 
+        ? `${data.length} words were added to your personal word list` 
+        : `${data.length} words were added to the vocabulary database`;
+      
       toast({
         title: 'Words imported successfully',
-        description: `${data.length} words were added to your vocabulary`,
+        description: message,
       });
       handleClosePreview();
     },
