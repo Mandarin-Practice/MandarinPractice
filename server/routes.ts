@@ -762,7 +762,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Register dictionary admin routes
   app.use('/api', dictionaryAdminRoutes);
-  app.use(authRoutes);
+  app.use('/api/auth', authRoutes);
 
   const httpServer = createServer(app);
   return httpServer;
