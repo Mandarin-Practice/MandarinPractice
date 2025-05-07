@@ -12,6 +12,7 @@ import { useUserWordList } from "@/hooks/use-user-word-list";
 import { LESSON1_WORDLIST } from "@/data/lesson1-wordlist";
 import { LESSON2_WORDLIST } from "@/data/lesson2-wordlist";
 import { LESSON3_WORDLIST } from "@/data/lesson3-wordlist";
+import { LESSON4_WORDLIST } from "@/data/lesson4-wordlist";
 import { LESSON11_WORDLIST } from "@/data/word-lists";
 import { LESSON12_WORDLIST } from "@/data/lesson12-wordlist";
 import { LESSON13_WORDLIST } from "@/data/lesson13-wordlist";
@@ -46,6 +47,7 @@ const SAMPLE_WORD_LISTS: WordList[] = [
   LESSON13_WORDLIST,
   LESSON12_WORDLIST,
   LESSON11_WORDLIST,
+  LESSON4_WORDLIST,
   LESSON3_WORDLIST,
   LESSON2_WORDLIST,
   LESSON1_WORDLIST,
