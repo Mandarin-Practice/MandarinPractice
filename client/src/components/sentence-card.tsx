@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { compareWordByWord } from "@/lib/string-similarity";
 import InteractiveChineseText from "./interactive-chinese-text";
+import CharacterHoverView from "./character-hover-view";
 
 interface HighlightedComparisonProps {
   correctSentence: string;
@@ -177,11 +178,14 @@ export default function SentenceCard({
                       <div className="text-xs text-primary font-medium uppercase tracking-wider mb-1">
                         {feedbackStatus ? "Chinese Text - Interactive" : "Chinese Text"}
                       </div>
-                      <InteractiveChineseText 
-                        chinese={sentence.chinese}
-                        vocabularyWords={vocabularyWords}
-                        feedbackStatus={feedbackStatus}
-                      />
+                      <div className="text-3xl font-['Noto_Sans_SC',sans-serif] leading-relaxed font-bold">
+                        <CharacterHoverView 
+                          chinese={sentence.chinese}
+                          isInteractive={feedbackStatus !== null}
+                          vocabularyWords={vocabularyWords}
+                          feedbackStatus={feedbackStatus}
+                        />
+                      </div>
                       
                       {/* Only show hover instructions after feedback */}
                       {feedbackStatus && (
