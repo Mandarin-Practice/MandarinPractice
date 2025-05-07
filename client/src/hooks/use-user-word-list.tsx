@@ -277,6 +277,11 @@ export function useUserWordList() {
     }
   };
 
+  // Add a utility function to check if the word list is available and non-empty
+  const hasWords = () => {
+    return Array.isArray(wordList) && wordList.length > 0;
+  };
+
   return {
     wordList: wordList || [],
     isLoading,
@@ -284,6 +289,7 @@ export function useUserWordList() {
     error,
     refetch,
     addWordToList,
-    removeWordFromList
+    removeWordFromList,
+    hasWords
   };
 }

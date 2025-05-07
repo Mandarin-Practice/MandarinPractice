@@ -189,18 +189,22 @@ export default function Practice() {
 
   // Check if vocabulary is empty and redirect if needed
   useEffect(() => {
-    // Only redirect if we're sure the vocabulary list is empty
-    // This prevents accidental redirects during loading or initialization
-    if (!isLoadingVocabulary && 
-        vocabularyWords !== undefined && 
-        (!Array.isArray(vocabularyWords) || vocabularyWords.length === 0)) {
-      console.log("No vocabulary words found, redirecting to word list page");
-      // Use a timeout to ensure this doesn't happen during initial render
-      const timeoutId = setTimeout(() => {
-        navigate("/word-list");
-      }, 100);
-      return () => clearTimeout(timeoutId);
+    // Wait until loading is complete before checking
+    if (isLoadingVocabulary) {
+      return;
     }
+    
+    // Use a counter to prevent premature redirects during initialization
+    const redirectCheckId = setTimeout(() => {
+      // Double-check that the vocabulary is still empty after the timeout
+      // This helps prevent race conditions with asynchronous data loading
+      if (!vocabularyWords || !Array.isArray(vocabularyWords) || vocabularyWords.length === 0) {
+        console.log("No vocabulary words available after loading completed, redirecting to word list page");
+        navigate("/word-list");
+      }
+    }, 500);  // Longer timeout for production environment
+    
+    return () => clearTimeout(redirectCheckId);
   }, [vocabularyWords, isLoadingVocabulary, navigate]);
 
   // Generate first sentence when component mounts and update totalWords count
