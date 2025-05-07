@@ -189,8 +189,17 @@ export default function Practice() {
 
   // Check if vocabulary is empty and redirect if needed
   useEffect(() => {
-    if (!isLoadingVocabulary && (!vocabularyWords || !Array.isArray(vocabularyWords) || vocabularyWords.length === 0)) {
-      navigate("/word-list");
+    // Only redirect if we're sure the vocabulary list is empty
+    // This prevents accidental redirects during loading or initialization
+    if (!isLoadingVocabulary && 
+        vocabularyWords !== undefined && 
+        (!Array.isArray(vocabularyWords) || vocabularyWords.length === 0)) {
+      console.log("No vocabulary words found, redirecting to word list page");
+      // Use a timeout to ensure this doesn't happen during initial render
+      const timeoutId = setTimeout(() => {
+        navigate("/word-list");
+      }, 100);
+      return () => clearTimeout(timeoutId);
     }
   }, [vocabularyWords, isLoadingVocabulary, navigate]);
 
