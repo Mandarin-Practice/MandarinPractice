@@ -73,16 +73,14 @@ export default function ScoreCard({
         
         <ToggleSwitch
           label="Show Chinese Characters"
-          pressed={showChinese}
-          onPressedChange={onToggleShowChinese}
-          data-state={showChinese ? "on" : "off"}
+          checked={showChinese}
+          onCheckedChange={onToggleShowChinese}
         />
         
         <ToggleSwitch
           label="Show Pinyin"
-          pressed={showPinyin}
-          onPressedChange={onToggleShowPinyin}
-          data-state={showPinyin ? "on" : "off"}
+          checked={showPinyin}
+          onCheckedChange={onToggleShowPinyin}
           className="mb-0"
         />
       </div>
