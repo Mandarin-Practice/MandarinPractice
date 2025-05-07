@@ -32,12 +32,26 @@ interface ProfileUpdate {
   photoUrl?: string;
 }
 
+// Credentials interface for username/password login
+interface LoginCredentials {
+  username: string;
+  password: string;
+}
+
+// Registration interface for creating new account
+interface RegisterCredentials extends LoginCredentials {
+  email?: string;
+  displayName?: string;
+}
+
 // Auth context type definition
 interface AuthContextType {
   user: AuthUser | null;
   isLoading: boolean;
   error: Error | null;
-  signIn: () => Promise<void>;
+  signIn: () => Promise<void>; // Google sign in
+  loginWithCredentials: (credentials: LoginCredentials) => Promise<void>; // Username/password login
+  registerWithCredentials: (credentials: RegisterCredentials) => Promise<void>; // Register new user
   signOut: () => Promise<void>;
   saveWordToList: (wordId: number) => Promise<void>;
   removeWordFromList: (wordId: number) => Promise<void>;
