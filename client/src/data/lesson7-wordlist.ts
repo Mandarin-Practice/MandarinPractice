@@ -1,5 +1,7 @@
-export const LESSON7_WORDLIST = {
-  id: "lesson7",
+import { WordList } from './word-lists';
+
+export const LESSON7_WORDLIST: WordList = {
+  id: "ic-lesson-7",
   name: "Integrated Chinese Lesson 7",
   description: "Essential vocabulary from Integrated Chinese Lesson 7",
   category: "Integrated Chinese",
