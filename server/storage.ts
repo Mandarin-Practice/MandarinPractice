@@ -38,6 +38,7 @@ export interface IStorage {
   // Vocabulary methods
   getAllVocabulary(): Promise<Vocabulary[]>;
   getVocabulary(id: number): Promise<Vocabulary | undefined>;
+  getVocabularyByChineseAndPinyin(chinese: string, pinyin: string): Promise<Vocabulary | undefined>;
   addVocabulary(word: InsertVocabulary): Promise<Vocabulary>;
   updateVocabulary(id: number, updates: Partial<InsertVocabulary>): Promise<Vocabulary>;
   deleteVocabulary(id: number): Promise<void>;
@@ -130,6 +131,12 @@ export class MemStorage implements IStorage {
 
   async getVocabulary(id: number): Promise<Vocabulary | undefined> {
     return this.vocabulary.get(id);
+  }
+  
+  async getVocabularyByChineseAndPinyin(chinese: string, pinyin: string): Promise<Vocabulary | undefined> {
+    // Convert entries to an array and find matching word
+    const words = Array.from(this.vocabulary.values());
+    return words.find(word => word.chinese === chinese && word.pinyin === pinyin);
   }
 
   async addVocabulary(word: InsertVocabulary): Promise<Vocabulary> {
@@ -303,6 +310,16 @@ export class DatabaseStorage implements IStorage {
 
   async getVocabulary(id: number): Promise<Vocabulary | undefined> {
     const [vocab] = await db.select().from(vocabulary).where(eq(vocabulary.id, id));
+    return vocab;
+  }
+  
+  async getVocabularyByChineseAndPinyin(chinese: string, pinyin: string): Promise<Vocabulary | undefined> {
+    const [vocab] = await db.select().from(vocabulary).where(
+      and(
+        eq(vocabulary.chinese, chinese),
+        eq(vocabulary.pinyin, pinyin)
+      )
+    );
     return vocab;
   }
 

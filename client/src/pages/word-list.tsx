@@ -291,15 +291,30 @@ export default function WordList() {
       queryClient.invalidateQueries({ queryKey: ['/api/vocabulary'] });
       queryClient.invalidateQueries({ queryKey: ['/api/auth/wordlist'] });
       
+      // New response format has data.savedWords and data.stats
+      const savedWords = data.savedWords || data;
+      const stats = data.stats || { totalRequested: data.length, savedWords: data.length };
+      
       setImportResults({
-        total: data.length,
-        imported: data.length
+        total: stats.totalRequested,
+        imported: stats.savedWords
       });
       
-      // Customize message based on whether user is logged in
-      const message = user?.backendUser?.id 
-        ? `${data.length} words were added to your personal word list` 
-        : `${data.length} words were added to the vocabulary database`;
+      // Customize message based on whether user is logged in and import stats
+      let message = '';
+      if (stats.totalRequested === stats.savedWords) {
+        message = user?.backendUser?.id 
+          ? `All ${stats.savedWords} words were added to your personal word list` 
+          : `All ${stats.savedWords} words were added to the vocabulary database`;
+      } else {
+        message = user?.backendUser?.id 
+          ? `${stats.savedWords} out of ${stats.totalRequested} words were added to your personal word list` 
+          : `${stats.savedWords} out of ${stats.totalRequested} words were added to the vocabulary database`;
+          
+        if (stats.validationErrors > 0) {
+          message += `\n${stats.validationErrors} words had validation errors`;
+        }
+      }
       
       toast({
         title: 'Words imported successfully',
