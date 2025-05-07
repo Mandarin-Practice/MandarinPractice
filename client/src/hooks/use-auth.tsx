@@ -190,9 +190,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
           // Force refresh user data
           await refetchBackendUser();
           console.log("User data refreshed after redirect");
-          
-          // Force page reload to ensure we have the latest state
-          window.location.reload();
         }
       } catch (error) {
         console.error("Redirect sign in error:", error);
