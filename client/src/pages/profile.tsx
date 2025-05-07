@@ -158,14 +158,20 @@ export default function ProfilePage() {
               <div className="text-center text-sm text-muted-foreground">
                 Sign in to keep your word lists and progress synchronized across devices.
               </div>
-              <Button
-                className="w-full"
-                size="lg"
-                onClick={handleSignIn}
-              >
-                <FiLogIn className="mr-2 h-4 w-4" />
-                Sign in with Google
-              </Button>
+              <div className="space-y-4">
+                <Button
+                  className="w-full"
+                  size="lg"
+                  onClick={handleSignIn}
+                >
+                  <FiLogIn className="mr-2 h-4 w-4" />
+                  Sign in with Google
+                </Button>
+                <p className="text-xs text-muted-foreground text-center">
+                  Note: Make sure this application's URL is added to your 
+                  Firebase project's authorized domains list to enable sign-in
+                </p>
+              </div>
             </div>
           )}
         </CardContent>

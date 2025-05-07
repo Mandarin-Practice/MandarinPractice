@@ -181,8 +181,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const checkRedirectResult = async () => {
       try {
         console.log("Checking redirect result...");
+        // Create a periodic check for redirect result
+        let checkCount = 0;
+        const maxChecks = 5;
+        
+        // First immediate check
         const result = await getRedirectResult(auth);
         console.log("Redirect result:", result);
+        
         if (result && result.user) {
           console.log("Got user from redirect:", result.user);
           await registerOrLoginWithBackend(result.user);
@@ -190,7 +196,37 @@ export function AuthProvider({ children }: AuthProviderProps) {
           // Force refresh user data
           await refetchBackendUser();
           console.log("User data refreshed after redirect");
+          return; // Successfully handled redirect
         }
+        
+        // If no result on first try, set up periodic checks
+        // This helps when redirect completes but result isn't immediately available
+        const checkInterval = setInterval(async () => {
+          checkCount++;
+          console.log(`Checking redirect result (attempt ${checkCount})...`);
+          
+          try {
+            const retryResult = await getRedirectResult(auth);
+            if (retryResult && retryResult.user) {
+              console.log("Got user from redirect (retry):", retryResult.user);
+              clearInterval(checkInterval);
+              
+              await registerOrLoginWithBackend(retryResult.user);
+              queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
+              await refetchBackendUser();
+              console.log("User data refreshed after redirect");
+            } else if (checkCount >= maxChecks) {
+              console.log("Max redirect checks reached, giving up");
+              clearInterval(checkInterval);
+            }
+          } catch (err) {
+            console.error("Error in redirect check:", err);
+            clearInterval(checkInterval);
+          }
+        }, 1000);
+        
+        // Clean up the interval if component unmounts
+        return () => clearInterval(checkInterval);
       } catch (error) {
         console.error("Redirect sign in error:", error);
       }
@@ -204,7 +240,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       console.log("Starting Google sign in with redirect");
       setFirebaseLoading(true);
+      
+      // Add URL to authorized domains message
+      const currentUrl = window.location.origin;
+      console.log(`Important: Make sure ${currentUrl} is added to authorized domains in Firebase console`);
+      
+      // Add debug log for Firebase config
+      console.log("Firebase config check:", {
+        projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID ? "✓" : "✗",
+        apiKey: import.meta.env.VITE_FIREBASE_API_KEY ? "✓" : "✗", 
+        appId: import.meta.env.VITE_FIREBASE_APP_ID ? "✓" : "✗"
+      });
+      
       // Use redirect method directly as it's more reliable
+      googleProvider.setCustomParameters({
+        prompt: "select_account",
+        login_hint: "user@example.com"
+      });
+      
       await signInWithRedirect(auth, googleProvider);
       // Note: The redirect will take the user away from the page,
       // and they'll be redirected back after authentication
