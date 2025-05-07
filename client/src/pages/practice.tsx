@@ -60,8 +60,16 @@ export default function Practice() {
   const { speak, isPlaying } = useTextToSpeech();
   const { playCorrectSound, playIncorrectSound } = useSoundEffects();
 
-  // Fetch vocabulary words from user's word list
-  const { wordList: vocabularyWords, isLoading: isLoadingVocabulary } = useUserWordList();
+  // Fetch vocabulary words from user's word list with additional stability flags
+  const { 
+    wordList: vocabularyWords, 
+    isLoading: isLoadingVocabulary,
+    isError: isVocabularyError,
+    hasWords 
+  } = useUserWordList();
+  
+  // Set a local flag to prevent showing "no vocabulary" message too early
+  const [fullyLoaded, setFullyLoaded] = useState(false);
 
   // Get toast hook for notifications
   const { toast } = useToast();
@@ -187,39 +195,63 @@ export default function Practice() {
     return () => clearInterval(checkDifficultyInterval);
   }, [currentDifficulty]);
 
-  // Check if vocabulary is empty and redirect if needed, but only if truly needed
+  // More robust approach to check if vocabulary is empty and handle redirects
   useEffect(() => {
-    // Check if page was just loaded (using a session flag)
-    const hasInitialized = sessionStorage.getItem('practice_initialized');
+    // Never check or redirect while vocabulary is still loading
+    if (isLoadingVocabulary) {
+      return;
+    }
     
+    // Flag to track redirect checks
+    let checkCount = 0;
+    let maxChecks = 5;
+    
+    // Check local storage for initialization flag
+    const hasInitialized = sessionStorage.getItem('practice_initialized');
     if (!hasInitialized) {
-      // Set initialization flag - helps avoid multiple redirects in same session
+      // First time visiting the page in this session
       sessionStorage.setItem('practice_initialized', 'true');
       
-      // Give a longer initial timeout on first page load to ensure data is fully loaded
-      console.log("First practice page visit this session, using extended loading time");
-      return;
-    }
-    
-    // Wait until loading is complete before checking for empty vocabulary
-    if (isLoadingVocabulary) {
-      console.log("Still loading vocabulary, waiting before redirect check");
-      return;
-    }
-    
-    // Use a longer timeout to prevent premature redirects during initialization
-    // This delay allows network requests to complete and data to be processed
-    const redirectCheckId = setTimeout(() => {
-      if (!vocabularyWords || !Array.isArray(vocabularyWords) || vocabularyWords.length === 0) {
-        console.log("No vocabulary words available after multiple checks, redirecting to word list page");
-        navigate("/word-list");
-      } else {
-        console.log(`Vocabulary loaded successfully: ${vocabularyWords.length} words available`);
+      // Setup periodic checks with exponential backoff
+      const checkInterval = setInterval(() => {
+        checkCount++;
+        console.log(`Checking redirect result (attempt ${checkCount})...`);
+        
+        // Only redirect if vocabulary is definitely not loading AND is empty
+        if (!isLoadingVocabulary) {
+          // Use the hasWords helper from useUserWordList to reliably check
+          const hasAnyWords = hasWords();
+          
+          if (hasAnyWords) {
+            // Words exist, mark as fully loaded and clear interval
+            console.log(`Vocabulary loaded successfully: ${vocabularyWords?.length || 0} words available`);
+            setFullyLoaded(true);
+            clearInterval(checkInterval);
+          } else if (checkCount >= maxChecks) {
+            // Max attempts reached, must be empty - redirect and clean up
+            console.log("Max redirect checks reached, giving up");
+            if (!isVocabularyError) {
+              // Only redirect if there's no error - could just be a temporary network issue
+              navigate("/word-list");
+            }
+            clearInterval(checkInterval);
+          }
+        }
+        
+        // Stop checking after max attempts regardless
+        if (checkCount >= maxChecks) {
+          clearInterval(checkInterval);
+        }
+      }, 1000); // Check every second
+      
+      return () => clearInterval(checkInterval);
+    } else {
+      // Not first visit, we can set fully loaded immediately if we have data
+      if (hasWords()) {
+        setFullyLoaded(true);
       }
-    }, 1500);  // Much longer timeout for production environment
-    
-    return () => clearTimeout(redirectCheckId);
-  }, [vocabularyWords, isLoadingVocabulary, navigate]);
+    }
+  }, [vocabularyWords, isLoadingVocabulary, isVocabularyError, navigate, hasWords]);
 
   // Generate first sentence when component mounts and update totalWords count
   useEffect(() => {
@@ -447,11 +479,11 @@ export default function Practice() {
     generateSentenceMutation.mutate();
   };
 
-  // Modify the loading behavior to be more gradual and give more time for data to load
+  // Use a more nuanced approach to showing loading states
   const justLoaded = !sessionStorage.getItem('practice_initialized');
   
-  // Always show loading during initial page load
-  if (isLoadingVocabulary || justLoaded) {
+  // Loading state: Show when definitely loading
+  if (isLoadingVocabulary || (!fullyLoaded && justLoaded)) {
     // Show a more detailed loading message to set expectations
     return (
       <div className="text-center py-10">
@@ -463,13 +495,16 @@ export default function Practice() {
         <p className="mt-4 text-gray-600 dark:text-gray-400">
           Loading vocabulary and preparing your practice session...
         </p>
+        <p className="mt-2 text-sm text-gray-500 dark:text-gray-500">
+          This might take a moment on first load.
+        </p>
       </div>
     );
   }
 
-  // Only show the "no vocabulary" message if we're certain there are no words
-  // and we've already given the app enough time to load them
-  if (!vocabularyWords || !Array.isArray(vocabularyWords) || vocabularyWords.length === 0) {
+  // No vocabulary state: Only show if we've completely finished loading AND verified there are no words
+  // We use both vocabulary list checks and the explicit hasWords() helper to verify
+  if (fullyLoaded && !hasWords()) {
     return (
       <div className="text-center py-12 px-6 bg-white dark:bg-gray-800 rounded-lg shadow-md mb-6">
         <div className="text-5xl mb-4 text-gray-400 dark:text-gray-500">
@@ -481,6 +516,24 @@ export default function Practice() {
         </p>
         <Button asChild>
           <Link href="/word-list">Add Words Now</Link>
+        </Button>
+      </div>
+    );
+  }
+  
+  // Error state: Show when there's a specific error loading vocabulary
+  if (isVocabularyError) {
+    return (
+      <div className="text-center py-12 px-6 bg-white dark:bg-gray-800 rounded-lg shadow-md mb-6">
+        <div className="text-5xl mb-4 text-red-500">
+          <i className="fas fa-exclamation-triangle"></i>
+        </div>
+        <h3 className="text-xl font-semibold mb-2">Error Loading Words</h3>
+        <p className="text-gray-600 dark:text-gray-400 mb-6">
+          There was a problem loading your vocabulary. Please try again or check your connection.
+        </p>
+        <Button variant="outline" onClick={() => window.location.reload()}>
+          Reload Page
         </Button>
       </div>
     );
