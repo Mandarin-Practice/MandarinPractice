@@ -10,6 +10,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTextToSpeech } from "@/hooks/use-text-to-speech";
 import { useToast } from "@/hooks/use-toast";
 import { useSoundEffects } from "@/hooks/use-sound-effects";
+import { useUserWordList } from "@/hooks/use-user-word-list";
 import { checkSimilarity } from "@/lib/string-similarity";
 
 interface Sentence {
@@ -60,10 +61,7 @@ export default function Practice() {
   const { playCorrectSound, playIncorrectSound } = useSoundEffects();
 
   // Fetch vocabulary words from user's word list
-  const { data: vocabularyWords, isLoading: isLoadingVocabulary } = useQuery({
-    queryKey: ['/api/auth/wordlist'],
-    refetchOnWindowFocus: false,
-  });
+  const { userWordList: vocabularyWords, isLoading: isLoadingVocabulary } = useUserWordList();
 
   // Get toast hook for notifications
   const { toast } = useToast();
