@@ -9,6 +9,8 @@ interface CharacterDetails {
   pinyin?: string;
   definition?: string;
   wordId?: number;
+  fullWord?: string;
+  positionInWord?: number;
 }
 
 interface CharacterHoverViewProps {
@@ -24,7 +26,7 @@ interface CharacterHoverViewProps {
   feedbackStatus?: "correct" | "partial" | "incorrect" | null;
 }
 
-// Simple character database with common characters for immediate display
+// Character database with common characters for immediate display
 // This is used as fallback when we can't fetch from the database
 const commonCharacters: Record<string, { pinyin: string, definition: string }> = {
   '他': { pinyin: 'tā', definition: 'he/him' },
@@ -66,7 +68,7 @@ const commonCharacters: Record<string, { pinyin: string, definition: string }> =
   '工': { pinyin: 'gōng', definition: 'work' },
   '作': { pinyin: 'zuò', definition: 'to do/make' },
   '爱': { pinyin: 'ài', definition: 'to love' },
-  '和': { pinyin: 'hé', definition: 'and/with' },
+  '和': { pinyin: 'hé', definition: 'and/with/harmonious' },
   '说': { pinyin: 'shuō', definition: 'to say/speak' },
   '话': { pinyin: 'huà', definition: 'speech/words' },
   '书': { pinyin: 'shū', definition: 'book' },
@@ -80,6 +82,61 @@ const commonCharacters: Record<string, { pinyin: string, definition: string }> =
   '点': { pinyin: 'diǎn', definition: 'o\'clock/dot/point' },
   '看': { pinyin: 'kàn', definition: 'to see/look/read' },
   '听': { pinyin: 'tīng', definition: 'to listen' },
+  '早': { pinyin: 'zǎo', definition: 'early/morning' },
+  '上': { pinyin: 'shàng', definition: 'up/above/on' },
+  '下': { pinyin: 'xià', definition: 'down/below' },
+  '饭': { pinyin: 'fàn', definition: 'rice/meal' },
+  '了': { pinyin: 'le', definition: 'past tense marker' },
+  '觉': { pinyin: 'jué', definition: 'to feel/perceive' },
+  '得': { pinyin: 'de', definition: 'auxiliary verb/possessive' },
+  '很': { pinyin: 'hěn', definition: 'very' },
+  '聪': { pinyin: 'cōng', definition: 'clever/intelligent' },
+  '明': { pinyin: 'míng', definition: 'bright/clear' },
+  '今': { pinyin: 'jīn', definition: 'now/current' },
+  '天': { pinyin: 'tiān', definition: 'day/sky' },
+  '气': { pinyin: 'qì', definition: 'air/gas/spirit' },
+  '暖': { pinyin: 'nuǎn', definition: 'warm' },
+  '最': { pinyin: 'zuì', definition: 'most/extremely' },
+  '近': { pinyin: 'jìn', definition: 'near/close' },
+  '累': { pinyin: 'lèi', definition: 'tired/exhausted' },
+  '所': { pinyin: 'suǒ', definition: 'place/so/therefore' },
+  '以': { pinyin: 'yǐ', definition: 'according to/because/so' },
+  '高': { pinyin: 'gāo', definition: 'high/tall' },
+  '兴': { pinyin: 'xìng', definition: 'happy/excited' },
+  '朋': { pinyin: 'péng', definition: 'friend' },
+  '友': { pinyin: 'yǒu', definition: 'friend' },
+  '发': { pinyin: 'fā', definition: 'to send/issue/develop' },
+  '音': { pinyin: 'yīn', definition: 'sound/tone' },
+  '常': { pinyin: 'cháng', definition: 'often/common/normal' },
+  '自': { pinyin: 'zì', definition: 'self/oneself' },
+  '然': { pinyin: 'rán', definition: 'so/yes/natural' },
+  '晚': { pinyin: 'wǎn', definition: 'evening/night' },
+  '跟': { pinyin: 'gēn', definition: 'with/to follow' },
+  '一': { pinyin: 'yī', definition: 'one' },
+  '起': { pinyin: 'qǐ', definition: 'to rise/start/together' },
+  '电': { pinyin: 'diàn', definition: 'electricity' },
+  '影': { pinyin: 'yǐng', definition: 'shadow/movie' },
+  '吗': { pinyin: 'ma', definition: 'question particle' },
+};
+
+// Phrase dictionary for multi-character words
+const commonPhrases: Record<string, { pinyin: string, definition: string }> = {
+  '早上': { pinyin: 'zǎo shang', definition: 'morning' },
+  '早饭': { pinyin: 'zǎo fàn', definition: 'breakfast' },
+  '聪明': { pinyin: 'cōng míng', definition: 'clever/intelligent' },
+  '天气': { pinyin: 'tiān qì', definition: 'weather' },
+  '暖和': { pinyin: 'nuǎn huo', definition: 'warm' },
+  '最近': { pinyin: 'zuì jìn', definition: 'recently/lately' },
+  '高兴': { pinyin: 'gāo xìng', definition: 'happy/glad' },
+  '朋友': { pinyin: 'péng you', definition: 'friend' },
+  '发音': { pinyin: 'fā yīn', definition: 'pronunciation' },
+  '非常': { pinyin: 'fēi cháng', definition: 'very/extremely' },
+  '自然': { pinyin: 'zì rán', definition: 'natural' },
+  '今天': { pinyin: 'jīn tiān', definition: 'today' },
+  '晚上': { pinyin: 'wǎn shang', definition: 'evening/night' },
+  '一起': { pinyin: 'yī qǐ', definition: 'together' },
+  '电影': { pinyin: 'diàn yǐng', definition: 'movie' },
+  '东西': { pinyin: 'dōng xi', definition: 'thing/stuff' },
 };
 
 export default function CharacterHoverView({
@@ -94,6 +151,40 @@ export default function CharacterHoverView({
   // Debug
   console.log("CharacterHoverView rendering with:", {chinese, isInteractive, feedbackStatus});
 
+  // Function to find phrases in the text
+  function findPhrasesInText(text: string): {
+    startIndex: number;
+    endIndex: number;
+    phrase: string;
+    pinyin: string;
+    definition: string;
+  }[] {
+    const results = [];
+    
+    // Check for phrases in our dictionary
+    for (const [phrase, info] of Object.entries(commonPhrases)) {
+      // Skip one-character phrases
+      if (phrase.length <= 1) continue;
+      
+      let startIndex = 0;
+      let foundIndex;
+      
+      // Find all occurrences of the phrase
+      while ((foundIndex = text.indexOf(phrase, startIndex)) !== -1) {
+        results.push({
+          startIndex: foundIndex,
+          endIndex: foundIndex + phrase.length - 1,
+          phrase,
+          pinyin: info.pinyin,
+          definition: info.definition
+        });
+        startIndex = foundIndex + 1;
+      }
+    }
+    
+    return results;
+  }
+
   // Build the character data with pinyin and definitions from vocabulary words or fallback
   useEffect(() => {
     // Only process if we have Chinese text
@@ -101,38 +192,75 @@ export default function CharacterHoverView({
     
     console.log("Processing characters from:", chinese);
     
-    const newCharactersData = chinese.split('').map(char => {
+    // Find multi-character phrases first
+    const phrases = findPhrasesInText(chinese);
+    console.log("Looking for phrases in text:", chinese);
+    console.log("Available phrases:", Object.keys(commonPhrases));
+    console.log("Found phrases:", phrases);
+    
+    // Create character data array
+    const newCharactersData = chinese.split('').map((char, index) => {
       // Skip processing for punctuation
       if (/[。，！？；：""''「」『』（）【】、]/.test(char)) {
         return { character: char };
       }
       
-      // First try to find from vocabulary words
+      // Check if this character is part of a phrase
+      const matchingPhrase = phrases.find(p => 
+        index >= p.startIndex && index <= p.endIndex
+      );
+      
       let charData: CharacterDetails = { character: char };
       
-      // Try to match from vocabulary words
-      if (vocabularyWords && vocabularyWords.length > 0) {
-        // Find if this character is in any vocabulary word
-        const matchingWord = vocabularyWords.find(word => 
-          word.chinese && word.chinese.includes(char)
-        );
-        
-        if (matchingWord) {
-          charData.pinyin = matchingWord.pinyin;
-          charData.definition = matchingWord.english;
-          charData.wordId = matchingWord.id;
+      if (matchingPhrase) {
+        // Character is part of a phrase
+        charData.pinyin = matchingPhrase.pinyin.split(' ')[index - matchingPhrase.startIndex];
+        charData.definition = `${char} (in ${matchingPhrase.phrase}: ${matchingPhrase.definition})`;
+        charData.fullWord = matchingPhrase.phrase;
+        charData.positionInWord = index - matchingPhrase.startIndex;
+      } else {
+        // Try to match from vocabulary words
+        if (vocabularyWords && vocabularyWords.length > 0) {
+          const matchingWord = vocabularyWords.find(word => 
+            word.chinese && word.chinese.includes(char)
+          );
+          
+          if (matchingWord) {
+            charData.pinyin = matchingWord.pinyin;
+            charData.definition = matchingWord.english;
+            charData.wordId = matchingWord.id;
+          }
         }
-      }
-      
-      // If not found in vocabulary, use common characters fallback
-      if (!charData.definition && commonCharacters[char]) {
-        charData.pinyin = commonCharacters[char].pinyin;
-        charData.definition = commonCharacters[char].definition;
-      } else if (!charData.definition) {
-        // If character not found in our dictionary, provide a placeholder definition
-        console.log("Character not found in dictionary:", char);
-        charData.pinyin = "(unknown)";
-        charData.definition = "Character not in dictionary";
+        
+        // If not found in vocabulary, use common characters fallback
+        if (!charData.definition && commonCharacters[char]) {
+          charData.pinyin = commonCharacters[char].pinyin;
+          charData.definition = commonCharacters[char].definition;
+        } else if (!charData.definition) {
+          // If character not found in our dictionary, provide a placeholder definition
+          console.log("Character not found in dictionary:", char);
+          
+          // Save this character to the dictionary
+          const savedCharacterMutation = async () => {
+            try {
+              const response = await apiRequest('POST', '/api/characters', {
+                character: char,
+                pinyin: "unknown",
+                definition: `Automatically added character: ${char}`,
+                simplified: true
+              });
+              console.log("Added new character to dictionary:", char, response);
+            } catch (error) {
+              console.error("Failed to add character to dictionary:", char, error);
+            }
+          };
+          
+          // Execute the mutation (no need to await, we're just initiating the background save)
+          savedCharacterMutation();
+          
+          charData.pinyin = "(unknown)";
+          charData.definition = "Character not in dictionary";
+        }
       }
       
       return charData;
@@ -189,7 +317,7 @@ export default function CharacterHoverView({
                 {charData.character}
               </span>
             </HoverCardTrigger>
-            <HoverCardContent className="w-64 p-4" style={{ zIndex: 9999 }}>
+            <HoverCardContent className="w-80 p-4" style={{ zIndex: 9999 }}>
               <div className="space-y-2">
                 <div className="text-2xl font-bold">{charData.character}</div>
                 <div className="text-sm text-gray-700 dark:text-gray-300 font-medium">
@@ -199,6 +327,25 @@ export default function CharacterHoverView({
                   {charData.definition || 'No definition available'}
                 </div>
                 
+                {/* If character is part of a phrase, show the full phrase */}
+                {charData.fullWord && (
+                  <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">
+                      Part of phrase
+                    </div>
+                    <div className="bg-gray-100 dark:bg-gray-800 rounded p-2">
+                      <div className="text-lg font-semibold">{charData.fullWord}</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-300">
+                        {commonPhrases[charData.fullWord]?.pinyin || ''}
+                      </div>
+                      <div className="text-sm mt-1">
+                        {commonPhrases[charData.fullWord]?.definition || ''}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Word management section for vocabulary words */}
                 {charData.wordId && (
                   <div className="flex flex-col space-y-2 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
                     <div className="text-xs text-gray-700 dark:text-white font-medium mb-1">
