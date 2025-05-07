@@ -141,8 +141,8 @@ export default function SentenceCard({
   };
 
   return (
-    <div className="md:col-span-2 overflow-visible">
-      <div className="card-custom h-full flex flex-col overflow-visible">
+    <div className="md:col-span-2">
+      <div className="card-custom h-full flex flex-col">
         <div className="flex justify-between items-center bg-primary text-white p-4 rounded-t-lg">
           <h2 className="font-bold text-white text-lg">Current Sentence</h2>
           <div className="flex items-center space-x-3">
@@ -160,7 +160,7 @@ export default function SentenceCard({
           </div>
         </div>
         
-        <div className="p-6 flex-grow overflow-visible">
+        <div className="p-6 flex-grow">
           {isLoading ? (
             <div className="space-y-4">
               <Skeleton className="h-8 w-full" />

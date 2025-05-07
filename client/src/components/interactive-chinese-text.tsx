@@ -96,10 +96,8 @@ export default function InteractiveChineseText({
     }
   });
   
-  const [activeCharId, setActiveCharId] = useState<string | null>(null);
-  
   return (
-    <div className="text-3xl font-['Noto_Sans_SC',sans-serif] leading-relaxed font-bold overflow-visible">
+    <div className="text-3xl font-['Noto_Sans_SC',sans-serif] leading-relaxed font-bold">
       {feedbackStatus ? (
         // Display with hover functionality after checking answer
         <span className={
@@ -119,7 +117,7 @@ export default function InteractiveChineseText({
                     {charInfo.character}
                   </span>
                 </HoverCardTrigger>
-                <HoverCardContent side="top" align="start" className="w-64 p-4">
+                <HoverCardContent className="w-64 p-4 top-layer" style={{ zIndex: 9999, position: 'relative' }}>
                   <div className="space-y-2">
                     {/* Display full word with the current character highlighted */}
                     {charInfo.fullWord && charInfo.positionInWord !== undefined ? (
