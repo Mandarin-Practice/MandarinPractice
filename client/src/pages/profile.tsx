@@ -30,23 +30,7 @@ export default function ProfilePage() {
     }
   }, [user]);
 
-  // Handle Google sign in
-  const handleGoogleSignIn = async () => {
-    try {
-      await signIn();
-      toast({
-        title: "Welcome!",
-        description: "You've successfully signed in.",
-      });
-    } catch (error) {
-      console.error("Sign in error:", error);
-      toast({
-        title: "Sign in failed",
-        description: "There was a problem signing in. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
+  // Google sign in is handled directly by the signIn function from useAuth
 
   // Handle username/password sign in
   const handleCredentialSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -217,7 +201,7 @@ export default function ProfilePage() {
                 <Button
                   className="w-full"
                   size="lg"
-                  onClick={handleGoogleSignIn}
+                  onClick={signIn}
                 >
                   <FiLogIn className="mr-2 h-4 w-4" />
                   Sign in with Google
