@@ -527,6 +527,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     const isDevAuth = localStorage.getItem('dev_auth') === 'true';
     const devUserName = localStorage.getItem('dev_user_name') || 'Dev User';
+    const devUsername = localStorage.getItem('dev_username') || 'dev_user';
     
     if (isDevAuth && !devUser) {
       console.log("Using development authentication mode");
@@ -535,8 +536,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Create a mock development user
       const mockUser: BackendUser = {
         id: 9999,
-        username: "dev_user",
-        email: "dev@example.com",
+        username: devUsername,
+        email: devUsername.includes('@') ? devUsername : `${devUsername}@example.com`,
         displayName: devUserName,
         photoUrl: null,
         firebaseUid: "dev-firebase-uid",
