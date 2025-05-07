@@ -468,7 +468,16 @@
   --z-popover: 70;
   --z-tooltip: 80;
   --z-toast: 90;
-  --z-maximum: 100;
+  --z-maximum: 999;
+}
+
+/* Fix for character popups - be aggressive with selectors to ensure it works in all environments */
+[data-radix-hover-card-content],
+[data-state="open"],
+.top-layer,
+div[style*="z-index: 9999"] {
+  z-index: 9999 !important;
+  position: fixed !important;
 }
 
 /* Ensure proper stacking of important elements */
