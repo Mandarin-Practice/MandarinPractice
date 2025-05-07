@@ -60,8 +60,9 @@ export function UserProfile() {
           size="icon"
           onClick={() => setLoginDialogOpen(true)}
           title="Sign in"
+          className="bg-white text-red-600 hover:bg-gray-100 rounded-full border-2 border-white flex items-center justify-center"
         >
-          <LogIn className="h-5 w-5" />
+          <User2 className="h-5 w-5" />
         </Button>
         
         <Dialog open={loginDialogOpen} onOpenChange={setLoginDialogOpen}>
@@ -114,13 +115,17 @@ export function UserProfile() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="rounded-full">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="rounded-full bg-white text-red-600 hover:bg-gray-100 border-2 border-white p-0 overflow-hidden"
+        >
           <Avatar className="h-8 w-8">
             <AvatarImage 
               src={user.firebaseUser.photoURL || undefined} 
               alt={user.backendUser.displayName || user.backendUser.username}
             />
-            <AvatarFallback>
+            <AvatarFallback className="bg-white text-red-600 font-bold">
               {(user.backendUser.displayName || user.backendUser.username || "")
                 .charAt(0)
                 .toUpperCase()}

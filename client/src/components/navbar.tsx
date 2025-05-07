@@ -65,7 +65,7 @@ export default function Navbar({ theme, toggleTheme }: NavbarProps) {
               {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
             </Button>
             
-            <div className="ml-2 text-white">
+            <div className="ml-4">
               <UserProfile />
             </div>
           </nav>
@@ -103,7 +103,7 @@ export default function Navbar({ theme, toggleTheme }: NavbarProps) {
                 {theme === "dark" ? "Light Mode" : "Dark Mode"}
               </Button>
               
-              <div className="text-white" onClick={() => setMobileMenuOpen(false)}>
+              <div onClick={() => setMobileMenuOpen(false)}>
                 <UserProfile />
               </div>
             </div>
