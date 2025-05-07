@@ -1,6 +1,8 @@
 import * as React from "react"
 import * as TogglePrimitive from "@radix-ui/react-toggle"
+import * as CheckboxPrimitive from "@radix-ui/react-checkbox"
 import { cva, type VariantProps } from "class-variance-authority"
+import { Check } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
@@ -12,7 +14,7 @@ const toggleVariants = cva(
         default: "bg-transparent",
         outline:
           "border border-input bg-transparent hover:bg-accent hover:text-accent-foreground",
-        switch: "relative rounded-full h-7 w-14 bg-gray-300 dark:bg-gray-600 data-[state=on]:bg-primary",
+        switch: "relative rounded-md h-6 w-6 bg-white border border-gray-300 data-[state=checked]:bg-primary",
       },
       size: {
         default: "h-10 px-3",
@@ -44,27 +46,28 @@ const Toggle = React.forwardRef<
 Toggle.displayName = TogglePrimitive.Root.displayName
 
 const ToggleSwitch = React.forwardRef<
-  React.ElementRef<typeof TogglePrimitive.Root>,
-  Omit<ToggleProps, "variant"> & { label?: string }
+  React.ElementRef<typeof CheckboxPrimitive.Root>,
+  Omit<React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root>, "variant"> & { label?: string, className?: string, size?: string }
 >(({ className, size, label, ...props }, ref) => (
   <div className="flex justify-between items-center mb-4">
     {label && (
       <label className="text-sm text-gray-700 dark:text-gray-300">{label}</label>
     )}
     <div className="relative inline-block align-middle select-none">
-      <TogglePrimitive.Root
+      <CheckboxPrimitive.Root
         ref={ref}
-        className={cn(toggleVariants({ variant: "switch", size, className }), "peer")}
+        className={cn(
+          "peer h-6 w-6 shrink-0 rounded-sm border border-primary ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground",
+          className
+        )}
         {...props}
       >
-        <span 
-          className="absolute block h-7 w-7 rounded-full bg-white shadow-md transition-all duration-200 ease-in-out left-0" 
-          style={{
-            top: '0',
-            transform: props.pressed ? 'translateX(7px)' : 'translateX(0)',
-          }}
-        />
-      </TogglePrimitive.Root>
+        <CheckboxPrimitive.Indicator
+          className={cn("flex items-center justify-center text-current")}
+        >
+          <Check className="h-4 w-4 text-white" />
+        </CheckboxPrimitive.Indicator>
+      </CheckboxPrimitive.Root>
     </div>
   </div>
 ))
