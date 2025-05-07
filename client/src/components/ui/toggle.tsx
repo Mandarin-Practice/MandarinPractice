@@ -12,7 +12,7 @@ const toggleVariants = cva(
         default: "bg-transparent",
         outline:
           "border border-input bg-transparent hover:bg-accent hover:text-accent-foreground",
-        switch: "relative rounded-full h-6 w-10 bg-gray-300 dark:bg-gray-600 data-[state=on]:bg-primary",
+        switch: "relative rounded-full h-6 w-16 bg-gray-300 dark:bg-gray-600 data-[state=on]:bg-primary",
       },
       size: {
         default: "h-10 px-3",
@@ -57,7 +57,12 @@ const ToggleSwitch = React.forwardRef<
         className={cn(toggleVariants({ variant: "switch", size, className }), "peer")}
         {...props}
       >
-        <span className="absolute block h-6 w-6 rounded-full bg-white shadow-sm transform transition-transform duration-200 ease-in-out left-0 top-0 data-[state=on]:translate-x-4" />
+        <span 
+          className="absolute block h-6 w-6 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out left-0 top-0" 
+          style={{
+            transform: props.pressed ? 'translateX(40px)' : 'translateX(0)',
+          }}
+        />
       </TogglePrimitive.Root>
     </div>
   </div>
