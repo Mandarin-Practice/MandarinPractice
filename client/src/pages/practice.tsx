@@ -59,9 +59,9 @@ export default function Practice() {
   const { speak, isPlaying } = useTextToSpeech();
   const { playCorrectSound, playIncorrectSound } = useSoundEffects();
 
-  // Fetch vocabulary words
+  // Fetch vocabulary words from user's word list
   const { data: vocabularyWords, isLoading: isLoadingVocabulary } = useQuery({
-    queryKey: ['/api/vocabulary'],
+    queryKey: ['/api/auth/wordlist'],
     refetchOnWindowFocus: false,
   });
 
