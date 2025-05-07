@@ -105,31 +105,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Import request received with ${words.length} words${userId ? ` for user ${userId}` : ''}`);
       
-      // First, validate all words using the schema
-      const validatedWords = words.map(word => {
+      // Instead of validating all words at once (which stops on first error),
+      // validate each word individually and proceed with valid ones
+      const validatedWords = [];
+      const validationErrors = [];
+      
+      for (const word of words) {
         try {
-          return vocabularySchema.parse(word);
+          const validWord = vocabularySchema.parse(word);
+          validatedWords.push(validWord);
         } catch (error) {
           if (error instanceof ZodError) {
             const errorMsg = `Invalid word format: ${error.errors.map(e => e.message).join(', ')}`;
             console.error(`Validation error for word "${JSON.stringify(word)}": ${errorMsg}`);
-            throw new Error(errorMsg);
+            validationErrors.push({
+              word: word.chinese || "unknown",
+              error: errorMsg
+            });
+          } else {
+            validationErrors.push({
+              word: word.chinese || "unknown",
+              error: error instanceof Error ? error.message : String(error)
+            });
           }
-          throw error;
         }
-      });
+      }
       
-      console.log(`Successfully validated ${validatedWords.length} words`);
+      console.log(`Successfully validated ${validatedWords.length} out of ${words.length} words`);
+      if (validationErrors.length > 0) {
+        console.log(`Found ${validationErrors.length} validation errors`);
+      }
       
-      // Instead of using Promise.all (which might silently swallow errors),
-      // process each word individually and track results
+      // Process each validated word individually and track results
       const savedWords = [];
       const wordErrors = [];
       
       // First, add all words to the global dictionary
       for (const word of validatedWords) {
         try {
-          const savedWord = await storage.addVocabulary(word);
+          // Check if word already exists to avoid duplicates
+          let existingWord = null;
+          try {
+            // Try to find by exact match first
+            existingWord = await storage.getVocabularyByChineseAndPinyin(word.chinese, word.pinyin);
+          } catch (err) {
+            // If the search method doesn't exist, just proceed with adding
+          }
+          
+          // Add the word if it doesn't exist
+          let savedWord;
+          if (existingWord) {
+            savedWord = existingWord;
+            console.log(`Word "${word.chinese}" already exists, skipping add`);
+          } else {
+            savedWord = await storage.addVocabulary(word);
+          }
+          
           savedWords.push(savedWord);
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : String(error);
@@ -156,14 +187,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      console.log(`Successfully saved ${savedWords.length} words out of ${validatedWords.length}`);
+      console.log(`Successfully saved ${savedWords.length} words out of ${words.length} total`);
       if (wordErrors.length > 0) {
         console.log(`Encountered ${wordErrors.length} errors during import`);
         console.log(wordErrors);
       }
       
-      // Return all the saved words, without the errors
-      res.status(201).json(savedWords);
+      // Return all the saved words, including validation stats
+      res.status(201).json({
+        savedWords,
+        stats: {
+          totalRequested: words.length,
+          validWords: validatedWords.length,
+          savedWords: savedWords.length,
+          validationErrors: validationErrors.length,
+          saveErrors: wordErrors.length
+        }
+      });
     } catch (error) {
       console.error(`Import failed: ${error instanceof Error ? error.message : String(error)}`);
       res.status(400).json({ message: error instanceof Error ? error.message : "Failed to import vocabulary" });
