@@ -463,6 +463,19 @@ export default function Practice() {
       similarity,
       matchStrictness
     });
+    
+    // Extra debug info for imperative phrases
+    if (correctAnswer.toLowerCase().includes("come in") || 
+        correctAnswer.toLowerCase().includes("please")) {
+      console.log('Imperative check - extra details:', {
+        userStartsWithI: input.toLowerCase().trim().startsWith("i "),
+        userIncludes: input.toLowerCase().includes("please"),
+        correctStartsWithPlease: correctAnswer.toLowerCase().trim().startsWith("please"),
+        hasComeInConflict: input.toLowerCase().includes("i come") && 
+                          (correctAnswer.toLowerCase().includes("come in") || 
+                           correctAnswer.toLowerCase().includes("please come"))
+      });
+    }
 
     // Additional checks for critical temporal words that can't be mixed up
     const userLower = input.toLowerCase().trim();
@@ -476,8 +489,26 @@ export default function Practice() {
       (userLower.includes("today") && correctLower.includes("yesterday"))
     );
     
+    // Check for imperative phrases and command conflicts
+    const imperativeConflict = (
+      // "Please come in" vs. "I come" conflict
+      (correctLower.includes("please come in") && userLower.includes("i come")) ||
+      (correctLower.includes("come in") && userLower.includes("i come")) ||
+      
+      // Direction conflicts (come vs go)
+      (userLower.includes("come") && correctLower.includes("go") && !correctLower.includes("come")) ||
+      (userLower.includes("go") && correctLower.includes("come") && !correctLower.includes("go")) ||
+      
+      // Imperative vs declarative sentence structure conflicts
+      (correctLower.startsWith("please") && !userLower.includes("please") && similarity < 0.85) ||
+      
+      // "I" vs "you" perspective conflicts
+      (userLower.startsWith("i ") && correctLower.startsWith("you ")) ||
+      (userLower.startsWith("you ") && correctLower.startsWith("i "))
+    );
+    
     // Threshold adjustments with special case handling:
-    if (similarity >= 0.7 && !temporalWordsConflict) {
+    if (similarity >= 0.7 && !temporalWordsConflict && !imperativeConflict) {
       setFeedbackStatus("correct");
       calculateScore(similarity);
       
