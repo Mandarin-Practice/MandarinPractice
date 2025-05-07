@@ -187,22 +187,36 @@ export default function Practice() {
     return () => clearInterval(checkDifficultyInterval);
   }, [currentDifficulty]);
 
-  // Check if vocabulary is empty and redirect if needed
+  // Check if vocabulary is empty and redirect if needed, but only if truly needed
   useEffect(() => {
-    // Wait until loading is complete before checking
-    if (isLoadingVocabulary) {
+    // Check if page was just loaded (using a session flag)
+    const hasInitialized = sessionStorage.getItem('practice_initialized');
+    
+    if (!hasInitialized) {
+      // Set initialization flag - helps avoid multiple redirects in same session
+      sessionStorage.setItem('practice_initialized', 'true');
+      
+      // Give a longer initial timeout on first page load to ensure data is fully loaded
+      console.log("First practice page visit this session, using extended loading time");
       return;
     }
     
-    // Use a counter to prevent premature redirects during initialization
+    // Wait until loading is complete before checking for empty vocabulary
+    if (isLoadingVocabulary) {
+      console.log("Still loading vocabulary, waiting before redirect check");
+      return;
+    }
+    
+    // Use a longer timeout to prevent premature redirects during initialization
+    // This delay allows network requests to complete and data to be processed
     const redirectCheckId = setTimeout(() => {
-      // Double-check that the vocabulary is still empty after the timeout
-      // This helps prevent race conditions with asynchronous data loading
       if (!vocabularyWords || !Array.isArray(vocabularyWords) || vocabularyWords.length === 0) {
-        console.log("No vocabulary words available after loading completed, redirecting to word list page");
+        console.log("No vocabulary words available after multiple checks, redirecting to word list page");
         navigate("/word-list");
+      } else {
+        console.log(`Vocabulary loaded successfully: ${vocabularyWords.length} words available`);
       }
-    }, 500);  // Longer timeout for production environment
+    }, 1500);  // Much longer timeout for production environment
     
     return () => clearTimeout(redirectCheckId);
   }, [vocabularyWords, isLoadingVocabulary, navigate]);
@@ -433,10 +447,28 @@ export default function Practice() {
     generateSentenceMutation.mutate();
   };
 
-  if (isLoadingVocabulary) {
-    return <div className="text-center py-10">Loading vocabulary...</div>;
+  // Modify the loading behavior to be more gradual and give more time for data to load
+  const justLoaded = !sessionStorage.getItem('practice_initialized');
+  
+  // Always show loading during initial page load
+  if (isLoadingVocabulary || justLoaded) {
+    // Show a more detailed loading message to set expectations
+    return (
+      <div className="text-center py-10">
+        <div className="animate-pulse">
+          <div className="h-10 w-10 mx-auto mb-4 rounded-full bg-gray-300 dark:bg-gray-700"></div>
+          <div className="h-6 w-48 mx-auto mb-2 rounded bg-gray-300 dark:bg-gray-700"></div>
+          <div className="h-4 w-64 mx-auto rounded bg-gray-200 dark:bg-gray-800"></div>
+        </div>
+        <p className="mt-4 text-gray-600 dark:text-gray-400">
+          Loading vocabulary and preparing your practice session...
+        </p>
+      </div>
+    );
   }
 
+  // Only show the "no vocabulary" message if we're certain there are no words
+  // and we've already given the app enough time to load them
   if (!vocabularyWords || !Array.isArray(vocabularyWords) || vocabularyWords.length === 0) {
     return (
       <div className="text-center py-12 px-6 bg-white dark:bg-gray-800 rounded-lg shadow-md mb-6">
