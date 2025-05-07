@@ -267,7 +267,16 @@ export default function WordList() {
 
   // Import word list mutation
   const importWordListMutation = useMutation({
-    mutationFn: async (data: { wordList: { chinese: string; pinyin: string; english: string }[] }) => {
+    mutationFn: async (data: { wordList: { chinese: string; pinyin: string; english: string }[] }): Promise<{
+      savedWords: any[];
+      stats: {
+        totalRequested: number;
+        validWords: number;
+        savedWords: number;
+        validationErrors: number;
+        saveErrors: number;
+      };
+    }> => {
       // Change the data structure to match what the server expects
       const words = data.wordList.map(word => ({
         chinese: word.chinese,
@@ -284,7 +293,16 @@ export default function WordList() {
       
       // Split words into smaller batches to avoid issues with large imports
       const BATCH_SIZE = 10;
-      const allResults = {
+      const allResults: {
+        savedWords: any[];
+        stats: {
+          totalRequested: number;
+          validWords: number;
+          savedWords: number;
+          validationErrors: number;
+          saveErrors: number;
+        }
+      } = {
         savedWords: [],
         stats: {
           totalRequested: words.length,
@@ -339,7 +357,7 @@ export default function WordList() {
       
       // New response format has data.savedWords and data.stats
       const savedWords = data.savedWords || data;
-      const stats = data.stats || { totalRequested: data.length, savedWords: data.length };
+      const stats = data.stats || { totalRequested: savedWords.length, savedWords: savedWords.length };
       
       setImportResults({
         total: stats.totalRequested,
@@ -403,6 +421,8 @@ export default function WordList() {
   const handleImportWordList = (listId: string) => {
     const list = SAMPLE_WORD_LISTS.find(l => l.id === listId);
     if (list) {
+      console.log(`[IMPORT] Starting import of word list: ${list.name} (${list.id})`);
+      console.log(`[IMPORT] First few words:`, list.words.slice(0, 3));
       importWordListMutation.mutateAsync({ wordList: list.words });
     }
   };
