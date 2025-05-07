@@ -518,10 +518,10 @@ export default function Practice() {
       // Trigger confetti animation for correct answer
       setShowConfetti(true);
       
-      // Reset confetti after a delay to prevent it from showing continuously
+      // Reset confetti after a short delay to prevent it from showing continuously
       setTimeout(() => {
         setShowConfetti(false);
-      }, 1500);
+      }, 600);
       
       // If we have vocabulary data and this is a correct answer,
       // update proficiency for each word in the sentence
