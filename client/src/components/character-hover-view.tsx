@@ -53,6 +53,33 @@ const commonCharacters: Record<string, { pinyin: string, definition: string }> =
   '喝': { pinyin: 'hē', definition: 'to drink' },
   '大': { pinyin: 'dà', definition: 'big/large' },
   '小': { pinyin: 'xiǎo', definition: 'small/little' },
+  '多': { pinyin: 'duō', definition: 'many/much' },
+  '少': { pinyin: 'shǎo', definition: 'few/little' },
+  '买': { pinyin: 'mǎi', definition: 'to buy' },
+  '东': { pinyin: 'dōng', definition: 'east' },
+  '西': { pinyin: 'xī', definition: 'west/thing' },
+  '南': { pinyin: 'nán', definition: 'south' },
+  '北': { pinyin: 'běi', definition: 'north' },
+  '家': { pinyin: 'jiā', definition: 'home/family' },
+  '想': { pinyin: 'xiǎng', definition: 'to think/want' },
+  '现': { pinyin: 'xiàn', definition: 'present/current' },
+  '工': { pinyin: 'gōng', definition: 'work' },
+  '作': { pinyin: 'zuò', definition: 'to do/make' },
+  '爱': { pinyin: 'ài', definition: 'to love' },
+  '和': { pinyin: 'hé', definition: 'and/with' },
+  '说': { pinyin: 'shuō', definition: 'to say/speak' },
+  '话': { pinyin: 'huà', definition: 'speech/words' },
+  '书': { pinyin: 'shū', definition: 'book' },
+  '年': { pinyin: 'nián', definition: 'year' },
+  '月': { pinyin: 'yuè', definition: 'month/moon' },
+  '日': { pinyin: 'rì', definition: 'day/sun' },
+  '时': { pinyin: 'shí', definition: 'time/hour' },
+  '分': { pinyin: 'fēn', definition: 'minute/to divide' },
+  '秒': { pinyin: 'miǎo', definition: 'second (time)' },
+  '钟': { pinyin: 'zhōng', definition: 'clock/bell' },
+  '点': { pinyin: 'diǎn', definition: 'o\'clock/dot/point' },
+  '看': { pinyin: 'kàn', definition: 'to see/look/read' },
+  '听': { pinyin: 'tīng', definition: 'to listen' },
 };
 
 export default function CharacterHoverView({
@@ -64,12 +91,26 @@ export default function CharacterHoverView({
   const queryClient = useQueryClient();
   const [charactersData, setCharactersData] = useState<CharacterDetails[]>([]);
 
+  // Debug
+  console.log("CharacterHoverView rendering with:", {chinese, isInteractive, feedbackStatus});
+
   // Build the character data with pinyin and definitions from vocabulary words or fallback
   useEffect(() => {
+    // Only process if we have Chinese text
+    if (!chinese) return;
+    
+    console.log("Processing characters from:", chinese);
+    
     const newCharactersData = chinese.split('').map(char => {
+      // Skip processing for punctuation
+      if (/[。，！？；：""''「」『』（）【】、]/.test(char)) {
+        return { character: char };
+      }
+      
       // First try to find from vocabulary words
       let charData: CharacterDetails = { character: char };
       
+      // Try to match from vocabulary words
       if (vocabularyWords && vocabularyWords.length > 0) {
         // Find if this character is in any vocabulary word
         const matchingWord = vocabularyWords.find(word => 
@@ -87,11 +128,17 @@ export default function CharacterHoverView({
       if (!charData.definition && commonCharacters[char]) {
         charData.pinyin = commonCharacters[char].pinyin;
         charData.definition = commonCharacters[char].definition;
+      } else if (!charData.definition) {
+        // If character not found in our dictionary, provide a placeholder definition
+        console.log("Character not found in dictionary:", char);
+        charData.pinyin = "(unknown)";
+        charData.definition = "Character not in dictionary";
       }
       
       return charData;
     });
     
+    console.log("Character data prepared:", newCharactersData);
     setCharactersData(newCharactersData);
   }, [chinese, vocabularyWords]);
 
