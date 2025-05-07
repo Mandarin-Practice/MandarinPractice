@@ -98,7 +98,6 @@ export default function InteractiveChineseText({
   
   return (
     <div className="text-3xl font-['Noto_Sans_SC',sans-serif] leading-relaxed font-bold">
-      {/* Display with hover functionality always, with appropriate styling based on feedback */}
       <span className={
         feedbackStatus === "correct" 
           ? "text-green-600 dark:text-green-400" 
@@ -106,77 +105,85 @@ export default function InteractiveChineseText({
             ? "text-red-600 dark:text-red-400" 
             : "text-primary"
       }>
-        {processedText.map((charInfo, index) => (
-          charInfo.definition ? (
-            <HoverCard key={index} openDelay={100} closeDelay={200}>
-              <HoverCardTrigger asChild>
-                <span 
-                  className="cursor-help hover:bg-gray-100 dark:hover:bg-gray-800 px-1 py-0.5 mx-0.5 rounded transition-colors"
-                >
-                  {charInfo.character}
-                </span>
-              </HoverCardTrigger>
-              <HoverCardContent className="w-64 p-4 top-layer" style={{ zIndex: 'var(--z-maximum)' }}>
-                <div className="space-y-2">
-                  {/* Display full word with the current character highlighted */}
-                  {charInfo.fullWord && charInfo.positionInWord !== undefined ? (
-                    <div className="text-2xl font-bold">
-                      {Array.from(charInfo.fullWord).map((char, i) => (
-                        <span 
-                          key={i} 
-                          className={i === charInfo.positionInWord 
-                            ? "bg-secondary/25 text-secondary-foreground/90 px-0.5 rounded" 
-                            : ""
-                          }
-                        >
-                          {char}
-                        </span>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-2xl font-bold">{charInfo.character}</div>
-                  )}
-                  
-                  <div className="text-sm text-gray-700 dark:text-gray-300 font-medium">{charInfo.pinyin}</div>
-                  <div className="text-base text-gray-900 dark:text-white">{charInfo.definition}</div>
-                  
-                  {/* Only show word management options after checking an answer */}
-                  {charInfo.wordId && feedbackStatus && (
-                    <div className="flex flex-col space-y-2 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-                      <div className="text-xs text-gray-700 dark:text-white font-medium mb-1">
-                        Manage this word (you can update multiple words before continuing)
+        {/* If we have feedback (after submission), render with hover functionality */}
+        {feedbackStatus ? (
+          processedText.map((charInfo, index) => (
+            charInfo.definition ? (
+              <HoverCard key={index} openDelay={100} closeDelay={200}>
+                <HoverCardTrigger asChild>
+                  <span 
+                    className="cursor-help hover:bg-gray-100 dark:hover:bg-gray-800 px-1 py-0.5 mx-0.5 rounded transition-colors"
+                    title={`${charInfo.pinyin}: ${charInfo.definition}`}
+                  >
+                    {charInfo.character}
+                  </span>
+                </HoverCardTrigger>
+                <HoverCardContent className="w-64 p-4 top-layer" style={{ zIndex: 'var(--z-maximum)' }}>
+                  <div className="space-y-2">
+                    {/* Display full word with the current character highlighted */}
+                    {charInfo.fullWord && charInfo.positionInWord !== undefined ? (
+                      <div className="text-2xl font-bold">
+                        {Array.from(charInfo.fullWord).map((char, i) => (
+                          <span 
+                            key={i} 
+                            className={i === charInfo.positionInWord 
+                              ? "bg-secondary/25 text-secondary-foreground/90 px-0.5 rounded" 
+                              : ""
+                            }
+                          >
+                            {char}
+                          </span>
+                        ))}
                       </div>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => toggleWordActive.mutate(charInfo.wordId as number)}
-                        className="text-xs justify-start"
-                      >
-                        {vocabularyWords.find(w => w.id === charInfo.wordId)?.active === 'true' 
-                          ? 'Mark as Inactive' 
-                          : 'Mark as Active'}
-                      </Button>
-                      <Button 
-                        variant="destructive" 
-                        size="sm"
-                        onClick={() => {
-                          if (window.confirm('Are you sure you want to delete this word?')) {
-                            deleteWord.mutate(charInfo.wordId as number);
-                          }
-                        }}
-                        className="text-xs justify-start"
-                      >
-                        Delete Word
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </HoverCardContent>
-            </HoverCard>
-          ) : (
-            <span key={index} className="px-1 mx-0.5">{charInfo.character}</span>
-          )
-        ))}
+                    ) : (
+                      <div className="text-2xl font-bold">{charInfo.character}</div>
+                    )}
+                    
+                    <div className="text-sm text-gray-700 dark:text-gray-300 font-medium">{charInfo.pinyin}</div>
+                    <div className="text-base text-gray-900 dark:text-white">{charInfo.definition}</div>
+                    
+                    {charInfo.wordId && (
+                      <div className="flex flex-col space-y-2 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                        <div className="text-xs text-gray-700 dark:text-white font-medium mb-1">
+                          Manage this word (you can update multiple words before continuing)
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => toggleWordActive.mutate(charInfo.wordId as number)}
+                          className="text-xs justify-start"
+                        >
+                          {vocabularyWords.find(w => w.id === charInfo.wordId)?.active === 'true' 
+                            ? 'Mark as Inactive' 
+                            : 'Mark as Active'}
+                        </Button>
+                        <Button 
+                          variant="destructive" 
+                          size="sm"
+                          onClick={() => {
+                            if (window.confirm('Are you sure you want to delete this word?')) {
+                              deleteWord.mutate(charInfo.wordId as number);
+                            }
+                          }}
+                          className="text-xs justify-start"
+                        >
+                          Delete Word
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </HoverCardContent>
+              </HoverCard>
+            ) : (
+              <span key={index} className="px-1 mx-0.5">{charInfo.character}</span>
+            )
+          ))
+        ) : (
+          // No feedback yet, just render the plain text without hover
+          chinese.split('').map((char, index) => (
+            <span key={index} className="px-1 mx-0.5">{char}</span>
+          ))
+        )}
       </span>
     </div>
   );
