@@ -126,6 +126,43 @@ export function useUserWordList() {
       return;
     }
 
+    // Check if we're in development mode
+    const isDevMode = localStorage.getItem('dev_auth') === 'true';
+
+    if (isDevMode) {
+      try {
+        console.log(`[Dev mode] Adding word ${wordId} to user's list`);
+        
+        // Get current saved words from localStorage
+        const savedWordsStr = localStorage.getItem('dev_saved_words') || '[]';
+        const savedWords = JSON.parse(savedWordsStr);
+        
+        // Add new word if not already saved
+        if (!savedWords.includes(wordId)) {
+          savedWords.push(wordId);
+          localStorage.setItem('dev_saved_words', JSON.stringify(savedWords));
+        }
+        
+        // Invalidate queries to refresh the UI
+        queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
+        
+        toast({
+          title: "Word saved",
+          description: "Word has been added to your list (dev mode).",
+        });
+        return;
+      } catch (error: any) {
+        console.error("[Dev mode] Error adding word to list:", error);
+        toast({
+          title: "Failed to save word",
+          description: error.message || "An unknown error occurred",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    // Regular API call for non-dev mode
     try {
       // Call the API directly rather than through the user object
       const response = await fetch(`/api/auth/wordlist`, {
@@ -171,6 +208,41 @@ export function useUserWordList() {
       return;
     }
 
+    // Check if we're in development mode
+    const isDevMode = localStorage.getItem('dev_auth') === 'true';
+
+    if (isDevMode) {
+      try {
+        console.log(`[Dev mode] Removing word ${wordId} from user's list`);
+        
+        // Get current saved words from localStorage
+        const savedWordsStr = localStorage.getItem('dev_saved_words') || '[]';
+        let savedWords = JSON.parse(savedWordsStr);
+        
+        // Remove word if it exists
+        savedWords = savedWords.filter((id: number) => id !== wordId);
+        localStorage.setItem('dev_saved_words', JSON.stringify(savedWords));
+        
+        // Invalidate queries to refresh the UI
+        queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
+        
+        toast({
+          title: "Word removed",
+          description: "Word has been removed from your list (dev mode).",
+        });
+        return;
+      } catch (error: any) {
+        console.error("[Dev mode] Error removing word from list:", error);
+        toast({
+          title: "Failed to remove word",
+          description: error.message || "An unknown error occurred",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    // Regular API call for non-dev mode
     try {
       // Call the API directly rather than through the user object
       const response = await fetch(`/api/auth/wordlist`, {
