@@ -194,24 +194,18 @@ export default function SentenceCard({
                         </div>
                       </div>
                     ) : (
-                      // Interactive display even before feedback
+                      // Normal display before feedback (non-interactive)
                       <div>
                         <div className="text-xs text-primary font-medium uppercase tracking-wider mb-2">
-                          Chinese Text - Interactive
+                          Chinese Text
                         </div>
-                        <InteractiveChineseText 
-                          chinese={sentence.chinese}
-                          vocabularyWords={vocabularyWords}
-                          feedbackStatus={null}
-                        />
-                        <div className="mt-2 text-xs text-gray-700 dark:text-white flex items-center font-medium">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1 text-primary">
-                            <circle cx="12" cy="12" r="10" />
-                            <path d="M12 16v-4" />
-                            <path d="M12 8h.01" />
-                          </svg>
-                          Hover over any character to see details
-                        </div>
+                        <p className="text-3xl font-bold leading-relaxed" style={{ color: '#cc0000' }}>
+                          {sentence.chinese.split('').map((char, index) => (
+                            <span key={index} className="chinese-character">
+                              {char}
+                            </span>
+                          ))}
+                        </p>
                       </div>
                     )}
                   </div>
@@ -301,12 +295,11 @@ export default function SentenceCard({
               ) : ''}
               <span className="mx-1 text-foreground">characters</span>
               <span className="mx-1">•</span>
-              <span className="text-gray-700 dark:text-gray-200 font-medium">
-                {feedbackStatus 
-                  ? "Hover over words to manage vocabulary"
-                  : "Hover over characters to see details"
-                }
-              </span>
+              {feedbackStatus && (
+                <span className="text-gray-700 dark:text-gray-200 font-medium">
+                  Hover over characters to see details and manage vocabulary
+                </span>
+              )}
             </p>
           )}
           <TooltipProvider>
