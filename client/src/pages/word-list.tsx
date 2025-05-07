@@ -18,6 +18,7 @@ import { LESSON6_WORDLIST } from "@/data/lesson6-wordlist";
 import { LESSON7_WORDLIST } from "@/data/lesson7-wordlist";
 import { LESSON8_WORDLIST } from "@/data/lesson8-wordlist";
 import { LESSON9_WORDLIST } from "@/data/lesson9-wordlist";
+import { LESSON10_WORDLIST } from "@/data/lesson10-wordlist";
 import { LESSON11_WORDLIST } from "@/data/word-lists";
 import { LESSON12_WORDLIST } from "@/data/lesson12-wordlist";
 import { LESSON13_WORDLIST } from "@/data/lesson13-wordlist";
@@ -52,6 +53,7 @@ const SAMPLE_WORD_LISTS: WordList[] = [
   LESSON13_WORDLIST,
   LESSON12_WORDLIST,
   LESSON11_WORDLIST,
+  LESSON10_WORDLIST,
   LESSON9_WORDLIST,
   LESSON8_WORDLIST,
   LESSON7_WORDLIST,
