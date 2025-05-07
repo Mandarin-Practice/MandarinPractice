@@ -118,7 +118,7 @@ export default function InteractiveChineseText({
   // Function to render popup content
   const renderPopupContent = (charInfo: CharacterInfo) => {
     return (
-      <div id="char-popup" className="absolute z-[9999] w-64 rounded-md border bg-popover p-4 text-popover-foreground shadow-md">
+      <div id="char-popup" className="absolute z-[9999] w-64 rounded-md border bg-popover p-4 text-popover-foreground shadow-md" style={{ top: '100%', left: 0 }}>
         <div className="space-y-2">
           {/* Close button */}
           <button 
@@ -214,6 +214,17 @@ export default function InteractiveChineseText({
                   onClick={(e) => {
                     e.stopPropagation();
                     setSelectedCharId(selectedCharId === charId ? null : charId);
+                  }}
+                  onMouseEnter={(e) => {
+                    setSelectedCharId(charId);
+                  }}
+                  onMouseLeave={(e) => {
+                    // Only close if we're not clicking
+                    if (!e.buttons) {
+                      setTimeout(() => {
+                        setSelectedCharId(null);
+                      }, 200);
+                    }
                   }}
                 >
                   {charInfo.character}
