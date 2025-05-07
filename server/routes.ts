@@ -234,12 +234,155 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create a sentence cache to speed up responses
+  const sentenceCache = {
+    beginner: [] as any[],
+    intermediate: [] as any[],
+    advanced: [] as any[],
+    lastUpdated: Date.now(),
+    maxSize: 10, // Store 10 sentences per difficulty level
+    expiryTimeMs: 60 * 60 * 1000 // Cache expires after 1 hour
+  };
+
+  // Define fallback sentences here so they're only defined once
+  const fallbackSentences = {
+    beginner: [
+      // Present tense sentences
+      { chinese: "我很高兴。", pinyin: "Wǒ hěn gāoxìng.", english: "I am very happy." },
+      { chinese: "今天天气很好。", pinyin: "Jīntiān tiānqì hěn hǎo.", english: "The weather is good today." },
+      { chinese: "你好吗？", pinyin: "Nǐ hǎo ma?", english: "How are you?" },
+      { chinese: "我喜欢学中文。", pinyin: "Wǒ xǐhuān xué Zhōngwén.", english: "I like learning Chinese." },
+      { chinese: "谢谢你的帮助。", pinyin: "Xièxiè nǐ de bāngzhù.", english: "Thank you for your help." },
+      { chinese: "我想喝水。", pinyin: "Wǒ xiǎng hē shuǐ.", english: "I want to drink water." },
+      { chinese: "这个很有意思。", pinyin: "Zhège hěn yǒuyìsi.", english: "This is very interesting." },
+      { chinese: "你叫什么名字？", pinyin: "Nǐ jiào shénme míngzi?", english: "What is your name?" },
+      
+      // Past tense sentences with 了
+      { chinese: "我买了一本书。", pinyin: "Wǒ mǎi le yī běn shū.", english: "I bought a book." },
+      { chinese: "他去了图书馆。", pinyin: "Tā qù le túshūguǎn.", english: "He went to the library." },
+      { chinese: "我们吃了晚饭。", pinyin: "Wǒmen chī le wǎnfàn.", english: "We ate dinner." },
+      { chinese: "我看了这部电影。", pinyin: "Wǒ kàn le zhè bù diànyǐng.", english: "I watched this movie." },
+      { chinese: "我学了新的汉字。", pinyin: "Wǒ xué le xīn de hànzì.", english: "I learned new Chinese characters." },
+      { chinese: "昨天下了雨。", pinyin: "Zuótiān xià le yǔ.", english: "It rained yesterday." },
+      { chinese: "他写了一封信。", pinyin: "Tā xiě le yī fēng xìn.", english: "He wrote a letter." },
+      { chinese: "我吃了早饭。", pinyin: "Wǒ chī le zǎofàn.", english: "I ate breakfast." },
+      
+      // Future tense or modal sentences
+      { chinese: "明天我要去学校。", pinyin: "Míngtiān wǒ yào qù xuéxiào.", english: "Tomorrow I will go to school." },
+      { chinese: "下周我们会见面。", pinyin: "Xià zhōu wǒmen huì jiànmiàn.", english: "We will meet next week." },
+      { chinese: "我可以帮你吗？", pinyin: "Wǒ kěyǐ bāng nǐ ma?", english: "Can I help you?" },
+      { chinese: "他会说中文。", pinyin: "Tā huì shuō Zhōngwén.", english: "He can speak Chinese." }
+    ],
+    intermediate: [
+      // Present tense sentences
+      { chinese: "这本书很有意思。", pinyin: "Zhè běn shū hěn yǒuyìsi.", english: "This book is very interesting." },
+      { chinese: "中国菜很好吃。", pinyin: "Zhōngguó cài hěn hǎochī.", english: "Chinese food is delicious." },
+      { chinese: "你能帮我一下吗？", pinyin: "Nǐ néng bāng wǒ yīxià ma?", english: "Can you help me?" },
+      { chinese: "我在北京工作。", pinyin: "Wǒ zài Běijīng gōngzuò.", english: "I work in Beijing." },
+      
+      // Past tense with 了
+      { chinese: "我昨天去了图书馆。", pinyin: "Wǒ zuótiān qù le túshūguǎn.", english: "I went to the library yesterday." },
+      { chinese: "他已经看完了这本书。", pinyin: "Tā yǐjīng kàn wán le zhè běn shū.", english: "He has finished reading this book." },
+      { chinese: "我们参观了故宫。", pinyin: "Wǒmen cānguān le Gùgōng.", english: "We visited the Forbidden City." },
+      { chinese: "他学了三年中文了。", pinyin: "Tā xué le sān nián Zhōngwén le.", english: "He has been learning Chinese for three years." },
+      { chinese: "我们认识了很多新朋友。", pinyin: "Wǒmen rènshí le hěn duō xīn péngyǒu.", english: "We met many new friends." },
+      
+      // Future tense
+      { chinese: "我明天要去北京。", pinyin: "Wǒ míngtiān yào qù Běijīng.", english: "I will go to Beijing tomorrow." },
+      { chinese: "下个月我会回国。", pinyin: "Xià gè yuè wǒ huì huí guó.", english: "I will return to my country next month." },
+      { chinese: "我打算学习中文。", pinyin: "Wǒ dǎsuàn xuéxí Zhōngwén.", english: "I plan to study Chinese." }
+    ],
+    advanced: [
+      // Complex sentences with 了 and other grammar patterns
+      { chinese: "我已经学了三年中文了，但是还是说得不太流利。", pinyin: "Wǒ yǐjīng xué le sān nián Zhōngwén le, dànshì háishì shuō de bú tài liúlì.", english: "I have been learning Chinese for three years, but I still don't speak very fluently." },
+      { chinese: "虽然学习中文很难，但是很有意思。", pinyin: "Suīrán xuéxí Zhōngwén hěn nán, dànshì hěn yǒuyìsi.", english: "Although learning Chinese is difficult, it is very interesting." },
+      { chinese: "如果明天天气好的话，我们可以去公园。", pinyin: "Rúguǒ míngtiān tiānqì hǎo dehuà, wǒmen kěyǐ qù gōngyuán.", english: "If the weather is good tomorrow, we can go to the park." },
+      { chinese: "我认为学习语言的最好方法是每天练习。", pinyin: "Wǒ rènwéi xuéxí yǔyán de zuì hǎo fāngfǎ shì měitiān liànxí.", english: "I think the best way to learn a language is to practice every day." },
+      { chinese: "昨天我看了一部电影，这部电影讲的是中国历史。", pinyin: "Zuótiān wǒ kàn le yī bù diànyǐng, zhè bù diànyǐng jiǎng de shì Zhōngguó lìshǐ.", english: "Yesterday I watched a movie that was about Chinese history." },
+      { chinese: "我们吃完了饭，就去看电影了。", pinyin: "Wǒmen chī wán le fàn, jiù qù kàn diànyǐng le.", english: "After we finished eating, we went to see a movie." },
+      { chinese: "他告诉我他已经去过北京了。", pinyin: "Tā gàosù wǒ tā yǐjīng qùguò Běijīng le.", english: "He told me he had already been to Beijing." },
+      { chinese: "学习汉语不仅要学习语法，还要了解中国文化。", pinyin: "Xuéxí Hànyǔ bùjǐn yào xuéxí yǔfǎ, hái yào liǎojiě Zhōngguó wénhuà.", english: "Learning Chinese requires not only learning grammar, but also understanding Chinese culture." }
+    ]
+  };
+
+  // Background cache filler function - runs in the background to keep the cache filled
+  async function fillSentenceCache() {
+    try {
+      // Get all vocabulary words once for efficiency
+      const allVocabulary = await storage.getAllVocabulary();
+      const activeVocabulary = allVocabulary.filter(word => word.active === "true");
+      
+      if (activeVocabulary.length === 0) return; // Nothing to cache if no vocabulary
+      
+      // Fill cache for each difficulty if needed
+      for (const difficulty of ['beginner', 'intermediate', 'advanced'] as const) {
+        // Only fill if we need more sentences
+        if (sentenceCache[difficulty].length < sentenceCache.maxSize) {
+          try {
+            // Generate a new sentence
+            const sentence = await generateSentence(activeVocabulary, difficulty);
+            
+            // Add to the cache if it's not a duplicate
+            const isDuplicate = sentenceCache[difficulty].some(s => s.chinese === sentence.chinese);
+            if (!isDuplicate) {
+              sentenceCache[difficulty].push({
+                ...sentence,
+                difficulty,
+                createdAt: Date.now()
+              });
+              console.log(`Added sentence to ${difficulty} cache: ${sentence.chinese}`);
+            }
+          } catch (error) {
+            console.error(`Error filling cache for ${difficulty}:`, error);
+          }
+        }
+      }
+      
+      // Update the last updated timestamp
+      sentenceCache.lastUpdated = Date.now();
+    } catch (error) {
+      console.error("Error filling sentence cache:", error);
+    }
+  }
+  
+  // Start filling the cache on server start (after a short delay)
+  setTimeout(() => {
+    fillSentenceCache();
+    
+    // Set up periodic cache filling every 30 minutes
+    setInterval(fillSentenceCache, 30 * 60 * 1000);
+  }, 5000);
+
   // Generate a sentence using the user's vocabulary
   app.post("/api/sentence/generate", async (req, res) => {
     try {
       const { difficulty = "beginner" } = req.body;
+      const typedDifficulty = difficulty as 'beginner' | 'intermediate' | 'advanced';
       
-      // Get all vocabulary words
+      // Check if cache is expired
+      const cacheIsExpired = (Date.now() - sentenceCache.lastUpdated) > sentenceCache.expiryTimeMs;
+      
+      // Try to get a sentence from the cache first
+      if (!cacheIsExpired && sentenceCache[typedDifficulty].length > 0) {
+        // Get a random cached sentence
+        const randomIndex = Math.floor(Math.random() * sentenceCache[typedDifficulty].length);
+        const cachedSentence = sentenceCache[typedDifficulty][randomIndex];
+        
+        // Remove the used sentence from cache to prevent repetition
+        sentenceCache[typedDifficulty].splice(randomIndex, 1);
+        
+        // Start refilling the cache in the background
+        setTimeout(fillSentenceCache, 100);
+        
+        // Return the cached sentence with a flag indicating it's from cache
+        return res.json({
+          ...cachedSentence,
+          fromCache: true
+        });
+      }
+      
+      // If we reach here, there's no cache or we need a new sentence
+      // Get all vocabulary words 
       const allVocabulary = await storage.getAllVocabulary();
       
       // Filter for only active words
@@ -249,81 +392,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No active vocabulary words available. Please add or activate some words first." });
       }
       
-      // Generate sentence using OpenAI with retries and fallback to simple sentences
+      // Generate new sentence using OpenAI with retries and fallback
       try {
-        const sentence = await generateSentence(activeVocabulary, difficulty);
+        const sentence = await generateSentence(activeVocabulary, typedDifficulty);
+        
+        // Add to cache for future use
+        if (sentenceCache[typedDifficulty].length < sentenceCache.maxSize) {
+          sentenceCache[typedDifficulty].push({
+            ...sentence,
+            difficulty: typedDifficulty,
+            createdAt: Date.now()
+          });
+        }
+        
         res.json(sentence);
       } catch (generateError) {
         console.log("Error generating sentence with OpenAI, using fallback sentences");
         
-        // Fallback sentences for different difficulty levels with proper grammar and tense markers
-        const fallbackSentences = {
-          beginner: [
-            // Present tense sentences
-            { chinese: "我很高兴。", pinyin: "Wǒ hěn gāoxìng.", english: "I am very happy." },
-            { chinese: "今天天气很好。", pinyin: "Jīntiān tiānqì hěn hǎo.", english: "The weather is good today." },
-            { chinese: "你好吗？", pinyin: "Nǐ hǎo ma?", english: "How are you?" },
-            { chinese: "我喜欢学中文。", pinyin: "Wǒ xǐhuān xué Zhōngwén.", english: "I like learning Chinese." },
-            { chinese: "谢谢你的帮助。", pinyin: "Xièxiè nǐ de bāngzhù.", english: "Thank you for your help." },
-            { chinese: "我想喝水。", pinyin: "Wǒ xiǎng hē shuǐ.", english: "I want to drink water." },
-            { chinese: "这个很有意思。", pinyin: "Zhège hěn yǒuyìsi.", english: "This is very interesting." },
-            { chinese: "你叫什么名字？", pinyin: "Nǐ jiào shénme míngzi?", english: "What is your name?" },
-            
-            // Past tense sentences with 了
-            { chinese: "我买了一本书。", pinyin: "Wǒ mǎi le yī běn shū.", english: "I bought a book." },
-            { chinese: "他去了图书馆。", pinyin: "Tā qù le túshūguǎn.", english: "He went to the library." },
-            { chinese: "我们吃了晚饭。", pinyin: "Wǒmen chī le wǎnfàn.", english: "We ate dinner." },
-            { chinese: "我看了这部电影。", pinyin: "Wǒ kàn le zhè bù diànyǐng.", english: "I watched this movie." },
-            { chinese: "我学了新的汉字。", pinyin: "Wǒ xué le xīn de hànzì.", english: "I learned new Chinese characters." },
-            { chinese: "昨天下了雨。", pinyin: "Zuótiān xià le yǔ.", english: "It rained yesterday." },
-            { chinese: "他写了一封信。", pinyin: "Tā xiě le yī fēng xìn.", english: "He wrote a letter." },
-            { chinese: "我吃了早饭。", pinyin: "Wǒ chī le zǎofàn.", english: "I ate breakfast." },
-            
-            // Future tense or modal sentences
-            { chinese: "明天我要去学校。", pinyin: "Míngtiān wǒ yào qù xuéxiào.", english: "Tomorrow I will go to school." },
-            { chinese: "下周我们会见面。", pinyin: "Xià zhōu wǒmen huì jiànmiàn.", english: "We will meet next week." },
-            { chinese: "我可以帮你吗？", pinyin: "Wǒ kěyǐ bāng nǐ ma?", english: "Can I help you?" },
-            { chinese: "他会说中文。", pinyin: "Tā huì shuō Zhōngwén.", english: "He can speak Chinese." }
-          ],
-          intermediate: [
-            // Present tense sentences
-            { chinese: "这本书很有意思。", pinyin: "Zhè běn shū hěn yǒuyìsi.", english: "This book is very interesting." },
-            { chinese: "中国菜很好吃。", pinyin: "Zhōngguó cài hěn hǎochī.", english: "Chinese food is delicious." },
-            { chinese: "你能帮我一下吗？", pinyin: "Nǐ néng bāng wǒ yīxià ma?", english: "Can you help me?" },
-            { chinese: "我在北京工作。", pinyin: "Wǒ zài Běijīng gōngzuò.", english: "I work in Beijing." },
-            
-            // Past tense with 了
-            { chinese: "我昨天去了图书馆。", pinyin: "Wǒ zuótiān qù le túshūguǎn.", english: "I went to the library yesterday." },
-            { chinese: "他已经看完了这本书。", pinyin: "Tā yǐjīng kàn wán le zhè běn shū.", english: "He has finished reading this book." },
-            { chinese: "我们参观了故宫。", pinyin: "Wǒmen cānguān le Gùgōng.", english: "We visited the Forbidden City." },
-            { chinese: "他学了三年中文了。", pinyin: "Tā xué le sān nián Zhōngwén le.", english: "He has been learning Chinese for three years." },
-            { chinese: "我们认识了很多新朋友。", pinyin: "Wǒmen rènshí le hěn duō xīn péngyǒu.", english: "We met many new friends." },
-            
-            // Future tense
-            { chinese: "我明天要去北京。", pinyin: "Wǒ míngtiān yào qù Běijīng.", english: "I will go to Beijing tomorrow." },
-            { chinese: "下个月我会回国。", pinyin: "Xià gè yuè wǒ huì huí guó.", english: "I will return to my country next month." },
-            { chinese: "我打算学习中文。", pinyin: "Wǒ dǎsuàn xuéxí Zhōngwén.", english: "I plan to study Chinese." }
-          ],
-          advanced: [
-            // Complex sentences with 了 and other grammar patterns
-            { chinese: "我已经学了三年中文了，但是还是说得不太流利。", pinyin: "Wǒ yǐjīng xué le sān nián Zhōngwén le, dànshì háishì shuō de bú tài liúlì.", english: "I have been learning Chinese for three years, but I still don't speak very fluently." },
-            { chinese: "虽然学习中文很难，但是很有意思。", pinyin: "Suīrán xuéxí Zhōngwén hěn nán, dànshì hěn yǒuyìsi.", english: "Although learning Chinese is difficult, it is very interesting." },
-            { chinese: "如果明天天气好的话，我们可以去公园。", pinyin: "Rúguǒ míngtiān tiānqì hǎo dehuà, wǒmen kěyǐ qù gōngyuán.", english: "If the weather is good tomorrow, we can go to the park." },
-            { chinese: "我认为学习语言的最好方法是每天练习。", pinyin: "Wǒ rènwéi xuéxí yǔyán de zuì hǎo fāngfǎ shì měitiān liànxí.", english: "I think the best way to learn a language is to practice every day." },
-            { chinese: "昨天我看了一部电影，这部电影讲的是中国历史。", pinyin: "Zuótiān wǒ kàn le yī bù diànyǐng, zhè bù diànyǐng jiǎng de shì Zhōngguó lìshǐ.", english: "Yesterday I watched a movie that was about Chinese history." },
-            { chinese: "我们吃完了饭，就去看电影了。", pinyin: "Wǒmen chī wán le fàn, jiù qù kàn diànyǐng le.", english: "After we finished eating, we went to see a movie." },
-            { chinese: "他告诉我他已经去过北京了。", pinyin: "Tā gàosù wǒ tā yǐjīng qùguò Běijīng le.", english: "He told me he had already been to Beijing." },
-            { chinese: "学习汉语不仅要学习语法，还要了解中国文化。", pinyin: "Xuéxí Hànyǔ bùjǐn yào xuéxí yǔfǎ, hái yào liǎojiě Zhōngguó wénhuà.", english: "Learning Chinese requires not only learning grammar, but also understanding Chinese culture." }
-          ]
-        };
-        
         // Select a random fallback sentence based on difficulty
-        const fallbackOptions = fallbackSentences[difficulty as keyof typeof fallbackSentences] || fallbackSentences.beginner;
+        const fallbackOptions = fallbackSentences[typedDifficulty] || fallbackSentences.beginner;
         const randomFallback = fallbackOptions[Math.floor(Math.random() * fallbackOptions.length)];
         
         res.json({
           ...randomFallback,
-          difficulty,
+          difficulty: typedDifficulty,
           fromFallback: true // Mark that this is a fallback sentence
         });
       }

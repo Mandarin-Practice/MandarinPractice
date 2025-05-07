@@ -74,13 +74,46 @@ export default function Practice() {
   // Get toast hook for notifications
   const { toast } = useToast();
   
-  // Function to get a new sentence, with duplicate prevention
+  // Local queue for pre-fetched sentences
+  const [preloadedSentences, setPreloadedSentences] = useState<{[key: string]: any[]}>({
+    beginner: [],
+    intermediate: [],
+    advanced: []
+  });
+  
+  // Function to get a new sentence, with duplicate prevention and pre-fetching
   const fetchNewSentence = async (maxAttempts = 3): Promise<any> => {
     // Always get the most recent difficulty setting
     const difficulty = localStorage.getItem('difficulty') || 'beginner';
+    const typedDifficulty = difficulty as 'beginner' | 'intermediate' | 'advanced';
     
     console.log(`Generating sentence with difficulty: ${difficulty}`);
     
+    // Try to use a pre-fetched sentence first (much faster)
+    if (preloadedSentences[typedDifficulty] && preloadedSentences[typedDifficulty].length > 0) {
+      // Get and remove the first sentence from the queue
+      const preloadedSentence = preloadedSentences[typedDifficulty][0];
+      
+      // Update the preloaded sentences array (remove the one we just used)
+      setPreloadedSentences(prev => ({
+        ...prev,
+        [typedDifficulty]: prev[typedDifficulty].slice(1)
+      }));
+      
+      // Start fetching a replacement sentence in the background
+      setTimeout(() => {
+        prefetchSentence(typedDifficulty);
+      }, 100);
+      
+      // If the sentence is a duplicate, try again, otherwise return it
+      if (preloadedSentence.chinese && recentSentences.includes(preloadedSentence.chinese)) {
+        console.log(`Preloaded sentence was recently used, trying again...`);
+      } else {
+        return preloadedSentence;
+      }
+    }
+    
+    // No usable preloaded sentences, fetch directly
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       const response = await apiRequest('POST', '/api/sentence/generate', { difficulty });
       const data = await response.json();
@@ -98,6 +131,28 @@ export default function Practice() {
     console.log("Max attempts reached, accepting any sentence");
     const response = await apiRequest('POST', '/api/sentence/generate', { difficulty });
     return response.json();
+  };
+  
+  // Helper function to prefetch sentences in the background
+  const prefetchSentence = async (difficulty: 'beginner' | 'intermediate' | 'advanced') => {
+    try {
+      const response = await apiRequest('POST', '/api/sentence/generate', { difficulty });
+      const data = await response.json();
+      
+      // Add to the preloaded sentences queue (up to 3 per difficulty)
+      setPreloadedSentences(prev => {
+        // Only add if we don't already have 3 sentences for this difficulty
+        if (prev[difficulty].length < 3) {
+          return {
+            ...prev,
+            [difficulty]: [...prev[difficulty], data]
+          };
+        }
+        return prev;
+      });
+    } catch (error) {
+      console.error("Error prefetching sentence:", error);
+    }
   };
 
   // Generate sentence mutation with loading state handling
@@ -254,8 +309,10 @@ export default function Practice() {
   }, [vocabularyWords, isLoadingVocabulary, isVocabularyError, navigate, hasWords]);
 
   // Generate first sentence when component mounts and update totalWords count
+  // Also start prefetching sentences for each difficulty level
   useEffect(() => {
     if (!isLoadingVocabulary && vocabularyWords && Array.isArray(vocabularyWords) && vocabularyWords.length > 0) {
+      // Start the first sentence generation
       generateSentenceMutation.mutate();
       
       // Update the total words count when vocabulary is loaded
@@ -264,6 +321,14 @@ export default function Practice() {
         totalWords: vocabularyWords.length,
         correctAnswers: prev.correctAnswers
       }));
+      
+      // Start prefetching sentences for each difficulty level
+      // This ensures we have sentences ready when the user changes difficulty
+      setTimeout(() => {
+        prefetchSentence('beginner');
+        setTimeout(() => prefetchSentence('intermediate'), 200);
+        setTimeout(() => prefetchSentence('advanced'), 400);
+      }, 2000);
     }
   }, [isLoadingVocabulary, vocabularyWords]);
 
