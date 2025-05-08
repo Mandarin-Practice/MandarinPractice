@@ -7,11 +7,13 @@ import Settings from "@/pages/settings";
 import CharacterDictionary from "@/pages/character-dictionary";
 import DictionaryAdmin from "@/pages/dictionary-admin";
 import Profile from "@/pages/profile";
+import AuthPage from "@/pages/auth-page";
 import Navbar from "@/components/navbar";
 import NotFound from "@/pages/not-found";
 import { useEffect, useState } from "react";
 import { Theme } from "@/lib/utils";
 import { AuthProvider } from "@/hooks/use-auth";
+import { ProtectedRoute } from "@/components/protected-route";
 
 function App() {
   const [theme, setTheme] = useState<Theme>(() => {
@@ -57,13 +59,14 @@ function App() {
         <main className="container mx-auto px-4 py-8 max-w-4xl overflow-visible">
           <Switch>
             <Route path="/" component={Home} />
-            <Route path="/practice" component={Practice} />
-            <Route path="/word-list" component={WordList} />
-            <Route path="/word/:id" component={WordDetail} />
-            <Route path="/dictionary" component={CharacterDictionary} />
-            <Route path="/dictionary/admin" component={DictionaryAdmin} />
-            <Route path="/settings" component={Settings} />
-            <Route path="/profile" component={Profile} />
+            <Route path="/auth" component={AuthPage} />
+            <ProtectedRoute path="/practice" component={Practice} />
+            <ProtectedRoute path="/word-list" component={WordList} />
+            <ProtectedRoute path="/word/:id" component={WordDetail} />
+            <ProtectedRoute path="/dictionary" component={CharacterDictionary} />
+            <ProtectedRoute path="/dictionary/admin" component={DictionaryAdmin} />
+            <ProtectedRoute path="/settings" component={Settings} />
+            <ProtectedRoute path="/profile" component={Profile} />
             <Route component={NotFound} />
           </Switch>
         </main>
