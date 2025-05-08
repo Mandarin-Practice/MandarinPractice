@@ -412,6 +412,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     ]
   };
 
+  // Track word usage to ensure all words get used in practice
+  const wordUsageStats: Record<number, { uses: number, lastUsed: number }> = {};
+  
   // Background cache filler function - runs in the background to keep the cache filled
   async function fillSentenceCache() {
     try {
@@ -421,13 +424,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (activeVocabulary.length === 0) return; // Nothing to cache if no vocabulary
       
+      // Function to select words, prioritizing less frequently used words
+      const selectWords = (wordsList: Array<{ id: number, chinese: string, [key: string]: any }>, count: number) => {
+        // Ensure we don't try to select more words than available
+        const selectionCount = Math.min(count, wordsList.length);
+        
+        // Create a weighted list based on usage
+        const weightedWords = wordsList.map(word => {
+          const stats = wordUsageStats[word.id] || { uses: 0, lastUsed: 0 };
+          // Lower score = higher priority for selection
+          // Weight by number of uses and how recently the word was used
+          const recencyFactor = Math.max(0, (Date.now() - stats.lastUsed) / (1000 * 60 * 60)); // hours since last use
+          const usageFactor = stats.uses + 1; // +1 to avoid division by zero
+          // Unused words get highest priority (score of 0)
+          const score = (stats.uses === 0) ? 0 : usageFactor / (recencyFactor + 0.1);
+          
+          return {
+            word,
+            score
+          };
+        });
+        
+        // Sort by score (lower = higher priority)
+        weightedWords.sort((a, b) => a.score - b.score);
+        
+        // Take the top N words
+        return weightedWords.slice(0, selectionCount).map(item => item.word);
+      };
+      
+      // Word count per difficulty level
+      const wordCounts = {
+        beginner: 3,
+        intermediate: 5,
+        advanced: 7
+      };
+      
       // Fill cache for each difficulty if needed
       for (const difficulty of ['beginner', 'intermediate', 'advanced'] as const) {
         // Only fill if we need more sentences
         if (sentenceCache[difficulty].length < sentenceCache.maxSize) {
           try {
-            // Generate a new sentence
-            const sentence = await generateSentence(activeVocabulary, difficulty);
+            // Select a subset of vocabulary words, prioritizing less used words
+            const selectedWords = selectWords(
+              activeVocabulary, 
+              wordCounts[difficulty]
+            );
+            
+            console.log(`Generating ${difficulty} sentence with words:`, 
+              selectedWords.map(w => w.chinese).join(', '));
+            
+            // Generate a new sentence using the selected words
+            // We need to ensure the vocabulary has the right format for generateSentence
+            const sentenceVocabulary = selectedWords.map(word => ({
+              chinese: word.chinese,
+              pinyin: word.pinyin || "",
+              english: word.english || ""
+            }));
+            const sentence = await generateSentence(sentenceVocabulary, difficulty);
+            
+            // Update word usage statistics
+            selectedWords.forEach(word => {
+              if (!wordUsageStats[word.id]) {
+                wordUsageStats[word.id] = { uses: 0, lastUsed: 0 };
+              }
+              wordUsageStats[word.id].uses += 1;
+              wordUsageStats[word.id].lastUsed = Date.now();
+            });
             
             // Add to the cache if it's not a duplicate
             const isDuplicate = sentenceCache[difficulty].some(s => s.chinese === sentence.chinese);
@@ -435,7 +497,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               sentenceCache[difficulty].push({
                 ...sentence,
                 difficulty,
-                createdAt: Date.now()
+                createdAt: Date.now(),
+                usedWords: selectedWords.map(w => w.id) // Track which words were used
               });
               console.log(`Added sentence to ${difficulty} cache: ${sentence.chinese}`);
             }
@@ -465,6 +528,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { difficulty = "beginner" } = req.body;
       const typedDifficulty = difficulty as 'beginner' | 'intermediate' | 'advanced';
+      
+      // Helper function to select words, prioritizing less frequently used words
+      const selectWords = (wordsList: Array<{ id: number, chinese: string, [key: string]: any }>, count: number) => {
+        // Ensure we don't try to select more words than available
+        const selectionCount = Math.min(count, wordsList.length);
+        
+        // Create a weighted list based on usage
+        const weightedWords = wordsList.map(word => {
+          const stats = wordUsageStats[word.id] || { uses: 0, lastUsed: 0 };
+          // Lower score = higher priority for selection
+          // Weight by number of uses and how recently the word was used
+          const recencyFactor = Math.max(0, (Date.now() - stats.lastUsed) / (1000 * 60 * 60)); // hours since last use
+          const usageFactor = stats.uses + 1; // +1 to avoid division by zero
+          // Unused words get highest priority (score of 0)
+          const score = (stats.uses === 0) ? 0 : usageFactor / (recencyFactor + 0.1);
+          
+          return {
+            word,
+            score
+          };
+        });
+        
+        // Sort by score (lower = higher priority)
+        weightedWords.sort((a, b) => a.score - b.score);
+        
+        // Take the top N words
+        return weightedWords.slice(0, selectionCount).map(item => item.word);
+      };
       
       // Check if cache is expired
       const cacheIsExpired = (Date.now() - sentenceCache.lastUpdated) > sentenceCache.expiryTimeMs;
@@ -501,14 +592,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Generate new sentence using OpenAI with retries and fallback
       try {
-        const sentence = await generateSentence(activeVocabulary, typedDifficulty);
+        // Word count per difficulty level
+        const wordCounts = {
+          beginner: 3,
+          intermediate: 5,
+          advanced: 7
+        };
+        
+        // Select a subset of vocabulary words, prioritizing less used words
+        const selectedWords = selectWords(
+          activeVocabulary, 
+          wordCounts[typedDifficulty]
+        );
+        
+        console.log(`Generating on-demand ${typedDifficulty} sentence with words:`, 
+          selectedWords.map(w => w.chinese).join(', '));
+        
+        // Generate a sentence using the selected words
+        // We need to ensure the vocabulary has the right format for generateSentence
+        const sentenceVocabulary = selectedWords.map(word => ({
+          chinese: word.chinese,
+          pinyin: word.pinyin || "",
+          english: word.english || ""
+        }));
+        const sentence = await generateSentence(sentenceVocabulary, typedDifficulty);
+        
+        // Update word usage statistics
+        selectedWords.forEach(word => {
+          if (!wordUsageStats[word.id]) {
+            wordUsageStats[word.id] = { uses: 0, lastUsed: 0 };
+          }
+          wordUsageStats[word.id].uses += 1;
+          wordUsageStats[word.id].lastUsed = Date.now();
+        });
         
         // Add to cache for future use
         if (sentenceCache[typedDifficulty].length < sentenceCache.maxSize) {
           sentenceCache[typedDifficulty].push({
             ...sentence,
             difficulty: typedDifficulty,
-            createdAt: Date.now()
+            createdAt: Date.now(),
+            usedWords: selectedWords.map(w => w.id) // Track which words were used
           });
         }
         
