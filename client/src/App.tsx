@@ -52,9 +52,9 @@ function App() {
 
   return (
     <AuthProvider>
-      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100">
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100 overflow-visible">
         <Navbar theme={theme} toggleTheme={toggleTheme} />
-        <main className="container mx-auto px-4 py-8 max-w-4xl">
+        <main className="container mx-auto px-4 py-8 max-w-4xl overflow-visible">
           <Switch>
             <Route path="/" component={Home} />
             <Route path="/practice" component={Practice} />
