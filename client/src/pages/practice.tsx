@@ -494,6 +494,22 @@ export default function Practice() {
       (userLower.includes("today") && correctLower.includes("yesterday"))
     );
     
+    // Check for food and beverage conflicts
+    const beverageConflict = (
+      (userLower.includes("tea") && correctLower.includes("coffee")) ||
+      (userLower.includes("coffee") && correctLower.includes("tea")) ||
+      (userLower.includes("water") && (correctLower.includes("tea") || correctLower.includes("coffee"))) ||
+      ((userLower.includes("tea") || userLower.includes("coffee")) && correctLower.includes("water"))
+    );
+    
+    // Check for food conflicts
+    const foodConflict = (
+      (userLower.includes("rice") && correctLower.includes("noodles")) ||
+      (userLower.includes("noodles") && correctLower.includes("rice")) ||
+      (userLower.includes("dumpling") && !correctLower.includes("dumpling")) ||
+      (!userLower.includes("dumpling") && correctLower.includes("dumpling"))
+    );
+    
     // Check for imperative phrases and command conflicts
     const imperativeConflict = (
       // "Please come in" vs. "I come" conflict
@@ -513,7 +529,7 @@ export default function Practice() {
     );
     
     // Threshold adjustments with special case handling:
-    if (similarity >= 0.7 && !temporalWordsConflict && !imperativeConflict) {
+    if (similarity >= 0.7 && !temporalWordsConflict && !imperativeConflict && !beverageConflict && !foodConflict) {
       setFeedbackStatus("correct");
       calculateScore(similarity);
       
