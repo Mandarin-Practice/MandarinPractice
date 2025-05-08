@@ -1,10 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useLocation, Redirect } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { z } from "zod";
@@ -26,8 +25,9 @@ const registerSchema = z.object({
 
 export default function AuthPage() {
   const [, navigate] = useLocation();
-  const { user, isLoading, loginMutation, registerMutation, signInWithGoogle } = useAuth();
+  const { user, isLoading, loginWithCredentials, registerWithCredentials, signIn } = useAuth();
   const [authError, setAuthError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   // Create forms for login and registration
   const loginForm = useForm<z.infer<typeof loginSchema>>({
@@ -48,36 +48,46 @@ export default function AuthPage() {
   });
 
   // Handle login form submission
-  const onLoginSubmit = (values: z.infer<typeof loginSchema>) => {
+  const onLoginSubmit = async (values: z.infer<typeof loginSchema>) => {
     setAuthError(null);
-    loginMutation.mutate({
-      username: values.username,
-      password: values.password,
-    }, {
-      onError: (error) => {
-        setAuthError(error.message || "Login failed. Please check your credentials.");
-      }
-    });
+    setIsSubmitting(true);
+    
+    try {
+      await loginWithCredentials({
+        username: values.username,
+        password: values.password,
+      });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Login failed. Please check your credentials.";
+      setAuthError(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Handle registration form submission
-  const onRegisterSubmit = (values: z.infer<typeof registerSchema>) => {
+  const onRegisterSubmit = async (values: z.infer<typeof registerSchema>) => {
     setAuthError(null);
-    registerMutation.mutate({
-      username: values.username,
-      email: values.email,
-      password: values.password,
-    }, {
-      onError: (error) => {
-        setAuthError(error.message || "Registration failed. Please try again.");
-      }
-    });
+    setIsSubmitting(true);
+    
+    try {
+      await registerWithCredentials({
+        username: values.username,
+        email: values.email,
+        password: values.password,
+      });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Registration failed. Please try again.";
+      setAuthError(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Handle Google sign in
   const handleGoogleSignIn = () => {
     setAuthError(null);
-    signInWithGoogle();
+    signIn();
   };
 
   // If user is already logged in, redirect to the main page
@@ -152,9 +162,9 @@ export default function AuthPage() {
                         <Button 
                           type="submit" 
                           className="w-full" 
-                          disabled={loginMutation.isPending}
+                          disabled={isSubmitting}
                         >
-                          {loginMutation.isPending ? "Signing in..." : "Sign In"}
+                          {isSubmitting ? "Signing in..." : "Sign In"}
                         </Button>
                       </form>
                     </Form>
@@ -263,9 +273,9 @@ export default function AuthPage() {
                         <Button 
                           type="submit" 
                           className="w-full"
-                          disabled={registerMutation.isPending}
+                          disabled={isSubmitting}
                         >
-                          {registerMutation.isPending ? "Creating account..." : "Create Account"}
+                          {isSubmitting ? "Creating account..." : "Create Account"}
                         </Button>
                       </form>
                     </Form>

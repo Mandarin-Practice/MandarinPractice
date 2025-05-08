@@ -6,10 +6,11 @@ import { ZodError } from "zod";
 import { generateSentence, generateSentenceWithWord, checkSynonyms } from "./openai";
 import dictionaryAdminRoutes from "./routes/dictionary-admin";
 import authRoutes from "./routes/auth";
+import { requireAuth, optionalAuth } from "./middleware/auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Get dictionary vocabulary words (not user specific)
-  app.get("/api/vocabulary/dictionary", async (req, res) => {
+  // Get dictionary vocabulary words (accessible only when logged in)
+  app.get("/api/vocabulary/dictionary", requireAuth, async (req, res) => {
     try {
       const vocabulary = await storage.getAllVocabulary();
       res.json(vocabulary);
@@ -18,16 +19,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Get user's vocabulary words (for authenticated users)
-  app.get("/api/vocabulary", async (req, res) => {
+  // Get user's vocabulary words (requires authentication)
+  app.get("/api/vocabulary", requireAuth, async (req, res) => {
     try {
-      const userId = req.query.userId ? parseInt(req.query.userId as string) : undefined;
-      
-      if (!userId) {
-        // If no user ID provided, return global vocabulary (for non-logged-in users)
-        const vocabulary = await storage.getAllVocabulary();
-        return res.json(vocabulary);
-      }
+      const userId = req.authenticatedUserId;
       
       // Get user's word proficiencies
       const proficiencies = await storage.getUserWordProficiencies(userId);
