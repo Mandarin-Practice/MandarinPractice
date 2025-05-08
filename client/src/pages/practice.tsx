@@ -311,24 +311,29 @@ export default function Practice() {
   // Generate first sentence when component mounts and update totalWords count
   // Also start prefetching sentences for each difficulty level
   useEffect(() => {
+    // Always generate a sentence immediately when the component mounts
+    // so users don't have to click "Next Sentence" for the first sentence
+    generateSentenceMutation.mutate();
+    
+    // Start prefetching sentences for each difficulty level to ensure quick loading
+    setTimeout(() => {
+      prefetchSentence('beginner');
+      setTimeout(() => prefetchSentence('intermediate'), 200);
+      setTimeout(() => prefetchSentence('advanced'), 400);
+    }, 2000);
+    
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty dependency array ensures this only runs once on mount
+  
+  // Handle vocabulary loading and update stats
+  useEffect(() => {
     if (!isLoadingVocabulary && vocabularyWords && Array.isArray(vocabularyWords) && vocabularyWords.length > 0) {
-      // Start the first sentence generation
-      generateSentenceMutation.mutate();
-      
       // Update the total words count when vocabulary is loaded
       setStats(prev => ({
         ...prev,
         totalWords: vocabularyWords.length,
         correctAnswers: prev.correctAnswers
       }));
-      
-      // Start prefetching sentences for each difficulty level
-      // This ensures we have sentences ready when the user changes difficulty
-      setTimeout(() => {
-        prefetchSentence('beginner');
-        setTimeout(() => prefetchSentence('intermediate'), 200);
-        setTimeout(() => prefetchSentence('advanced'), 400);
-      }, 2000);
     }
   }, [isLoadingVocabulary, vocabularyWords]);
 
