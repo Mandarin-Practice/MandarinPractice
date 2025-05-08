@@ -231,11 +231,20 @@ export async function generateSentence(
           3. Do not break words into individual characters unless they make sense as standalone words
           4. Names should be kept together as proper names (e.g., 王朋 should be "Wang Peng", not used as separate characters)
           5. Respect the original meaning of each character and word
+          6. NEVER create contradictory or impossible statements (e.g., "她男姐姐" is nonsensical because "姐姐" must be female)
+          7. ALWAYS maintain real-world logic and consistency
           
           For example:
           - If given "王朋" (Wang Peng), use it as a name, not as separate characters
           - If given "学生" (student), use it as "student", not as separate characters with different meanings
           - If given "美国" (America), use it as "America", not as "beautiful country"
+          
+          STRICT LOGICAL CONSTRAINTS:
+          - Family terms must be used correctly (弟弟 = younger brother, 姐姐 = older sister, etc.)
+          - Gender terms must be consistent (男 = male, 女 = female)
+          - Time expressions must be consistent (明天 = tomorrow, 昨天 = yesterday)
+          - Foods must be paired with appropriate verbs (吃 for solid food, 喝 for drinks)
+          - Locations and objects must be used realistically
           
           ${difficultyGuide[difficulty]}
           
