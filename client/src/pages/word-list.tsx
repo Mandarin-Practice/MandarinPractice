@@ -287,12 +287,17 @@ export default function WordList() {
       
       console.log('[IMPORT CLIENT] Preparing import of', words.length, 'words');
       console.log('[IMPORT CLIENT] First few words:', words.slice(0, 3));
+      console.log('[IMPORT CLIENT] Authentication status:', {
+        isLoggedIn: !!user,
+        hasBackendUser: !!user?.backendUser,
+        userId: user?.backendUser?.id || 'not logged in'
+      });
       
       // If user is logged in, include userId to add words to their list
       const userId = user?.backendUser?.id;
       
       // Split words into smaller batches to avoid issues with large imports
-      const BATCH_SIZE = 10;
+      const BATCH_SIZE = 5; // Reduced batch size for better reliability
       const allResults: {
         savedWords: any[];
         stats: {
@@ -313,37 +318,68 @@ export default function WordList() {
         }
       };
       
-      // Process words in batches
+      // Process words in batches with more robust error handling
       for (let i = 0; i < words.length; i += BATCH_SIZE) {
         const batch = words.slice(i, i + BATCH_SIZE);
         const batchPayload = userId ? { words: batch, userId } : { words: batch };
         
-        console.log(`[IMPORT CLIENT] Sending batch ${i/BATCH_SIZE + 1} with ${batch.length} words (${i+1} to ${Math.min(i+BATCH_SIZE, words.length)} of ${words.length})`);
+        console.log(`[IMPORT CLIENT] Sending batch ${Math.floor(i/BATCH_SIZE) + 1} with ${batch.length} words (${i+1} to ${Math.min(i+BATCH_SIZE, words.length)} of ${words.length})`);
         
-        const response = await apiRequest('POST', '/api/vocabulary/import', batchPayload);
-        if (!response.ok) {
-          throw new Error(`Failed to import batch ${i/BATCH_SIZE + 1}`);
-        }
-        
-        const batchResult = await response.json();
-        console.log(`[IMPORT CLIENT] Batch ${i/BATCH_SIZE + 1} result:`, batchResult);
-        
-        // Add this batch's saved words to the combined results
-        if (batchResult.savedWords) {
-          allResults.savedWords = [...allResults.savedWords, ...batchResult.savedWords];
-          
-          // Update the stats
-          if (batchResult.stats) {
-            allResults.stats.validWords += batchResult.stats.validWords;
-            allResults.stats.savedWords += batchResult.stats.savedWords;
-            allResults.stats.validationErrors += batchResult.stats.validationErrors;
-            allResults.stats.saveErrors += batchResult.stats.saveErrors;
+        try {
+          // Add a slight delay between batches to prevent overwhelming the server
+          if (i > 0) {
+            await new Promise(resolve => setTimeout(resolve, 500));
           }
-        } else {
-          // Handle old response format
-          allResults.savedWords = [...allResults.savedWords, ...batchResult];
-          allResults.stats.savedWords += batchResult.length;
-          allResults.stats.validWords += batchResult.length;
+          
+          const response = await apiRequest('POST', '/api/vocabulary/import', batchPayload);
+          
+          // Enhanced error handling
+          if (!response.ok) {
+            const errorText = await response.text().catch(() => 'Unknown error');
+            console.error(`[IMPORT CLIENT] Batch ${Math.floor(i/BATCH_SIZE) + 1} failed:`, {
+              status: response.status,
+              statusText: response.statusText,
+              body: errorText
+            });
+            throw new Error(`Failed to import batch ${Math.floor(i/BATCH_SIZE) + 1}: ${response.status} ${response.statusText}`);
+          }
+          
+          // Parse JSON response with error handling
+          let batchResult;
+          try {
+            batchResult = await response.json();
+          } catch (jsonError) {
+            console.error('[IMPORT CLIENT] Failed to parse JSON response:', jsonError);
+            throw new Error('Invalid response format from server');
+          }
+          
+          console.log(`[IMPORT CLIENT] Batch ${Math.floor(i/BATCH_SIZE) + 1} result:`, batchResult);
+          
+          // Add this batch's saved words to the combined results
+          if (batchResult.savedWords) {
+            allResults.savedWords = [...allResults.savedWords, ...batchResult.savedWords];
+            
+            // Update the stats
+            if (batchResult.stats) {
+              allResults.stats.validWords += batchResult.stats.validWords;
+              allResults.stats.savedWords += batchResult.stats.savedWords;
+              allResults.stats.validationErrors += batchResult.stats.validationErrors;
+              allResults.stats.saveErrors += batchResult.stats.saveErrors;
+            }
+          } else {
+            // Handle old response format
+            allResults.savedWords = [...allResults.savedWords, ...(Array.isArray(batchResult) ? batchResult : [])];
+            allResults.stats.savedWords += Array.isArray(batchResult) ? batchResult.length : 0;
+            allResults.stats.validWords += Array.isArray(batchResult) ? batchResult.length : 0;
+          }
+        } catch (batchError) {
+          console.error(`[IMPORT CLIENT] Error processing batch ${Math.floor(i/BATCH_SIZE) + 1}:`, batchError);
+          // Continue with next batch instead of failing the entire import
+          toast({
+            title: `Batch ${Math.floor(i/BATCH_SIZE) + 1} failed`,
+            description: batchError instanceof Error ? batchError.message : 'Unknown error',
+            variant: 'destructive',
+          });
         }
       }
       

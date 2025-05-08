@@ -90,7 +90,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Import a list of vocabulary words
-  app.post("/api/vocabulary/import", async (req, res) => {
+  app.post("/api/vocabulary/import", optionalAuth, async (req, res) => {
     try {
       const { words, userId } = req.body;
       
@@ -229,8 +229,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // If userId is provided, also add these words to the user's personal list
-      if (userId && !isNaN(parseInt(userId))) {
-        const userIdNum = parseInt(userId);
+      let effectiveUserId = userId;
+      
+      // Use authenticatedUserId from middleware if available
+      if (req.authenticatedUserId) {
+        effectiveUserId = req.authenticatedUserId;
+        console.log(`[IMPORT DEBUG] Using authenticatedUserId from middleware: ${effectiveUserId}`);
+      }
+      
+      if (effectiveUserId && !isNaN(parseInt(String(effectiveUserId)))) {
+        const userIdNum = parseInt(String(effectiveUserId));
         console.log(`[IMPORT DEBUG] Adding ${savedWords.length} words to user ${userIdNum}'s personal list`);
         
         // Add each word to the user's list
@@ -244,6 +252,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.error(`[IMPORT DEBUG] Error adding word ${i} (id: ${word.id}) to user ${userIdNum}'s list: ${error}`);
           }
         }
+      } else {
+        console.log(`[IMPORT DEBUG] No valid user ID provided, words added to global dictionary only`);
       }
       
       console.log(`[IMPORT DEBUG] Successfully saved ${savedWords.length} words out of ${words.length} total`);
