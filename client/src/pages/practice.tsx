@@ -469,6 +469,15 @@ export default function Practice() {
       matchStrictness
     });
     
+    // Debug log for conflict detection
+    console.log('Conflict detection:', {
+      temporalWordsConflict,
+      beverageConflict,
+      foodConflict,
+      verbTenseConflict,
+      imperativeConflict
+    });
+    
     // Extra debug info for imperative phrases
     if (correctAnswer.toLowerCase().includes("come in") || 
         correctAnswer.toLowerCase().includes("please")) {
@@ -488,10 +497,20 @@ export default function Practice() {
     
     // Special checks for temporal words that shouldn't be confused
     const temporalWordsConflict = (
+      // Day conflicts
       (userLower.includes("today") && correctLower.includes("tomorrow")) ||
       (userLower.includes("tomorrow") && correctLower.includes("today")) ||
       (userLower.includes("yesterday") && correctLower.includes("today")) ||
-      (userLower.includes("today") && correctLower.includes("yesterday"))
+      (userLower.includes("today") && correctLower.includes("yesterday")) ||
+      
+      // Specific vs general time conflicts
+      (userLower.includes("this morning") && correctLower.includes("in the morning") && !correctLower.includes("this morning")) ||
+      (userLower.includes("this afternoon") && correctLower.includes("in the afternoon") && !correctLower.includes("this afternoon")) ||
+      (userLower.includes("this evening") && correctLower.includes("in the evening") && !correctLower.includes("this evening")) ||
+      (userLower.includes("this night") && correctLower.includes("at night") && !correctLower.includes("this night")) ||
+      
+      // Tense conflicts with specific time indications
+      (userLower.includes("this morning") && userLower.includes("showered") && correctLower.includes("shower") && !correctLower.includes("showered"))
     );
     
     // Check for food and beverage conflicts
@@ -508,6 +527,33 @@ export default function Practice() {
       (userLower.includes("noodles") && correctLower.includes("rice")) ||
       (userLower.includes("dumpling") && !correctLower.includes("dumpling")) ||
       (!userLower.includes("dumpling") && correctLower.includes("dumpling"))
+    );
+    
+    // Check for verb tense conflicts
+    const verbTenseConflict = (
+      // Common past vs present tense confusions
+      (userLower.includes(" took ") && correctLower.includes(" take ") && !correctLower.includes(" took ")) ||
+      (userLower.includes(" went ") && correctLower.includes(" go ") && !correctLower.includes(" went ")) ||
+      (userLower.includes(" ate ") && correctLower.includes(" eat ") && !correctLower.includes(" ate ")) ||
+      (userLower.includes(" drank ") && correctLower.includes(" drink ") && !correctLower.includes(" drank ")) ||
+      (userLower.includes(" bought ") && correctLower.includes(" buy ") && !correctLower.includes(" bought ")) ||
+      (userLower.includes(" saw ") && correctLower.includes(" see ") && !correctLower.includes(" saw ")) ||
+      
+      // Present tense vs past tense - common verbs with -ed ending
+      (userLower.includes("showered") && correctLower.includes("shower") && !correctLower.includes("showered")) ||
+      (userLower.includes("played") && correctLower.includes("play") && !correctLower.includes("played")) ||
+      (userLower.includes("watched") && correctLower.includes("watch") && !correctLower.includes("watched")) ||
+      (userLower.includes("liked") && correctLower.includes("like") && !correctLower.includes("liked")) ||
+      (userLower.includes("wanted") && correctLower.includes("want") && !correctLower.includes("wanted")) ||
+      (userLower.includes("needed") && correctLower.includes("need") && !correctLower.includes("needed")) ||
+      
+      // Present tense vs past tense - reverse direction
+      (correctLower.includes("showered") && userLower.includes("shower") && !userLower.includes("showered")) ||
+      (correctLower.includes("played") && userLower.includes("play") && !userLower.includes("played")) ||
+      (correctLower.includes("watched") && userLower.includes("watch") && !userLower.includes("watched")) ||
+      (correctLower.includes("liked") && userLower.includes("like") && !userLower.includes("liked")) ||
+      (correctLower.includes("wanted") && userLower.includes("want") && !userLower.includes("wanted")) ||
+      (correctLower.includes("needed") && userLower.includes("need") && !userLower.includes("needed"))
     );
     
     // Check for imperative phrases and command conflicts
@@ -529,7 +575,7 @@ export default function Practice() {
     );
     
     // Threshold adjustments with special case handling:
-    if (similarity >= 0.7 && !temporalWordsConflict && !imperativeConflict && !beverageConflict && !foodConflict) {
+    if (similarity >= 0.7 && !temporalWordsConflict && !imperativeConflict && !beverageConflict && !foodConflict && !verbTenseConflict) {
       setFeedbackStatus("correct");
       calculateScore(similarity);
       
