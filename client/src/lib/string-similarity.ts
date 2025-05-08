@@ -67,7 +67,7 @@ const nonCriticalWords: Record<string, string[]> = {
 const equivalentPhrases: Array<string[]> = [
   // Verbs with similar meaning
   ["study", "learn", "studying", "learning"],
-  ["see", "look at", "looking at", "viewing", "watching", "watch", "saw", "watched", "seeing"],
+  ["see", "look at", "looking at", "viewing", "watching", "watch", "saw", "watched", "seeing", "observe", "observing", "observed"],
   ["eat", "have a meal", "having a meal", "having food", "having dinner", "having lunch", "having breakfast", "ate", "eats", "eating"],
   ["drink", "having a drink", "drank", "drinking", "drinks"],
   ["walk", "walking", "go", "going", "went", "goes", "walked"],
@@ -78,6 +78,12 @@ const equivalentPhrases: Array<string[]> = [
   ["give", "hand", "pass", "giving", "handing", "passing", "gave", "handed", "passed", "given"],
   ["speak", "talk", "speaking", "talking", "spoke", "talked", "speaks", "talks"],
   ["read", "reading", "reads", "studying", "look at", "looking at", "looked at", "read through"],
+  
+  // Country/region references that aren't exact matches but are related
+  ["uk", "united kingdom", "britain", "great britain", "england"],
+  ["china", "chinese", "prc"],
+  ["usa", "united states", "america", "us", "american"],
+  ["japan", "japanese"],
   
   // Time expressions
   ["now", "at the moment", "currently", "at present", "right now"],

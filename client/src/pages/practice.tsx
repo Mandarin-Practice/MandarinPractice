@@ -565,7 +565,27 @@ export default function Practice() {
       (userLower.startsWith("you ") && correctLower.startsWith("i "))
     );
     
-    // Debug log for conflict detection - placed after all variables are defined
+    // Check for location references that differ significantly
+    const locationConflict = 
+      // Check for different country/city references
+      (userLower.includes("england") && correctLower.includes("uk") && !correctLower.includes("england")) ||
+      (userLower.includes("uk") && correctLower.includes("england") && !correctLower.includes("uk")) ||
+      (userLower.includes("britain") && correctLower.includes("england") && !correctLower.includes("britain")) ||
+      (userLower.includes("england") && correctLower.includes("britain") && !correctLower.includes("england")) ||
+      (userLower.includes("china") && correctLower.includes("beijing") && !correctLower.includes("china")) ||
+      (userLower.includes("beijing") && correctLower.includes("china") && !correctLower.includes("beijing"));
+    
+    // Check for "each other" vs simple verb missing reciprocal meaning
+    const reciprocalConflict = 
+      (correctLower.includes("each other") && !userLower.includes("each other")) ||
+      (userLower.includes("each other") && !correctLower.includes("each other"));
+    
+    // Check for future tense markers like "will" that are critical to meaning
+    const futureMarkerConflict = 
+      (correctLower.includes(" will ") && !userLower.includes(" will ") && !userLower.includes("'ll ")) ||
+      (userLower.includes(" will ") && !correctLower.includes(" will ") && !correctLower.includes("'ll "));
+      
+    // Debug log for conflict detection - just log the original conflicts for now
     console.log('Conflict detection:', {
       temporalWordsConflict,
       beverageConflict,
@@ -574,8 +594,24 @@ export default function Practice() {
       imperativeConflict
     });
     
-    // Threshold adjustments with special case handling:
-    if (similarity >= 0.7 && !temporalWordsConflict && !imperativeConflict && !beverageConflict && !foodConflict && !verbTenseConflict) {
+    // Log new conflict types separately
+    console.log('Additional conflict checks:', {
+      locationConflict,
+      reciprocalConflict,
+      futureMarkerConflict
+    });
+
+    // Threshold adjustments with enhanced special case handling:
+    // Increase required similarity to 0.8 for "correct" answers
+    if (similarity >= 0.8 && 
+        !temporalWordsConflict && 
+        !imperativeConflict && 
+        !beverageConflict && 
+        !foodConflict && 
+        !verbTenseConflict && 
+        !locationConflict && 
+        !reciprocalConflict && 
+        !futureMarkerConflict) {
       setFeedbackStatus("correct");
       calculateScore(similarity);
       
@@ -607,7 +643,8 @@ export default function Practice() {
           }
         });
       }
-    } else if (similarity >= 0.25) {
+    // Make the partial correct threshold between 0.4 and 0.8 (was 0.25 to 0.7)
+    } else if (similarity >= 0.4) {
       setFeedbackStatus("partial");
       // Play incorrect sound for partial matches too
       playIncorrectSound();
