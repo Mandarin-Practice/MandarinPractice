@@ -239,12 +239,22 @@ export async function generateSentence(
           - If given "学生" (student), use it as "student", not as separate characters with different meanings
           - If given "美国" (America), use it as "America", not as "beautiful country"
           
-          STRICT LOGICAL CONSTRAINTS:
+          STRICT LOGICAL AND GRAMMATICAL CONSTRAINTS:
           - Family terms must be used correctly (弟弟 = younger brother, 姐姐 = older sister, etc.)
           - Gender terms must be consistent (男 = male, 女 = female)
           - Time expressions must be consistent (明天 = tomorrow, 昨天 = yesterday)
           - Foods must be paired with appropriate verbs (吃 for solid food, 喝 for drinks)
           - Locations and objects must be used realistically
+          - Question particles must be used correctly (吗 for yes/no questions, 呢 for "what about" questions)
+          - The 吧 particle should only be used for suggestions or mild commands, not after greetings
+          - Measure words must match their nouns properly
+          - Basic greeting phrases must follow standard patterns (你好, 早上好, etc.)
+          
+          COMMON GRAMMAR MISTAKES TO AVOID:
+          - "你好吧" is incorrect; the proper greeting is just "你好"
+          - "我是去" is incorrect; it should be "我去" (I go) or "我要去" (I want to go)
+          - "他学三年中文" needs the 了 particle when referring to past: "他学了三年中文"
+          - Mixing incompatible particles in the same sentence
           
           ${difficultyGuide[difficulty]}
           
