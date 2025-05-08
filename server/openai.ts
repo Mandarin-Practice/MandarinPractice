@@ -211,6 +211,10 @@ export async function generateSentence(
   const allChars = vocabulary.map(word => word.chinese.split('')).flat();
   console.log(`Available characters from vocabulary: ${allChars.join(', ')}`);
   
+  // Get the original words to provide context
+  const originalWords = vocabulary.map(word => word.chinese);
+  console.log(`Original vocabulary words: ${originalWords.join(', ')}`);
+  
   try {
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
@@ -218,37 +222,47 @@ export async function generateSentence(
         {
           role: "system",
           content: `You are a Mandarin Chinese language teacher creating practice sentences for students.
-          Generate a grammatically correct Mandarin sentence using ONLY characters from the provided list.
+          Your task is to create grammatically correct and semantically meaningful Mandarin sentences 
+          using ONLY characters from the provided vocabulary list.
           
-          EXTREMELY IMPORTANT: You MUST ONLY use the specific Chinese characters provided in the vocabulary list. 
-          DO NOT introduce any new characters that aren't in the list.
+          EXTREMELY IMPORTANT CONSTRAINTS:
+          1. ONLY use characters from the provided list - NO exceptions
+          2. Create sentences that are SEMANTICALLY MEANINGFUL and LOGICAL
+          3. Do not break words into individual characters unless they make sense as standalone words
+          4. Names should be kept together as proper names (e.g., 王朋 should be "Wang Peng", not used as separate characters)
+          5. Respect the original meaning of each character and word
           
-          If you need common particles like "的", "了", or "是", you can ONLY use them if they appear in the provided character list.
+          For example:
+          - If given "王朋" (Wang Peng), use it as a name, not as separate characters
+          - If given "学生" (student), use it as "student", not as separate characters with different meanings
+          - If given "美国" (America), use it as "America", not as "beautiful country"
           
           ${difficultyGuide[difficulty]}
           
-          Create a sentence that:
-          1. ONLY uses characters from the provided list
+          You must create a sentence that:
+          1. ONLY uses characters from the provided character list
           2. Is grammatically correct
-          3. Makes logical sense
-          4. Sounds natural in Chinese
-          
-          You are strictly limited to the characters provided. Treat this as a puzzle where you must form
-          a meaningful sentence using only the given pieces.
+          3. Makes logical sense in real-world contexts
+          4. Uses words in their proper, natural context
+          5. Preserves the meaning of proper names and vocabulary words
           
           Provide the sentence in Chinese characters, pinyin (with proper tone marks), and an English translation.
           Format your response as a valid JSON object with 'chinese', 'pinyin', and 'english' fields.`
         },
         {
           role: "user",
-          content: `Available Chinese characters: ${allChars.join(' ')}
+          content: `Original vocabulary words: ${originalWords.join(', ')}
+          Individual characters available: ${allChars.join(' ')}
           
           Difficulty level: ${difficulty}
           
           For this specific request: ${randomPattern}
           
-          Generate a sentence using ONLY these characters. Each character can be used multiple times.
-          Make it sound as natural as possible while strictly using only the provided characters.`
+          Generate a natural, meaningful sentence that uses these vocabulary words or their characters appropriately.
+          The sentence must make logical sense and only use the available characters.
+          
+          IMPORTANT: Preserve the original meaning of words. If a character is part of a name or multi-character word,
+          it should typically be used in that context, not broken apart unless it makes sense to do so.`
         }
       ],
       response_format: { type: "json_object" }
