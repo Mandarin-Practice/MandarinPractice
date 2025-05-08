@@ -324,20 +324,26 @@ export default function CharacterHoverView({
                 if (savedChar && savedChar.id) {
                   const definitionResponse = await apiRequest('POST', `/api/characters/${savedChar.id}/definitions`, {
                     characterId: savedChar.id,
-                    definition: `Character ${char}`,
+                    definition: "", // The server will generate a good definition using OpenAI
                     partOfSpeech: "unknown",
                     order: 1
                   });
                   
-                  console.log("Added definition for character:", char, definitionResponse);
+                  // Get the definition with accurate info from the server
+                  const definitionData = await definitionResponse.json();
+                  console.log("Added definition for character:", char, definitionData);
                   
                   // Also add to common characters collection for immediate use
                   if (!commonCharacters[char]) {
                     commonCharacters[char] = { 
-                      pinyin: savedChar.pinyin || char, 
-                      definition: `Character ${char}` 
+                      pinyin: savedChar.pinyin || char,
+                      definition: definitionData.definition || `Character ${char}`
                     };
                   }
+                  
+                  // Update character data directly with the new definition
+                  charData.pinyin = savedChar.pinyin || "(pending)";
+                  charData.definition = definitionData.definition || "⏳ Processing definition...";
                 }
               }
             } catch (error) {

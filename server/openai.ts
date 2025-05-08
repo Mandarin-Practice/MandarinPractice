@@ -4,6 +4,54 @@ import OpenAI from "openai";
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "your-api-key" });
 
 /**
+ * Get the definition and pinyin for a Chinese character
+ * @param character The Chinese character to define
+ * @returns Object with definition and pinyin
+ */
+export async function getChineseCharacterDefinition(character: string): Promise<{ definition: string, pinyin: string }> {
+  if (!character || character.length !== 1) {
+    throw new Error("A single Chinese character is required");
+  }
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: `You are a Chinese language expert. Provide accurate definitions and pinyin 
+          for Chinese characters. Return only a JSON object with 'definition' (string) containing 
+          a brief English explanation (max 5 words) and 'pinyin' (string) with proper tone marks 
+          (not numbers).`
+        },
+        {
+          role: "user",
+          content: `Define this Chinese character: "${character}"`
+        }
+      ],
+      response_format: { type: "json_object" }
+    });
+
+    const generatedContent = response.choices[0].message.content;
+    if (!generatedContent) {
+      throw new Error("No content generated");
+    }
+
+    const parsedContent = JSON.parse(generatedContent);
+    return {
+      definition: parsedContent.definition || `Character ${character}`,
+      pinyin: parsedContent.pinyin || character
+    };
+  } catch (error) {
+    console.error(`Error getting definition for character ${character}:`, error);
+    return {
+      definition: `Character ${character}`,
+      pinyin: character
+    };
+  }
+}
+
+/**
  * Check if two English words or phrases are synonyms
  * @param word1 First word or phrase
  * @param word2 Second word or phrase

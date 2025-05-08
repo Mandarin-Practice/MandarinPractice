@@ -772,6 +772,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate character
       const validatedCharacter = characterSchema.parse(character);
       
+      // If no proper definition/pinyin provided, try to get it from OpenAI
+      if ((!validatedCharacter.pinyin || validatedCharacter.pinyin === "pending" || 
+           validatedCharacter.pinyin === "unknown") && 
+          validatedCharacter.character && validatedCharacter.character.length === 1) {
+        try {
+          // Import the function from openai.ts
+          const { getChineseCharacterDefinition } = await import("./openai");
+          const charDetails = await getChineseCharacterDefinition(validatedCharacter.character);
+          
+          // Update with AI-generated definition and pinyin
+          validatedCharacter.pinyin = charDetails.pinyin;
+          
+          // We'll add the definition separately after creating the character
+          console.log(`Enhanced character ${validatedCharacter.character} with AI: ${JSON.stringify(charDetails)}`);
+        } catch (aiError) {
+          console.error("Failed to get AI definition:", aiError);
+          // Continue with original values if AI definition fails
+        }
+      }
+      
       const savedCharacter = await storage.addCharacter(validatedCharacter);
       res.status(201).json(savedCharacter);
     } catch (error) {
@@ -848,7 +868,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Character not found" });
       }
       
-      const definition = { ...req.body, characterId };
+      let definition = { ...req.body, characterId };
+      
+      // If the definition just says "Character X", try to get a better definition from OpenAI
+      if (character && character.character && character.character.length === 1 && 
+          (!definition.definition || definition.definition.startsWith("Character ") || 
+           definition.definition === "Automatically added character")) {
+        try {
+          // Import the function from openai.ts
+          const { getChineseCharacterDefinition } = await import("./openai");
+          const charDetails = await getChineseCharacterDefinition(character.character);
+          
+          // Update with AI-generated definition
+          definition.definition = charDetails.definition;
+          console.log(`Enhanced definition for ${character.character} with AI: ${charDetails.definition}`);
+        } catch (aiError) {
+          console.error("Failed to get AI definition:", aiError);
+          // Continue with original definition if AI definition fails
+        }
+      }
       
       // Validate definition
       const validatedDefinition = characterDefinitionSchema.parse(definition);
