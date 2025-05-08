@@ -178,6 +178,9 @@ const commonPhrases: Record<string, { pinyin: string, definition: string }> = {
   '打算': { pinyin: 'dǎ suàn', definition: 'to plan' },
   '打球': { pinyin: 'dǎ qiú', definition: 'to play ball' },
   '看电影': { pinyin: 'kàn diàn yǐng', definition: 'to watch a movie' },
+  '明天': { pinyin: 'míng tiān', definition: 'tomorrow' },
+  '昨天': { pinyin: 'zuó tiān', definition: 'yesterday' },
+  '去见': { pinyin: 'qù jiàn', definition: 'to go see/to visit' },
 };
 
 export default function CharacterHoverView({
