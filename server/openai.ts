@@ -207,6 +207,10 @@ export async function generateSentence(
   // Randomly select a sentence pattern to request
   const randomPattern = sentencePatterns[Math.floor(Math.random() * sentencePatterns.length)];
 
+  // Extract all individual characters from the vocabulary words
+  const allChars = vocabulary.map(word => word.chinese.split('')).flat();
+  console.log(`Available characters from vocabulary: ${allChars.join(', ')}`);
+  
   try {
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
@@ -214,54 +218,37 @@ export async function generateSentence(
         {
           role: "system",
           content: `You are a Mandarin Chinese language teacher creating practice sentences for students.
-          Generate a grammatically correct Mandarin sentence using ONLY the vocabulary words provided.
+          Generate a grammatically correct Mandarin sentence using ONLY characters from the provided list.
+          
+          EXTREMELY IMPORTANT: You MUST ONLY use the specific Chinese characters provided in the vocabulary list. 
+          DO NOT introduce any new characters that aren't in the list.
+          
+          If you need common particles like "的", "了", or "是", you can ONLY use them if they appear in the provided character list.
+          
           ${difficultyGuide[difficulty]}
           
-          CRITICALLY IMPORTANT: Generate only FACTUALLY CORRECT and LOGICALLY SOUND sentences.
+          Create a sentence that:
+          1. ONLY uses characters from the provided list
+          2. Is grammatically correct
+          3. Makes logical sense
+          4. Sounds natural in Chinese
           
-          - Family relationships must be logical (e.g., "弟弟" is always male, "姐姐" is always female, etc.)
-          - Food items should only be paired with appropriate verbs (eat/drink)
-          - People can't be objects or places, and objects can't be people
-          - Sentence must make real-world sense and not be nonsensical (e.g., "弟弟不是男姐姐" is illogical)
-          - Pronouns should be used correctly (he/she/it)
-          
-          You must create highly varied sentence structures. Avoid repetitive patterns.
-          
-          Include different sentence types:
-          - Questions (using 吗, 呢, 吧)
-          - Imperative statements (commands or requests)
-          - Comparison sentences
-          - If/then structures
-          - Opinion statements
-          - Time-based sentences (morning, afternoon, days of week, seasons)
-          - Descriptive sentences
-          - Cause and effect relationships
-          - Negative statements
-          - Emotional expressions
-          - Location expressions
-          
-          IMPORTANT: Use proper grammar particles for tense and aspect:
-          - Use the 了 particle to indicate completed actions or change of state (approximately 30% of sentences)
-          - Use 过 for past experiences when appropriate
-          - Use 正在 or 着 for ongoing actions when appropriate
-          
-          Examples of proper grammar:
-          - "我昨天看了一本书" (I read a book yesterday) - not "我昨天看一本书"
-          - "他学了三年中文" (He has studied Chinese for three years) - not "他学三年中文"
-          - "我吃了早饭" (I ate breakfast) - not "我吃早饭" when referring to past
+          You are strictly limited to the characters provided. Treat this as a puzzle where you must form
+          a meaningful sentence using only the given pieces.
           
           Provide the sentence in Chinese characters, pinyin (with proper tone marks), and an English translation.
-          Important: ONLY use words from the provided vocabulary list. If you need common connecting words like "的" or "是", you may use them ONLY if they're in the vocabulary list.
           Format your response as a valid JSON object with 'chinese', 'pinyin', and 'english' fields.`
         },
         {
           role: "user",
-          content: `Vocabulary words (in Chinese): ${chineseWords}. 
-          Difficulty level: ${difficulty}.
+          content: `Available Chinese characters: ${allChars.join(' ')}
+          
+          Difficulty level: ${difficulty}
           
           For this specific request: ${randomPattern}
           
-          Generate a sentence using only these words. Make it sound natural and conversational.`
+          Generate a sentence using ONLY these characters. Each character can be used multiple times.
+          Make it sound as natural as possible while strictly using only the provided characters.`
         }
       ],
       response_format: { type: "json_object" }
@@ -285,35 +272,58 @@ export async function generateSentence(
       }
     }
     
-    // Common Chinese characters that are allowed regardless of difficulty level
+    // Expanded list of common Chinese characters that are always allowed
     // These are basic characters like particles, pronouns, and common verbs
-    const commonChineseChars = ['的', '了', '和', '是', '在', '有', '我', '你', '他', '她', '它', '们', '这', '那', '不', '很', '都', '也', '个', '吗', '吧', '呢', '啊', '就', '说', '能', '要', '会', '对', '给', '到', '得', '着', '过', '被', '上', '下', '前', '后', '里', '外', '左', '右', '中', '大', '小', '多', '少', '好', '与', '为', '因'];
+    const commonChineseChars = ['的', '了', '和', '是', '在', '有', '我', '你', '他', '她', '它', '们', '这', '那', '不', '很', '都', '也', '个', '吗', '吧', '呢', '啊', '就', '说', '能', '要', '会', '对', '给', '到', '得', '着', '过', '被', '上', '下', '前', '后', '里', '外', '左', '右', '中', '大', '小', '多', '少', '好', '与', '为', '因', '什么', '谢谢', '再见', '请', '问'];
     
-    // Create a vocabulary set of all characters in the vocabulary
-    const vocabularySet = new Set(vocabulary.map(w => w.chinese).join('').split(''));
+    // Create a vocabulary set of all characters in the vocabulary list
+    const vocabularyChars: Set<string> = new Set();
+    vocabulary.forEach(word => {
+      // Split each Chinese word into characters
+      word.chinese.split('').forEach(char => {
+        vocabularyChars.add(char);
+      });
+    });
     
-    // For beginner difficulty, be very strict - only allow characters in the vocabulary
+    // For beginner difficulty, allow all chars in vocabulary list plus common connecting words
     if (difficulty === "beginner") {
-      const validSentence = uniqueSentenceWords.every((word: string) => 
-        vocabularySet.has(word) || word.trim() === '' || /\s/.test(word) || commonChineseChars.includes(word)
+      // For each character in the sentence, check if it's allowed
+      const unknownChars = uniqueSentenceWords.filter(char => 
+        !vocabularyChars.has(char) &&                 // Not in vocabulary
+        !commonChineseChars.includes(char) &&         // Not a common particle
+        char.trim() !== '' &&                         // Not whitespace
+        !/\s/.test(char) &&                           // Not whitespace
+        !(/[，。！？,.!?]/.test(char))                 // Not punctuation
       );
       
-      if (!validSentence) {
+      if (unknownChars.length > 0) {
+        console.log(`Beginner sentence has unknown characters: ${unknownChars.join(', ')}`);
+        // Only throw error if there are actually unknown characters
         throw new Error("Beginner level sentences must only use vocabulary from the list");
       }
     } 
-    // For intermediate difficulty, allow some common characters not in vocabulary
+    // For intermediate/advanced, allow a percentage of non-vocabulary words
     else if (difficulty === "intermediate" || difficulty === "advanced") {
-      // Count characters that are neither in vocabulary nor in common chars
-      const unknownChars = uniqueSentenceWords.filter((word: string) => 
-        !vocabularySet.has(word) && !commonChineseChars.includes(word) && word.trim() !== '' && !/\s/.test(word)
+      // Find characters in the sentence that aren't in vocabulary or common chars
+      const unknownChars = uniqueSentenceWords.filter(char => 
+        !vocabularyChars.has(char) && 
+        !commonChineseChars.includes(char) && 
+        char.trim() !== '' && 
+        !/\s/.test(char) &&
+        !(/[，。！？,.!?]/.test(char))
       );
       
-      // For intermediate, allow at most 20% unknown characters
-      const maxUnknownRatio = difficulty === "intermediate" ? 0.2 : 0.35; // 20% for intermediate, 35% for advanced
+      // Allow more unknown characters for higher difficulties
+      const maxUnknownRatio = difficulty === "intermediate" ? 0.1 : 0.2; // 10% for intermediate, 20% for advanced
       const unknownRatio = unknownChars.length / uniqueSentenceWords.length;
       
-      // Verify that the sentence isn't too complex
+      // Log detailed information for debugging
+      console.log(`${difficulty} sentence check: ${unknownChars.length} unknown chars out of ${uniqueSentenceWords.length} total (ratio: ${unknownRatio.toFixed(2)})`);
+      if (unknownChars.length > 0) {
+        console.log(`Unknown chars: ${unknownChars.join(', ')}`);
+      }
+      
+      // Reject sentences with too many unknown characters
       if (unknownRatio > maxUnknownRatio) {
         throw new Error(`${difficulty} level sentences have too many unknown characters (${unknownRatio.toFixed(2)})`);
       }
