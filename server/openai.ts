@@ -217,6 +217,14 @@ export async function generateSentence(
           Generate a grammatically correct Mandarin sentence using ONLY the vocabulary words provided.
           ${difficultyGuide[difficulty]}
           
+          CRITICALLY IMPORTANT: Generate only FACTUALLY CORRECT and LOGICALLY SOUND sentences.
+          
+          - Family relationships must be logical (e.g., "弟弟" is always male, "姐姐" is always female, etc.)
+          - Food items should only be paired with appropriate verbs (eat/drink)
+          - People can't be objects or places, and objects can't be people
+          - Sentence must make real-world sense and not be nonsensical (e.g., "弟弟不是男姐姐" is illogical)
+          - Pronouns should be used correctly (he/she/it)
+          
           You must create highly varied sentence structures. Avoid repetitive patterns.
           
           Include different sentence types:
@@ -381,6 +389,14 @@ export async function generateSentenceWithWord(
           content: `You are a Mandarin Chinese language teacher creating example sentences. 
           Generate a grammatically correct Mandarin sentence that includes the word "${word}".
           ${difficultyGuide[difficulty]}
+          
+          CRITICALLY IMPORTANT: Generate only FACTUALLY CORRECT and LOGICALLY SOUND sentences.
+          
+          - Family relationships must be logical (e.g., "弟弟" is always male, "姐姐" is always female, etc.)
+          - Food items should only be paired with appropriate verbs (eat/drink)
+          - People can't be objects or places, and objects can't be people
+          - Sentence must make real-world sense and not be nonsensical (e.g., "弟弟不是男姐姐" is illogical)
+          - Pronouns should be used correctly (he/she/it)
           
           You must create highly varied sentence structures. Avoid repetitive patterns.
           
