@@ -477,8 +477,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // We need to ensure the vocabulary has the right format for generateSentence
             const sentenceVocabulary = selectedWords.map(word => ({
               chinese: word.chinese,
-              pinyin: word.pinyin || "",
-              english: word.english || ""
+              pinyin: typeof word.pinyin === 'string' ? word.pinyin : "",
+              english: typeof word.english === 'string' ? word.english : ""
             }));
             const sentence = await generateSentence(sentenceVocabulary, difficulty);
             
@@ -612,8 +612,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // We need to ensure the vocabulary has the right format for generateSentence
         const sentenceVocabulary = selectedWords.map(word => ({
           chinese: word.chinese,
-          pinyin: word.pinyin || "",
-          english: word.english || ""
+          pinyin: typeof word.pinyin === 'string' ? word.pinyin : "",
+          english: typeof word.english === 'string' ? word.english : ""
         }));
         const sentence = await generateSentence(sentenceVocabulary, typedDifficulty);
         
