@@ -304,26 +304,60 @@ export default function CharacterHoverView({
           // If character not found in our dictionary, provide a placeholder definition
           console.log("Character not found in dictionary:", char);
           
-          // Save this character to the dictionary
+          // Save this character to the dictionary with proper definition
           const savedCharacterMutation = async () => {
             try {
-              const response = await apiRequest('POST', '/api/characters', {
+              // First add the character
+              const characterResponse = await apiRequest('POST', '/api/characters', {
                 character: char,
-                pinyin: "unknown",
-                definition: `Automatically added character: ${char}`,
+                pinyin: "pending", // We'll update this later when we get proper data
                 simplified: true
               });
-              console.log("Added new character to dictionary:", char, response);
+              
+              console.log("Added new character to dictionary:", char, characterResponse);
+              
+              // If character was added successfully, add a default definition
+              if (characterResponse.ok && characterResponse.status === 201) {
+                const savedChar = await characterResponse.json();
+                
+                // Now add a definition for this character
+                if (savedChar && savedChar.id) {
+                  const definitionResponse = await apiRequest('POST', `/api/characters/${savedChar.id}/definitions`, {
+                    characterId: savedChar.id,
+                    definition: `Character ${char}`,
+                    partOfSpeech: "unknown",
+                    order: 1
+                  });
+                  
+                  console.log("Added definition for character:", char, definitionResponse);
+                  
+                  // Also add to common characters collection for immediate use
+                  if (!commonCharacters[char]) {
+                    commonCharacters[char] = { 
+                      pinyin: savedChar.pinyin || char, 
+                      definition: `Character ${char}` 
+                    };
+                  }
+                }
+              }
             } catch (error) {
               console.error("Failed to add character to dictionary:", char, error);
             }
           };
           
           // Execute the mutation (no need to await, we're just initiating the background save)
-          savedCharacterMutation();
+          savedCharacterMutation()
+            .then(() => {
+              // After a short delay, try to refresh this component to show the definition
+              setTimeout(() => {
+                // Force re-render by updating state
+                setCharactersData(prev => [...prev]);
+              }, 2000);
+            });
           
-          charData.pinyin = "(unknown)";
-          charData.definition = "Character not in dictionary";
+          // For now, we'll show a placeholder while the character is being added
+          charData.pinyin = "(pending)";
+          charData.definition = "⏳ Adding to dictionary...";
         }
       }
       
