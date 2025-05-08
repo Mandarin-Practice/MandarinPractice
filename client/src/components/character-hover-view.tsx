@@ -381,8 +381,11 @@ export default function CharacterHoverView({
             <HoverCardContent 
               align="center"
               side="bottom"
+              sideOffset={5}
+              avoidCollisions={true}
+              collisionPadding={20}
               className="w-80 p-4 overflow-visible" 
-              style={{ zIndex: 9999 }}>
+              style={{ zIndex: 9999, position: 'fixed' }}>
               <div className="space-y-2">
                 <div className="text-2xl font-bold">{charData.character}</div>
                 <div className="text-sm text-gray-700 dark:text-gray-300 font-medium">

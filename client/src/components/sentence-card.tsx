@@ -143,7 +143,7 @@ export default function SentenceCard({
 
   return (
     <div className="md:col-span-2">
-      <div className="card-custom h-full flex flex-col relative">
+      <div className="card-custom h-full flex flex-col relative" style={{ overflow: 'visible' }}>
         <div className="flex justify-between items-center bg-primary text-white p-4 rounded-t-lg">
           <h2 className="font-bold text-white text-lg">Current Sentence</h2>
           <div className="flex items-center space-x-3">
@@ -161,7 +161,7 @@ export default function SentenceCard({
           </div>
         </div>
         
-        <div className="p-6 flex-grow overflow-visible">
+        <div className="p-6 flex-grow" style={{ overflow: 'visible' }}>
           {isLoading ? (
             <div className="space-y-4">
               <Skeleton className="h-8 w-full" />
@@ -172,9 +172,9 @@ export default function SentenceCard({
             <>
               {/* Chinese Text with Interactive Hover */}
               {showChinese && sentence?.chinese && (
-                <div className="mb-8 mt-2">
-                  <div className="border border-red-200 dark:border-red-900 rounded-md p-4 bg-background overflow-visible">
-                    <div className="relative">
+                <div className="mb-8 mt-2" style={{ overflow: 'visible' }}>
+                  <div className="border border-red-200 dark:border-red-900 rounded-md p-4 bg-background" style={{ overflow: 'visible' }}>
+                    <div className="relative" style={{ overflow: 'visible' }}>
                       <div className="text-xs text-primary font-medium uppercase tracking-wider mb-1">
                         {feedbackStatus ? "Chinese Text - Interactive" : "Chinese Text"}
                       </div>
