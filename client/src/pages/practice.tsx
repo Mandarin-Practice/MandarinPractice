@@ -469,31 +469,22 @@ export default function Practice() {
       matchStrictness
     });
     
-    // Debug log for conflict detection
-    console.log('Conflict detection:', {
-      temporalWordsConflict,
-      beverageConflict,
-      foodConflict,
-      verbTenseConflict,
-      imperativeConflict
-    });
+    // Additional checks for critical words that can't be mixed up
+    const userLower = input.toLowerCase().trim();
+    const correctLower = correctAnswer.toLowerCase().trim();
     
     // Extra debug info for imperative phrases
     if (correctAnswer.toLowerCase().includes("come in") || 
         correctAnswer.toLowerCase().includes("please")) {
       console.log('Imperative check - extra details:', {
-        userStartsWithI: input.toLowerCase().trim().startsWith("i "),
-        userIncludes: input.toLowerCase().includes("please"),
-        correctStartsWithPlease: correctAnswer.toLowerCase().trim().startsWith("please"),
-        hasComeInConflict: input.toLowerCase().includes("i come") && 
-                          (correctAnswer.toLowerCase().includes("come in") || 
-                           correctAnswer.toLowerCase().includes("please come"))
+        userStartsWithI: userLower.startsWith("i "),
+        userIncludes: userLower.includes("please"),
+        correctStartsWithPlease: correctLower.startsWith("please"),
+        hasComeInConflict: userLower.includes("i come") && 
+                          (correctLower.includes("come in") || 
+                           correctLower.includes("please come"))
       });
     }
-
-    // Additional checks for critical temporal words that can't be mixed up
-    const userLower = input.toLowerCase().trim();
-    const correctLower = correctAnswer.toLowerCase().trim();
     
     // Special checks for temporal words that shouldn't be confused
     const temporalWordsConflict = (
@@ -573,6 +564,15 @@ export default function Practice() {
       (userLower.startsWith("i ") && correctLower.startsWith("you ")) ||
       (userLower.startsWith("you ") && correctLower.startsWith("i "))
     );
+    
+    // Debug log for conflict detection - placed after all variables are defined
+    console.log('Conflict detection:', {
+      temporalWordsConflict,
+      beverageConflict,
+      foodConflict,
+      verbTenseConflict,
+      imperativeConflict
+    });
     
     // Threshold adjustments with special case handling:
     if (similarity >= 0.7 && !temporalWordsConflict && !imperativeConflict && !beverageConflict && !foodConflict && !verbTenseConflict) {
