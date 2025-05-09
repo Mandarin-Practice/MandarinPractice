@@ -485,7 +485,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
               pinyin: typeof word.pinyin === 'string' ? word.pinyin : "",
               english: typeof word.english === 'string' ? word.english : ""
             }));
-            const sentence = await generateSentence(sentenceVocabulary, difficulty);
+            
+            // Add common grammatical particles if they aren't already in the vocabulary
+            // This helps create more natural sentences while still focusing on the target vocabulary
+            const commonWords = [
+              { chinese: "的", pinyin: "de", english: "possessive particle" },
+              { chinese: "了", pinyin: "le", english: "completion particle" },
+              { chinese: "是", pinyin: "shì", english: "to be" },
+              { chinese: "在", pinyin: "zài", english: "at, in" },
+              { chinese: "和", pinyin: "hé", english: "and" },
+              { chinese: "吗", pinyin: "ma", english: "question particle" }
+            ];
+            
+            // Only add common words if there are enough vocabulary words
+            // For beginner level, ensure we have at least 3 actual vocabulary words
+            let sentence;
+            if (sentenceVocabulary.length >= (difficulty === "beginner" ? 3 : 2)) {
+              // Filter out common words that are already in vocabulary
+              const existingChars = new Set(sentenceVocabulary.flatMap(w => w.chinese.split('')));
+              const additionalWords = commonWords.filter(w => !existingChars.has(w.chinese));
+              
+              // Add common words as supplementary vocabulary
+              const enhancedVocabulary = [...sentenceVocabulary, ...additionalWords];
+              console.log(`Enhanced vocabulary with ${additionalWords.length} common particles for more natural sentences`);
+              
+              try {
+                // Try generating with enhanced vocabulary first
+                sentence = await generateSentence(enhancedVocabulary, difficulty, true);
+              } catch (err) {
+                const error = err as Error;
+                console.log("Couldn't generate with enhanced vocabulary, falling back to strict mode:", error.message);
+                // Fall back to strict mode with only the original vocabulary
+                sentence = await generateSentence(sentenceVocabulary, difficulty);
+              }
+            } else {
+              // Not enough words for enhancement, use strict mode
+              sentence = await generateSentence(sentenceVocabulary, difficulty);
+            }
             
             // Update word usage statistics
             selectedWords.forEach(word => {

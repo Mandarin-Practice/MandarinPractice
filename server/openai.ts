@@ -149,7 +149,8 @@ function levenshteinDistance(a: string, b: string): number {
  */
 export async function generateSentence(
   vocabulary: { chinese: string; pinyin: string; english: string }[],
-  difficulty: "beginner" | "intermediate" | "advanced" = "beginner"
+  difficulty: "beginner" | "intermediate" | "advanced" = "beginner",
+  useEnhancedVocabulary: boolean = false
 ) {
   if (!vocabulary || vocabulary.length === 0) {
     throw new Error("No vocabulary provided");
