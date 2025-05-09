@@ -1,12 +1,18 @@
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Play, SkipForward } from "lucide-react";
+import { Play, SkipForward, ChevronDown } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { compareWordByWord } from "@/lib/string-similarity";
 import InteractiveChineseText from "./interactive-chinese-text";
 import CharacterHoverView from "./character-hover-view";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
 
 interface HighlightedComparisonProps {
   correctSentence: string;
@@ -83,6 +89,7 @@ interface SentenceCardProps {
   onNextSentence: () => void;
   onKeyPress?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   onCheckAnswer?: () => void;
+  onChangeDifficulty?: (difficulty: string) => void;
 }
 
 export default function SentenceCard({
@@ -98,7 +105,8 @@ export default function SentenceCard({
   onPlayAudio,
   onNextSentence,
   onKeyPress,
-  onCheckAnswer
+  onCheckAnswer,
+  onChangeDifficulty
 }: SentenceCardProps) {
   
   const renderFeedback = () => {
@@ -154,10 +162,36 @@ export default function SentenceCard({
             >
               <Play className={isPlaying ? "animate-pulse" : ""} />
             </button>
-            <div className="text-sm bg-red-800 px-2 py-1 rounded-md border border-red-700">
-              <span className="font-medium">{sentence?.difficulty || "Loading..."}</span> 
-              <span className="text-white"> Difficulty</span>
-            </div>
+            {onChangeDifficulty ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="text-sm bg-red-800 px-2 py-1 rounded-md border border-red-700 text-white h-auto hover:bg-red-700 hover:text-white">
+                    <span className="font-medium mr-1">{sentence?.difficulty || "Loading..."}</span>
+                    <span>Difficulty</span>
+                    <ChevronDown className="h-4 w-4 ml-1" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => onChangeDifficulty("beginner")} 
+                    className={sentence?.difficulty === "beginner" ? "bg-primary/20" : ""}>
+                    Beginner
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onChangeDifficulty("intermediate")}
+                    className={sentence?.difficulty === "intermediate" ? "bg-primary/20" : ""}>
+                    Intermediate
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onChangeDifficulty("advanced")}
+                    className={sentence?.difficulty === "advanced" ? "bg-primary/20" : ""}>
+                    Advanced
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <div className="text-sm bg-red-800 px-2 py-1 rounded-md border border-red-700">
+                <span className="font-medium">{sentence?.difficulty || "Loading..."}</span> 
+                <span className="text-white"> Difficulty</span>
+              </div>
+            )}
           </div>
         </div>
         

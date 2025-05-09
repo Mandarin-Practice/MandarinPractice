@@ -47,6 +47,26 @@ export default function Practice() {
   // Track the current difficulty setting
   const [currentDifficulty, setCurrentDifficulty] = useState<string>(localStorage.getItem('difficulty') || 'beginner');
   
+  // Handler to change the difficulty level
+  const handleChangeDifficulty = (difficulty: string) => {
+    // Update local state
+    setCurrentDifficulty(difficulty);
+    // Store in localStorage for persistence
+    localStorage.setItem('difficulty', difficulty);
+    // Regenerate a sentence with the new difficulty
+    generateSentenceMutation.mutate();
+    // Clear old translation when changing difficulty
+    setUserTranslation("");
+    setFeedbackStatus(null);
+    
+    // Show a toast notification
+    toast({
+      title: `Difficulty changed to ${difficulty}`,
+      description: "The next sentence will use the new difficulty level.",
+      variant: "default",
+    });
+  };
+  
   const [stats, setStats] = useState<Stats>({
     completed: 0,
     accuracy: "0%",
@@ -756,6 +776,7 @@ export default function Practice() {
           onNextSentence={nextSentence}
           onKeyPress={handleKeyPress}
           onCheckAnswer={handleCheckAnswer}
+          onChangeDifficulty={handleChangeDifficulty}
           isLoading={generateSentenceMutation.isPending}
           isPlaying={isPlaying}
           vocabularyWords={vocabularyWords}
