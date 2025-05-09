@@ -8,6 +8,76 @@ import dictionaryAdminRoutes from "./routes/dictionary-admin";
 import authRoutes from "./routes/auth";
 import { requireAuth, optionalAuth } from "./middleware/auth";
 
+// List of unnatural or grammatically incorrect sentence patterns to filter out
+const unnaturalPatterns = [
+  // Greetings related patterns
+  { pattern: "请你好", reason: "Incorrect greeting structure" },
+  { pattern: "谢谢你好", reason: "Incorrect greeting combination" },
+  { pattern: "谢谢好", reason: "Incorrect greeting structure" },
+  { pattern: "吗你好", reason: "Incorrect particle usage with greeting" },
+  { pattern: "呢你好", reason: "Incorrect particle usage with greeting" },
+  { pattern: "吧你好", reason: "Incorrect particle usage with greeting" },
+  
+  // Verb structure problems
+  { pattern: "我是去", reason: "Incorrect verb structure" },
+  { pattern: "他是看", reason: "Incorrect verb structure" },
+  { pattern: "你是来", reason: "Incorrect verb structure" },
+  
+  // Particle errors
+  { pattern: "你吧好", reason: "Incorrect particle usage" },
+  { pattern: "你好吧", reason: "Incorrect particle usage" },
+  { pattern: "你呢好", reason: "Incorrect particle usage" },
+  { pattern: "你吗好", reason: "Incorrect particle usage" },
+  
+  // Double greeting patterns
+  { pattern: "你好你好", reason: "Redundant greeting" },
+  { pattern: "早上早上", reason: "Redundant greeting" },
+  { pattern: "晚上晚上", reason: "Redundant time reference" },
+  
+  // Pronoun/verb ordering
+  { pattern: "请我", reason: "Incorrect pronoun-verb ordering" },
+  { pattern: "请他们", reason: "Incorrect pronoun-verb ordering" }
+];
+
+// Function to validate if a sentence is natural and grammatically correct
+function validateSentence(chinese: string): { isValid: boolean; reason?: string } {
+  // Check against known unnatural patterns
+  for (const { pattern, reason } of unnaturalPatterns) {
+    if (chinese.includes(pattern)) {
+      console.log(`Rejecting sentence "${chinese}" because it contains unnatural pattern "${pattern}": ${reason}`);
+      return { isValid: false, reason };
+    }
+  }
+  
+  // Check for redundant/incorrect pronoun+verb patterns
+  if (/你请/.test(chinese)) {
+    return { isValid: false, reason: "Incorrect pronoun-verb combination" };
+  }
+  
+  // Check for sentences that are too short (likely to be unnatural)
+  if (chinese.replace(/[,.?!，。？！]/g, '').length < 3) {
+    return { isValid: false, reason: "Sentence is too short" };
+  }
+  
+  // Check for adjacent duplicated characters (likely errors)
+  const duplicateChars = /(.)\1{2,}/.exec(chinese);
+  if (duplicateChars) {
+    return { isValid: false, reason: `Repeated character: ${duplicateChars[1]}` };
+  }
+  
+  // Check for incorrect particle usage at the end of sentences
+  if (chinese.endsWith('的。') || chinese.endsWith('的?') || chinese.endsWith('的？')) {
+    return { isValid: false, reason: "Incorrect particle usage at sentence end" };
+  }
+  
+  // Check for incorrect sentence structure with names
+  if (/李友李/.test(chinese) || /王朋王/.test(chinese)) {
+    return { isValid: false, reason: "Incorrect name structure (missing separator)" };
+  }
+  
+  return { isValid: true };
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Get dictionary vocabulary words (accessible only when logged in)
   app.get("/api/vocabulary/dictionary", requireAuth, async (req, res) => {
@@ -532,16 +602,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
               wordUsageStats[word.id].lastUsed = Date.now();
             });
             
-            // Add to the cache if it's not a duplicate
-            const isDuplicate = sentenceCache[difficulty].some(s => s.chinese === sentence.chinese);
-            if (!isDuplicate) {
-              sentenceCache[difficulty].push({
-                ...sentence,
-                difficulty,
-                createdAt: Date.now(),
-                usedWords: selectedWords.map(w => w.id) // Track which words were used
-              });
-              console.log(`Added sentence to ${difficulty} cache: ${sentence.chinese}`);
+            // Validate sentence naturalness before adding to cache
+            const validationResult = validateSentence(sentence.chinese);
+            
+            // Only add natural and grammatically correct sentences to the cache
+            if (validationResult.isValid) {
+              // Check for duplicates
+              const isDuplicate = sentenceCache[difficulty].some(s => s.chinese === sentence.chinese);
+              if (!isDuplicate) {
+                sentenceCache[difficulty].push({
+                  ...sentence,
+                  difficulty,
+                  createdAt: Date.now(),
+                  usedWords: selectedWords.map(w => w.id) // Track which words were used
+                });
+                console.log(`Added sentence to ${difficulty} cache: ${sentence.chinese}`);
+              }
+            } else {
+              console.log(`Rejected unnatural sentence: "${sentence.chinese}" - Reason: ${validationResult.reason}`);
             }
           } catch (error) {
             console.error(`Error filling cache for ${difficulty}:`, error);
@@ -701,17 +779,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
           wordUsageStats[word.id].lastUsed = Date.now();
         });
         
-        // Add to cache for future use
-        if (sentenceCache[typedDifficulty].length < sentenceCache.maxSize) {
-          sentenceCache[typedDifficulty].push({
-            ...sentence,
-            difficulty: typedDifficulty,
-            createdAt: Date.now(),
-            usedWords: selectedWords.map(w => w.id) // Track which words were used
-          });
-        }
+        // Validate sentence naturalness
+        const validationResult = validateSentence(sentence.chinese);
         
-        res.json(sentence);
+        if (validationResult.isValid) {
+          // Add to cache for future use
+          if (sentenceCache[typedDifficulty].length < sentenceCache.maxSize) {
+            sentenceCache[typedDifficulty].push({
+              ...sentence,
+              difficulty: typedDifficulty,
+              createdAt: Date.now(),
+              usedWords: selectedWords.map(w => w.id) // Track which words were used
+            });
+          }
+          
+          // Send the validated sentence to the client
+          res.json(sentence);
+        } else {
+          console.log(`Rejected unnatural on-demand sentence: "${sentence.chinese}" - Reason: ${validationResult.reason}`);
+          
+          // Generate a simple fallback sentence using the same vocabulary
+          const fallbackTemplate = "我们学习{word}。";
+          const randomWord = selectedWords[Math.floor(Math.random() * selectedWords.length)];
+          
+          const fallbackSentence = {
+            chinese: `我们学习${randomWord.chinese}。`,
+            pinyin: `Wǒmen xuéxí ${randomWord.pinyin}.`,
+            english: `We are studying ${randomWord.english}.`,
+            difficulty: typedDifficulty,
+            fromFallback: true,
+            rejectedOriginal: sentence.chinese,
+            rejectionReason: validationResult.reason
+          };
+          
+          res.json(fallbackSentence);
+        }
       } catch (generateError) {
         console.log("Error generating sentence with OpenAI, using fallback sentences");
         
@@ -742,7 +844,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate sentence using OpenAI with specific word, with fallback
       try {
         const sentence = await generateSentenceWithWord(word, difficulty);
-        res.json(sentence);
+        
+        // Validate sentence naturalness
+        const validationResult = validateSentence(sentence.chinese);
+        
+        if (validationResult.isValid) {
+          res.json(sentence);
+        } else {
+          console.log(`Rejected unnatural word-specific sentence: "${sentence.chinese}" - Reason: ${validationResult.reason}`);
+          
+          // Use a simple template fallback
+          const fallbackSentence = {
+            chinese: `我们学习${word}。`,
+            pinyin: `Wǒmen xuéxí ${word}.`,
+            english: `We are studying ${word}.`,
+            difficulty,
+            fromFallback: true,
+            rejectedOriginal: sentence.chinese,
+            rejectionReason: validationResult.reason
+          };
+          
+          res.json(fallbackSentence);
+        }
       } catch (generateError) {
         console.log(`Error generating sentence with word "${word}", using fallback`);
         
