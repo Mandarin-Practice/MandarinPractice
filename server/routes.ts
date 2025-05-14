@@ -501,7 +501,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (activeVocabulary.length === 0) return; // Nothing to cache if no vocabulary
       
       // Function to select words, prioritizing newer lesson words and less frequently used words
-      const selectWords = (wordsList: Array<{ id: number, chinese: string, lessonId?: number, [key: string]: any }>, count: number) => {
+      const selectWords = (wordsList: Array<{ id: number, chinese: string, lessonId?: number | null, [key: string]: any }>, count: number) => {
         // Ensure we don't try to select more words than available
         const selectionCount = Math.min(count, wordsList.length);
         
