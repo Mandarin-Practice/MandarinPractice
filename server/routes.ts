@@ -515,8 +515,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (advancedLessonWords.length > 0 && count > 1) {
           // Ensure a minimum percentage of words from newer lessons
-          const minAdvancedWords = Math.max(1, Math.floor(count * 0.3)); // At least 30% of words from newer lessons
-          const maxAdvancedWords = Math.min(advancedLessonWords.length, Math.ceil(count * 0.7)); // At most 70% of words
+          const minAdvancedWords = Math.max(1, Math.floor(count * 0.5)); // At least 50% of words from newer lessons
+          const maxAdvancedWords = Math.min(advancedLessonWords.length, Math.ceil(count * 0.8)); // At most 80% of words
           
           console.log(`Including ${minAdvancedWords}-${maxAdvancedWords} words from lessons 11-20`);
           
