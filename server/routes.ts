@@ -894,14 +894,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           wordUsageStats[word.id].lastUsed = Date.now();
         });
         
-        // Step 1: First validate using pattern matching (quick check)
+        // Step 1: First validate using pattern matching (quick check for obvious issues)
         const patternValidationResult = validateSentence(sentence.chinese);
         
         if (!patternValidationResult.isValid) {
           console.log(`Rejected unnatural on-demand sentence: "${sentence.chinese}" - Reason: ${patternValidationResult.reason}`);
-          // Skip AI validation if pattern validation fails
+          // Pattern validation failed, don't even try AI validation
         } else {
-          // Step 2: Then validate using AI (deeper linguistic check) if pattern validation passed
+          // Step 2: Always validate with AI for semantic correctness
           try {
             console.log("Running AI validation for sentence:", sentence.chinese);
             const aiValidationResult = await validateSentenceWithAI(sentence.chinese, typedDifficulty);
@@ -909,28 +909,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Log AI validation results
             console.log(`AI validation results: Score=${aiValidationResult.score}, Valid=${aiValidationResult.isValid}`);
             console.log(`AI feedback: ${aiValidationResult.feedback}`);
-            if (aiValidationResult.corrections) {
-              console.log(`Suggested corrections: ${aiValidationResult.corrections}`);
-              
-              // Apply corrections if AI suggested them and they're substantial improvements
-              if (aiValidationResult.score >= 5 && aiValidationResult.score < 8) {
-                console.log("Applying AI-suggested corrections to improve sentence quality");
-                sentence.chinese = aiValidationResult.corrections;
-                // Note: In a complete implementation, we would also update pinyin and English
-                // but for simplicity in this proof of concept, we're just updating Chinese
+            
+            // If score is below 7, the sentence is not good enough
+            if (aiValidationResult.score < 7) {
+              if (aiValidationResult.corrections) {
+                console.log(`Suggested corrections: ${aiValidationResult.corrections}`);
+                
+                // Apply corrections if AI suggested them and score is at least 5
+                if (aiValidationResult.score >= 5) {
+                  console.log("Applying AI-suggested corrections to improve sentence quality");
+                  sentence.chinese = aiValidationResult.corrections;
+                  // Now we need to re-validate the corrected sentence
+                  const correctionValidation = validateSentence(sentence.chinese);
+                  if (!correctionValidation.isValid) {
+                    console.log(`Rejected corrected sentence: "${sentence.chinese}" - Reason: ${correctionValidation.reason}`);
+                    patternValidationResult.isValid = false;
+                    patternValidationResult.reason = correctionValidation.reason;
+                  } else {
+                    // Corrections seem valid, mark as valid
+                    patternValidationResult.isValid = true;
+                  }
+                } else {
+                  // Score too low, reject the sentence
+                  patternValidationResult.isValid = false;
+                  patternValidationResult.reason = `AI validation score too low (${aiValidationResult.score}): ${aiValidationResult.feedback}`;
+                }
+              } else {
+                // No corrections available and score below 7, reject
+                patternValidationResult.isValid = false;
+                patternValidationResult.reason = `AI validation score too low (${aiValidationResult.score}): ${aiValidationResult.feedback}`;
               }
             }
             
-            // If AI validation fails, handle like pattern validation failure
+            // If AI explicitly says it's invalid, always reject
             if (!aiValidationResult.isValid) {
               console.log(`AI rejected sentence: "${sentence.chinese}" - Feedback: ${aiValidationResult.feedback}`);
               patternValidationResult.isValid = false;
               patternValidationResult.reason = `AI validation: ${aiValidationResult.feedback}`;
             }
           } catch (aiError) {
-            // If AI validation errors, continue with the pattern-validated sentence
+            // If AI validation errors, we're more cautious - only accept very simple sentences
             console.error("AI validation error:", aiError);
-            console.log("Continuing with pattern-validated sentence due to AI service error");
+            if (sentence.chinese.length > 8) {
+              console.log("Rejecting longer sentence due to failed AI validation");
+              patternValidationResult.isValid = false;
+              patternValidationResult.reason = "AI validation error - cannot verify semantic correctness";
+            } else {
+              console.log("Continuing with very simple pattern-validated sentence despite AI validation error");
+            }
           }
         }
         

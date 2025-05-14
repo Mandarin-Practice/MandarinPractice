@@ -41,7 +41,14 @@ export async function validateSentenceWithAI(chinese: string, difficulty: string
           2. Unnatural word combinations (e.g., 请你好)
           3. Awkward sentence structure
           4. Incorrect grammar
-          5. Cultural appropriateness`
+          5. Cultural appropriateness
+          6. Semantic coherence and logical meaning
+          7. Translation quality to English
+          
+          Pay special attention to semantically incorrect phrases like:
+          - "学习蛋糕" (studying cake) - nonsensical verb-object pair
+          - "你的舞跳得不高" (your dancing is not high) - awkward in English 
+          - "吃水" (eating water) or "喝饭" (drinking rice) - incorrect verb-object pairing`
         },
         {
           role: "user",
