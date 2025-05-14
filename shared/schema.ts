@@ -34,6 +34,8 @@ export const vocabulary = pgTable("vocabulary", {
   pinyin: text("pinyin").notNull(),
   english: text("english").notNull(),
   active: text("active").default("true").notNull(),
+  lessonId: integer("lesson_id"), // Track which lesson this vocabulary word is from (11-20 for advanced)
+  category: text("category"), // Category like "food", "travel", etc.
 });
 
 export const vocabularySchema = createInsertSchema(vocabulary).pick({
@@ -41,6 +43,8 @@ export const vocabularySchema = createInsertSchema(vocabulary).pick({
   pinyin: true,
   english: true,
   active: true,
+  lessonId: true,
+  category: true,
 });
 
 export type InsertVocabulary = z.infer<typeof vocabularySchema>;

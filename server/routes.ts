@@ -500,32 +500,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (activeVocabulary.length === 0) return; // Nothing to cache if no vocabulary
       
-      // Function to select words, prioritizing less frequently used words
-      const selectWords = (wordsList: Array<{ id: number, chinese: string, [key: string]: any }>, count: number) => {
+      // Function to select words, prioritizing newer lesson words and less frequently used words
+      const selectWords = (wordsList: Array<{ id: number, chinese: string, lessonId?: number, [key: string]: any }>, count: number) => {
         // Ensure we don't try to select more words than available
         const selectionCount = Math.min(count, wordsList.length);
         
-        // Create a weighted list based on usage
-        const weightedWords = wordsList.map(word => {
-          const stats = wordUsageStats[word.id] || { uses: 0, lastUsed: 0 };
-          // Lower score = higher priority for selection
-          // Weight by number of uses and how recently the word was used
-          const recencyFactor = Math.max(0, (Date.now() - stats.lastUsed) / (1000 * 60 * 60)); // hours since last use
-          const usageFactor = stats.uses + 1; // +1 to avoid division by zero
-          // Unused words get highest priority (score of 0)
-          const score = (stats.uses === 0) ? 0 : usageFactor / (recencyFactor + 0.1);
+        // Identify advanced lesson words (from lessons 11-20)
+        const advancedLessonWords = wordsList.filter(word => 
+          word.lessonId && word.lessonId >= 11 && word.lessonId <= 20
+        );
+        
+        // Always try to include at least one advanced lesson word if available
+        let selectedWords: typeof wordsList = [];
+        
+        if (advancedLessonWords.length > 0 && count > 1) {
+          // Ensure a minimum percentage of words from newer lessons
+          const minAdvancedWords = Math.max(1, Math.floor(count * 0.3)); // At least 30% of words from newer lessons
+          const maxAdvancedWords = Math.min(advancedLessonWords.length, Math.ceil(count * 0.7)); // At most 70% of words
           
-          return {
-            word,
-            score
-          };
-        });
+          console.log(`Including ${minAdvancedWords}-${maxAdvancedWords} words from lessons 11-20`);
+          
+          // Randomly select advanced lesson words
+          const shuffledAdvanced = [...advancedLessonWords].sort(() => 0.5 - Math.random());
+          const selectedAdvanced = shuffledAdvanced.slice(0, maxAdvancedWords);
+          
+          // Add to selected words
+          selectedWords = selectedAdvanced;
+          
+          // Remove selected advanced words from wordsList to avoid duplicates
+          const selectedIds = new Set(selectedWords.map(w => w.id));
+          const remainingWords = wordsList.filter(w => !selectedIds.has(w.id));
+          
+          // Fill remaining slots based on usage weight
+          const remainingCount = count - selectedWords.length;
+          if (remainingCount > 0 && remainingWords.length > 0) {
+            // Create a weighted list based on usage
+            const weightedWords = remainingWords.map(word => {
+              const stats = wordUsageStats[word.id] || { uses: 0, lastUsed: 0 };
+              // Lower score = higher priority for selection
+              // Weight by number of uses and how recently the word was used
+              const recencyFactor = Math.max(0, (Date.now() - stats.lastUsed) / (1000 * 60 * 60)); // hours since last use
+              const usageFactor = stats.uses + 1; // +1 to avoid division by zero
+              // Unused words get highest priority (score of 0)
+              const score = (stats.uses === 0) ? 0 : usageFactor / (recencyFactor + 0.1);
+              
+              return {
+                word,
+                score
+              };
+            });
+            
+            // Sort by score (lower = higher priority)
+            weightedWords.sort((a, b) => a.score - b.score);
+            
+            // Take the top N remaining words
+            const remainingSelected = weightedWords.slice(0, remainingCount).map(item => item.word);
+            selectedWords = [...selectedWords, ...remainingSelected];
+          }
+        } else {
+          // Fall back to original selection algorithm if no advanced lesson words available
+          // Create a weighted list based on usage
+          const weightedWords = wordsList.map(word => {
+            const stats = wordUsageStats[word.id] || { uses: 0, lastUsed: 0 };
+            // Lower score = higher priority for selection
+            // Weight by number of uses and how recently the word was used
+            const recencyFactor = Math.max(0, (Date.now() - stats.lastUsed) / (1000 * 60 * 60)); // hours since last use
+            const usageFactor = stats.uses + 1; // +1 to avoid division by zero
+            // Unused words get highest priority (score of 0)
+            const score = (stats.uses === 0) ? 0 : usageFactor / (recencyFactor + 0.1);
+            
+            // Add a bonus for higher lesson IDs to prioritize newer vocabulary
+            const lessonBonus = word.lessonId ? Math.min(5, word.lessonId / 2) : 0;
+            const adjustedScore = score - lessonBonus;
+            
+            return {
+              word,
+              score: adjustedScore
+            };
+          });
+          
+          // Sort by score (lower = higher priority)
+          weightedWords.sort((a, b) => a.score - b.score);
+          
+          // Take the top N words
+          selectedWords = weightedWords.slice(0, selectionCount).map(item => item.word);
+        }
         
-        // Sort by score (lower = higher priority)
-        weightedWords.sort((a, b) => a.score - b.score);
+        // Log the selected words with their lesson IDs
+        console.log("Selected vocabulary:", selectedWords.map(w => 
+          `${w.chinese}${w.lessonId ? ` (Lesson ${w.lessonId})` : ''}`
+        ).join(', '));
         
-        // Take the top N words
-        return weightedWords.slice(0, selectionCount).map(item => item.word);
+        return selectedWords;
       };
       
       // Word count per difficulty level
