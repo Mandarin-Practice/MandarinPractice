@@ -4,6 +4,73 @@ import OpenAI from "openai";
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "your-api-key" });
 
 /**
+ * Validates a Chinese sentence for accuracy, grammar, and naturalness using AI
+ * @param chinese The Chinese sentence to validate
+ * @param difficulty The difficulty level of the sentence
+ * @returns Object with validation results and feedback
+ */
+export async function validateSentenceWithAI(chinese: string, difficulty: string): Promise<{
+  isValid: boolean;
+  score: number;
+  feedback: string;
+  corrections?: string;
+}> {
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      temperature: 0.3,
+      messages: [
+        {
+          role: "system",
+          content: `You are a Mandarin Chinese linguistic expert focusing on accuracy validation. Analyze the following Chinese sentence for grammatical correctness, naturalness, and appropriateness for ${difficulty} level learners.
+          
+          Score the sentence on a scale of 0-10 where:
+          - 0-3: Unnatural or grammatically incorrect sentence
+          - 4-6: Grammatically correct but unnatural or awkward phrasing
+          - 7-8: Natural but with minor issues
+          - 9-10: Perfect natural sentence
+          
+          Provide your evaluation in JSON format with these fields:
+          - score: number (0-10)
+          - isValid: boolean (true if score >= 7)
+          - feedback: concise explanation of your evaluation
+          - corrections: suggested corrections if any (or null if none)
+          
+          Focus on these common issues:
+          1. Inappropriate particle usage (的, 了, 和, 在, 吗, etc.)
+          2. Unnatural word combinations (e.g., 请你好)
+          3. Awkward sentence structure
+          4. Incorrect grammar
+          5. Cultural appropriateness`
+        },
+        {
+          role: "user",
+          content: chinese
+        }
+      ],
+      response_format: { type: "json_object" }
+    });
+
+    const result = JSON.parse(response.choices[0].message.content);
+    return {
+      isValid: result.isValid,
+      score: result.score,
+      feedback: result.feedback,
+      corrections: result.corrections
+    };
+  } catch (error) {
+    console.error("Error validating sentence with AI:", error);
+    // Return a default response that allows the sentence to pass
+    // This ensures the feature degrades gracefully if the AI service fails
+    return {
+      isValid: true,
+      score: 7,
+      feedback: "Validation service unavailable - sentence passed by default"
+    };
+  }
+}
+
+/**
  * Get the definition and pinyin for a Chinese character
  * @param character The Chinese character to define
  * @returns Object with definition and pinyin
