@@ -22,12 +22,34 @@ interface HighlightedComparisonProps {
 function HighlightedComparison({ correctSentence, userSentence }: HighlightedComparisonProps) {
   // Use compareWordByWord to determine which words match
   const comparison = compareWordByWord(correctSentence, userSentence);
+  
+  // Simplify the correct translation by handling alternative definitions
+  // This removes comma-separated alternative definitions like "fine, good, nice, OK" 
+  // and displays only the first option
+  const simplifiedCorrectSentence = correctSentence
+    .split(' ')
+    .map(word => {
+      // If word contains comma-separated alternatives like "fine, good, nice, OK"
+      // Only keep the first option
+      if (word.includes(',')) {
+        return word.split(',')[0];
+      }
+      // Handle "or" alternatives like "must or have to"
+      if (word.includes(' or ')) {
+        return word.split(' or ')[0];
+      }
+      return word;
+    })
+    .join(' ');
+  
+  // Create new comparison with simplified sentence
+  const simplifiedComparison = compareWordByWord(simplifiedCorrectSentence, userSentence);
 
   return (
     <div className="space-y-4">
       <div className="p-3 rounded-md bg-accent/20 border border-border">
         <p className="text-base leading-relaxed">
-          {comparison.correctWordElements.map((element, index) => (
+          {simplifiedComparison.correctWordElements.map((element, index) => (
             <span 
               key={`correct-${index}`}
               className={element.matched 
@@ -35,7 +57,7 @@ function HighlightedComparison({ correctSentence, userSentence }: HighlightedCom
                 : "text-primary font-medium"
               }
             >
-              {element.word}{index < comparison.correctWordElements.length - 1 ? ' ' : ''}
+              {element.word}{index < simplifiedComparison.correctWordElements.length - 1 ? ' ' : ''}
             </span>
           ))}
         </p>
@@ -45,7 +67,7 @@ function HighlightedComparison({ correctSentence, userSentence }: HighlightedCom
         <p className="text-sm font-medium mb-2 text-foreground">Your translation:</p>
         <div className="p-3 rounded-md bg-background border border-border">
           <p className="text-base leading-relaxed">
-            {comparison.userWordElements.map((element, index) => (
+            {simplifiedComparison.userWordElements.map((element, index) => (
               <span 
                 key={`user-${index}`}
                 className={element.matched 
@@ -53,7 +75,7 @@ function HighlightedComparison({ correctSentence, userSentence }: HighlightedCom
                   : "text-primary font-medium"
                 }
               >
-                {element.word}{index < comparison.userWordElements.length - 1 ? ' ' : ''}
+                {element.word}{index < simplifiedComparison.userWordElements.length - 1 ? ' ' : ''}
               </span>
             ))}
           </p>
