@@ -22,6 +22,8 @@ interface CharacterHoverViewProps {
     pinyin: string;
     english: string;
     active: string;
+    lessonId?: number | null;
+    category?: string | null;
   }>;
   feedbackStatus?: "correct" | "partial" | "incorrect" | null;
 }
