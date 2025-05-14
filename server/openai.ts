@@ -51,12 +51,13 @@ export async function validateSentenceWithAI(chinese: string, difficulty: string
       response_format: { type: "json_object" }
     });
 
-    const result = JSON.parse(response.choices[0].message.content);
+    const content = response.choices[0].message.content || "{}";
+    const result = JSON.parse(content);
     return {
-      isValid: result.isValid,
-      score: result.score,
-      feedback: result.feedback,
-      corrections: result.corrections
+      isValid: result.isValid || false,
+      score: result.score || 0,
+      feedback: result.feedback || "No feedback provided",
+      corrections: result.corrections || null
     };
   } catch (error) {
     console.error("Error validating sentence with AI:", error);

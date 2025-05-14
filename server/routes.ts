@@ -92,7 +92,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user's vocabulary words (requires authentication)
   app.get("/api/vocabulary", requireAuth, async (req, res) => {
     try {
-      const userId = req.authenticatedUserId;
+      // The requireAuth middleware ensures userId exists, but we need to properly type it
+      const userId = req.authenticatedUserId as number;
       
       // Get user's word proficiencies
       const proficiencies = await storage.getUserWordProficiencies(userId);
@@ -846,7 +847,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             difficulty: typedDifficulty,
             fromFallback: true,
             rejectedOriginal: sentence.chinese,
-            rejectionReason: validationResult.reason
+            rejectionReason: patternValidationResult.reason
           };
           
           res.json(fallbackSentence);
