@@ -11,6 +11,8 @@ interface CharacterDetails {
   wordId?: number;
   fullWord?: string;
   positionInWord?: number;
+  lessonId?: number | null;
+  category?: string | null;
 }
 
 interface CharacterHoverViewProps {
@@ -137,9 +139,9 @@ const commonCharacters: Record<string, { pinyin: string, definition: string }> =
 };
 
 // Phrase dictionary for multi-character words
-const commonPhrases: Record<string, { pinyin: string, definition: string }> = {
-  '早上': { pinyin: 'zǎo shang', definition: 'morning' },
-  '早饭': { pinyin: 'zǎo fàn', definition: 'breakfast' },
+const commonPhrases: Record<string, { pinyin: string, definition: string, lessonId?: number, category?: string }> = {
+  '早上': { pinyin: 'zǎo shang', definition: 'morning', lessonId: 1 },
+  '早饭': { pinyin: 'zǎo fàn', definition: 'breakfast', lessonId: 1 },
   '聪明': { pinyin: 'cōng míng', definition: 'clever/intelligent' },
   '天气': { pinyin: 'tiān qì', definition: 'weather' },
   '暖和': { pinyin: 'nuǎn huo', definition: 'warm' },
@@ -165,10 +167,10 @@ const commonPhrases: Record<string, { pinyin: string, definition: string }> = {
   '星期六': { pinyin: 'xīng qī liù', definition: 'Saturday' },
   '星期日': { pinyin: 'xīng qī rì', definition: 'Sunday' },
   '星期天': { pinyin: 'xīng qī tiān', definition: 'Sunday' },
-  '因为': { pinyin: 'yīn wèi', definition: 'because' },
-  '学校': { pinyin: 'xué xiào', definition: 'school' },
-  '生病': { pinyin: 'shēng bìng', definition: 'to fall ill' },
-  '所以': { pinyin: 'suǒ yǐ', definition: 'so/therefore' },
+  '因为': { pinyin: 'yīn wèi', definition: 'because', lessonId: 17, category: 'grammar' },
+  '学校': { pinyin: 'xué xiào', definition: 'school', lessonId: 3, category: 'school' },
+  '生病': { pinyin: 'shēng bìng', definition: 'to fall ill', lessonId: 9, category: 'health' },
+  '所以': { pinyin: 'suǒ yǐ', definition: 'so/therefore', lessonId: 17, category: 'grammar' },
   '不能': { pinyin: 'bù néng', definition: 'cannot' },
   '觉得': { pinyin: 'jué de', definition: 'to think/feel' },
   '这个': { pinyin: 'zhè ge', definition: 'this (one)' },
@@ -295,6 +297,8 @@ export default function CharacterHoverView({
             charData.pinyin = matchingWord.pinyin;
             charData.definition = matchingWord.english;
             charData.wordId = matchingWord.id;
+            charData.lessonId = matchingWord.lessonId;
+            charData.category = matchingWord.category;
           }
         }
         
@@ -440,6 +444,14 @@ export default function CharacterHoverView({
                   {charData.definition || 'No definition available'}
                 </div>
                 
+                {/* Show lesson information if available */}
+                {charData.lessonId && (
+                  <div className="mt-2 text-xs text-blue-600 dark:text-blue-400 font-medium">
+                    Lesson {charData.lessonId}
+                    {charData.category && ` • ${charData.category}`}
+                  </div>
+                )}
+                
                 {/* If character is part of a phrase, show the full phrase */}
                 {charData.fullWord && (
                   <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
@@ -454,6 +466,16 @@ export default function CharacterHoverView({
                       <div className="text-sm mt-1">
                         {commonPhrases[charData.fullWord]?.definition || ''}
                       </div>
+                      
+                      {/* Show lesson information for the phrase if available */}
+                      {commonPhrases[charData.fullWord]?.lessonId && (
+                        <div className="mt-2 text-xs text-blue-600 dark:text-blue-400 font-medium">
+                          Lesson {commonPhrases[charData.fullWord]?.lessonId}
+                          {commonPhrases[charData.fullWord]?.category && 
+                            ` • ${commonPhrases[charData.fullWord]?.category}`
+                          }
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
