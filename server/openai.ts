@@ -14,6 +14,7 @@ export async function validateSentenceWithAI(chinese: string, difficulty: string
   score: number;
   feedback: string;
   corrections?: string;
+  translationPreview?: string;
 }> {
   try {
     const response = await openai.chat.completions.create({
@@ -578,5 +579,66 @@ export async function generateSentenceWithWord(
   } catch (error) {
     console.error("Error generating sentence:", error);
     throw new Error("Failed to generate example sentence. Please try again.");
+  }
+}
+
+/**
+ * Specifically checks if a sentence translates naturally to English 
+ * @param chinese The Chinese sentence to check
+ * @returns Object with translation assessment
+ */
+export async function verifyTranslationQuality(chinese: string): Promise<{
+  isNaturalTranslation: boolean;
+  naturalEnglishTranslation: string;
+  feedback: string;
+}> {
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      temperature: 0.1,
+      messages: [
+        {
+          role: "system",
+          content: `You are a bilingual Chinese-English translation expert. For the given Chinese sentence, 
+          determine if it translates naturally into English.
+          
+          1. Provide a natural English translation
+          2. Assess if the sentence has any Chinese expressions that don't translate well
+          3. Pay special attention to verb-object pairs, idioms, and cultural phrases
+          
+          Examples of problematic sentences:
+          - "你的舞跳得不高" - Awkward translation: "Your dancing is not high" - Better: "You don't dance very well"
+          - "我们学习明天" - Awkward translation: "We study tomorrow" - Better: "We will study tomorrow"
+          
+          Return your analysis in JSON format:
+          {
+            "isNaturalTranslation": boolean,
+            "naturalEnglishTranslation": string,
+            "feedback": string with explanation if not natural
+          }`
+        },
+        {
+          role: "user",
+          content: chinese
+        }
+      ],
+      response_format: { type: "json_object" }
+    });
+
+    const content = response.choices[0].message.content || "{}";
+    const result = JSON.parse(content);
+    return {
+      isNaturalTranslation: result.isNaturalTranslation || false,
+      naturalEnglishTranslation: result.naturalEnglishTranslation || "",
+      feedback: result.feedback || "No feedback provided"
+    };
+  } catch (error) {
+    console.error("Error checking translation quality:", error);
+    // Fallback
+    return {
+      isNaturalTranslation: true, // Default to true to not block everything on error
+      naturalEnglishTranslation: "",
+      feedback: "Error checking translation quality"
+    };
   }
 }
