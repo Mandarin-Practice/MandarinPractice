@@ -154,13 +154,13 @@ const commonPhrases: Record<string, { pinyin: string, definition: string, lesson
   '今天': { pinyin: 'jīn tiān', definition: 'today' },
   '晚上': { pinyin: 'wǎn shang', definition: 'evening/night' },
   '一起': { pinyin: 'yī qǐ', definition: 'together' },
-  '电影': { pinyin: 'diàn yǐng', definition: 'movie' },
-  '东西': { pinyin: 'dōng xi', definition: 'thing/stuff' },
-  '喜欢': { pinyin: 'xǐ huan', definition: 'to like/to enjoy' },
-  '饺子': { pinyin: 'jiǎo zi', definition: 'dumpling' },
-  '星期': { pinyin: 'xīng qī', definition: 'week' },
-  '星期一': { pinyin: 'xīng qī yī', definition: 'Monday' },
-  '星期二': { pinyin: 'xīng qī èr', definition: 'Tuesday' },
+  '电影': { pinyin: 'diàn yǐng', definition: 'movie', lessonId: 14, category: 'entertainment' },
+  '东西': { pinyin: 'dōng xi', definition: 'thing/stuff', lessonId: 4, category: 'objects' },
+  '喜欢': { pinyin: 'xǐ huan', definition: 'to like/to enjoy', lessonId: 3, category: 'feelings' },
+  '饺子': { pinyin: 'jiǎo zi', definition: 'dumpling', lessonId: 11, category: 'food' },
+  '星期': { pinyin: 'xīng qī', definition: 'week', lessonId: 2, category: 'time' },
+  '星期一': { pinyin: 'xīng qī yī', definition: 'Monday', lessonId: 2, category: 'time' },
+  '星期二': { pinyin: 'xīng qī èr', definition: 'Tuesday', lessonId: 2, category: 'time' },
   '星期三': { pinyin: 'xīng qī sān', definition: 'Wednesday' },
   '星期四': { pinyin: 'xīng qī sì', definition: 'Thursday' },
   '星期五': { pinyin: 'xīng qī wǔ', definition: 'Friday' },
@@ -182,9 +182,9 @@ const commonPhrases: Record<string, { pinyin: string, definition: string, lesson
   '打算': { pinyin: 'dǎ suàn', definition: 'to plan' },
   '打球': { pinyin: 'dǎ qiú', definition: 'to play ball' },
   '看电影': { pinyin: 'kàn diàn yǐng', definition: 'to watch a movie' },
-  '明天': { pinyin: 'míng tiān', definition: 'tomorrow' },
-  '昨天': { pinyin: 'zuó tiān', definition: 'yesterday' },
-  '去见': { pinyin: 'qù jiàn', definition: 'to go see/to visit' },
+  '明天': { pinyin: 'míng tiān', definition: 'tomorrow', lessonId: 2, category: 'time' },
+  '昨天': { pinyin: 'zuó tiān', definition: 'yesterday', lessonId: 2, category: 'time' },
+  '去见': { pinyin: 'qù jiàn', definition: 'to go see/to visit', lessonId: 5, category: 'travel' },
 };
 
 export default function CharacterHoverView({
@@ -446,7 +446,11 @@ export default function CharacterHoverView({
                 
                 {/* Show lesson information if available */}
                 {charData.lessonId && (
-                  <div className="mt-2 text-xs text-blue-600 dark:text-blue-400 font-medium">
+                  <div className="mt-2 px-2 py-1 bg-blue-50 dark:bg-blue-900/30 rounded-md text-xs text-blue-700 dark:text-blue-300 font-medium inline-flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+                      <circle cx="10" cy="10" r="1" />
+                    </svg>
                     Lesson {charData.lessonId}
                     {charData.category && ` • ${charData.category}`}
                   </div>
@@ -469,7 +473,11 @@ export default function CharacterHoverView({
                       
                       {/* Show lesson information for the phrase if available */}
                       {commonPhrases[charData.fullWord]?.lessonId && (
-                        <div className="mt-2 text-xs text-blue-600 dark:text-blue-400 font-medium">
+                        <div className="mt-2 px-2 py-1 bg-blue-50 dark:bg-blue-900/30 rounded-md text-xs text-blue-700 dark:text-blue-300 font-medium inline-flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+                            <circle cx="10" cy="10" r="1" />
+                          </svg>
                           Lesson {commonPhrases[charData.fullWord]?.lessonId}
                           {commonPhrases[charData.fullWord]?.category && 
                             ` • ${commonPhrases[charData.fullWord]?.category}`
