@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { vocabularySchema, characterSchema, characterDefinitionSchema, learnedDefinitionSchema } from "@shared/schema";
 import { ZodError } from "zod";
-import { generateSentence, generateSentenceWithWord, checkSynonyms, validateSentenceWithAI } from "./openai";
+import { generateSentence, generateSentenceWithWord, checkSynonyms, validateSentenceWithAI, verifyTranslationQuality } from "./openai";
 import dictionaryAdminRoutes from "./routes/dictionary-admin";
 import authRoutes from "./routes/auth";
 import { requireAuth, optionalAuth } from "./middleware/auth";
@@ -956,6 +956,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
               patternValidationResult.reason = "AI validation error - cannot verify semantic correctness";
             } else {
               console.log("Continuing with very simple pattern-validated sentence despite AI validation error");
+            }
+          }
+          
+          // Additional step: Even if validation passed, double-check the translation quality
+          if (patternValidationResult.isValid) {
+            try {
+              console.log("Verifying translation quality for:", sentence.chinese);
+              const translationCheck = await verifyTranslationQuality(sentence.chinese);
+              
+              if (!translationCheck.isNaturalTranslation) {
+                console.log(`Translation quality check failed: "${sentence.chinese}"`);
+                console.log(`Feedback: ${translationCheck.feedback}`);
+                console.log(`Better translation would be: ${translationCheck.naturalEnglishTranslation}`);
+                
+                // If there's a translation issue, reject the sentence
+                patternValidationResult.isValid = false;
+                patternValidationResult.reason = `Poor translation quality: ${translationCheck.feedback}`;
+                
+                // Update the English translation with the improved version for future use
+                if (translationCheck.naturalEnglishTranslation) {
+                  sentence.english = translationCheck.naturalEnglishTranslation;
+                }
+              } else {
+                console.log("Translation quality check passed");
+                // If there's a better translation available, use it
+                if (translationCheck.naturalEnglishTranslation) {
+                  sentence.english = translationCheck.naturalEnglishTranslation;
+                }
+              }
+            } catch (translationError) {
+              console.error("Translation quality check error:", translationError);
+              // Continue with the sentence - don't block if this additional check fails
             }
           }
         }

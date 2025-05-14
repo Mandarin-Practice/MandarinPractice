@@ -23,19 +23,20 @@ export async function validateSentenceWithAI(chinese: string, difficulty: string
       messages: [
         {
           role: "system",
-          content: `You are a Mandarin Chinese linguistic expert focusing on accuracy validation. Analyze the following Chinese sentence for grammatical correctness, naturalness, and appropriateness for ${difficulty} level learners.
+          content: `You are a Mandarin Chinese linguistic expert focusing on accuracy validation. Analyze the following Chinese sentence for grammatical correctness, naturalness, translation quality, and appropriateness for ${difficulty} level learners.
           
           Score the sentence on a scale of 0-10 where:
-          - 0-3: Unnatural or grammatically incorrect sentence
-          - 4-6: Grammatically correct but unnatural or awkward phrasing
+          - 0-3: Unnatural, grammatically incorrect, or translates awkwardly to English
+          - 4-6: Grammatically correct but unnatural or awkward phrasing in either language
           - 7-8: Natural but with minor issues
-          - 9-10: Perfect natural sentence
+          - 9-10: Perfect natural sentence in both Chinese and English translation
           
           Provide your evaluation in JSON format with these fields:
           - score: number (0-10)
           - isValid: boolean (true if score >= 7)
           - feedback: concise explanation of your evaluation
           - corrections: suggested corrections if any (or null if none)
+          - translationPreview: a natural English translation of the sentence or null if not applicable
           
           Focus on these common issues:
           1. Inappropriate particle usage (的, 了, 和, 在, 吗, etc.)
@@ -48,8 +49,11 @@ export async function validateSentenceWithAI(chinese: string, difficulty: string
           
           Pay special attention to semantically incorrect phrases like:
           - "学习蛋糕" (studying cake) - nonsensical verb-object pair
-          - "你的舞跳得不高" (your dancing is not high) - awkward in English 
-          - "吃水" (eating water) or "喝饭" (drinking rice) - incorrect verb-object pairing`
+          - "你的舞跳得不高" (your dancing is not high) - awkward in English, better would be "你跳舞跳得不好" (you don't dance very well)
+          - "吃水" (eating water) or "喝饭" (drinking rice) - incorrect verb-object pairing
+          - "我们学习明天" (we study tomorrow) - illogical time reference
+          
+          A good sentence should be natural in both Chinese AND English translation.`
         },
         {
           role: "user",
@@ -65,7 +69,8 @@ export async function validateSentenceWithAI(chinese: string, difficulty: string
       isValid: result.isValid || false,
       score: result.score || 0,
       feedback: result.feedback || "No feedback provided",
-      corrections: result.corrections || null
+      corrections: result.corrections || null,
+      translationPreview: result.translationPreview || null
     };
   } catch (error) {
     console.error("Error validating sentence with AI:", error);
