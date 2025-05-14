@@ -96,6 +96,33 @@ function validateSentence(chinese: string): { isValid: boolean; reason?: string 
     }
   }
   
+  // Check for inappropriate subject-verb-object combinations
+  // 学习 (study) should be followed by something learnable (a language, subject, skill)
+  const nonLearnableObjects = ['像', '蛋糕', '衣服', '鞋子', '筷子', '汤', '水', '菜', '饭'];
+  for (const obj of nonLearnableObjects) {
+    if (chinese.includes('学习' + obj)) {
+      return { isValid: false, reason: `Inappropriate object for 学习 (study): ${obj}` };
+    }
+  }
+  
+  // Check for other inappropriate verb-object pairs
+  if (chinese.includes('吃水') || chinese.includes('喝饭') || 
+      chinese.includes('看音乐') || chinese.includes('听电影')) {
+    return { isValid: false, reason: "Inappropriate verb-object combination" };
+  }
+  
+  // Check for treating non-food items as food
+  const foodVerbs = ['吃', '喝'];
+  const nonFoodItems = ['书', '桌子', '椅子', '手机', '电脑', '衣服'];
+  
+  for (const verb of foodVerbs) {
+    for (const item of nonFoodItems) {
+      if (chinese.includes(verb + item)) {
+        return { isValid: false, reason: `Inappropriate verb-object combination: ${verb}${item}` };
+      }
+    }
+  }
+  
   return { isValid: true };
 }
 
