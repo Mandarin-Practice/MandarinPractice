@@ -29,6 +29,10 @@ const unnaturalPatterns = [
   { pattern: "你呢好", reason: "Incorrect particle usage" },
   { pattern: "你吗好", reason: "Incorrect particle usage" },
   
+  // Conjunction errors
+  { pattern: "所以。", reason: "Incomplete sentence ending with conjunction" },
+  { pattern: "因为。", reason: "Incomplete sentence ending with conjunction" },
+  
   // Double greeting patterns
   { pattern: "你好你好", reason: "Redundant greeting" },
   { pattern: "早上早上", reason: "Redundant greeting" },
@@ -73,6 +77,23 @@ function validateSentence(chinese: string): { isValid: boolean; reason?: string 
   // Check for incorrect sentence structure with names
   if (/李友李/.test(chinese) || /王朋王/.test(chinese)) {
     return { isValid: false, reason: "Incorrect name structure (missing separator)" };
+  }
+  
+  // Check for incomplete conjunction usage
+  const conjunctions = ['所以', '因为', '但是', '虽然'];
+  for (const conjunction of conjunctions) {
+    // Check if the conjunction is at the end of the sentence (right before punctuation)
+    if (chinese.endsWith(conjunction + '。') || 
+        chinese.endsWith(conjunction + '？') || 
+        chinese.endsWith(conjunction + '！')) {
+      return { isValid: false, reason: `Incomplete sentence ending with conjunction "${conjunction}"` };
+    }
+    
+    // Check if the conjunction is alone in a very short sentence
+    if (chinese.replace(/[,.?!，。？！]/g, '').length < 6 && 
+        chinese.includes(conjunction)) {
+      return { isValid: false, reason: `Sentence too short for conjunction "${conjunction}"` };
+    }
   }
   
   return { isValid: true };
