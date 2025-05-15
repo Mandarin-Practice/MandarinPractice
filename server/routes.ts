@@ -814,13 +814,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // If we reach here, there's no cache or we need a new sentence
-      // Get all vocabulary words 
-      const allVocabulary = await storage.getAllVocabulary();
       
-      // Filter for only active words
-      const activeVocabulary = allVocabulary.filter(word => word.active === "true");
+      // First check if user is authenticated
+      const userId = req.user?.id;
+      let userVocabulary = [];
       
-      if (activeVocabulary.length === 0) {
+      if (userId) {
+        // Get user's personal word list first
+        try {
+          const userProficiencies = await storage.getUserWordProficiencies(userId);
+          
+          // Get all the words the user has practiced
+          const wordIds = userProficiencies.map(prof => prof.wordId);
+          const allUserWords = await Promise.all(
+            wordIds.map(id => storage.getVocabulary(Number(id)))
+          );
+          
+          // Filter out undefined entries and inactive words
+          userVocabulary = allUserWords
+            .filter(word => word && word.active === "true");
+          
+          console.log(`Found ${userVocabulary.length} words in user's personal vocabulary`);
+        } catch (error) {
+          console.error("Error fetching user vocabulary:", error);
+          // Continue with default vocabulary if user-specific fetch fails
+        }
+      }
+      
+      // If user has no words or is not logged in, fall back to all vocabulary
+      if (userVocabulary.length === 0) {
+        console.log("No user-specific vocabulary found, using all active vocabulary");
+        // Get all vocabulary words 
+        const allVocabulary = await storage.getAllVocabulary();
+        
+        // Filter for only active words
+        userVocabulary = allVocabulary.filter(word => word.active === "true");
+      }
+      
+      // Final check if we have any vocabulary
+      if (userVocabulary.length === 0) {
         return res.status(400).json({ message: "No active vocabulary words available. Please add or activate some words first." });
       }
       
@@ -835,7 +867,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Select a subset of vocabulary words, prioritizing less used words
         const selectedWords = selectWords(
-          activeVocabulary, 
+          userVocabulary, 
           wordCounts[typedDifficulty]
         );
         
