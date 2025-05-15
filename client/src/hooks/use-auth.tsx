@@ -18,6 +18,11 @@ interface BackendUser {
   displayName: string | null;
   photoUrl: string | null;
   firebaseUid: string;
+  currentStreak?: number;
+  highestStreak?: number;
+  currentScore?: number;
+  highestScore?: number;
+  lastPracticeDate?: string;
 }
 
 // Combined auth user type with Firebase and backend data

@@ -35,10 +35,10 @@ export function StreakDisplay({ className = "" }: StreakDisplayProps) {
     return 1;
   };
   
-  const currentStreak = user.currentStreak || 0;
-  const highestStreak = user.highestStreak || 0;
-  const currentScore = user.currentScore || 0;
-  const highestScore = user.highestScore || 0;
+  const currentStreak = user.backendUser.currentStreak || 0;
+  const highestStreak = user.backendUser.highestStreak || 0;
+  const currentScore = user.backendUser.currentScore || 0;
+  const highestScore = user.backendUser.highestScore || 0;
   
   const nextMilestone = getNextMilestone(currentStreak);
   const streakProgress = (currentStreak / nextMilestone) * 100;
@@ -55,15 +55,15 @@ export function StreakDisplay({ className = "" }: StreakDisplayProps) {
       <CardContent>
         <div className="flex items-center gap-4 mb-4">
           <Avatar className="h-14 w-14 border-2 border-primary/20">
-            {user.photoUrl ? (
-              <AvatarImage src={user.photoUrl} alt={user.displayName || user.username} />
+            {user.backendUser.photoUrl ? (
+              <AvatarImage src={user.backendUser.photoUrl} alt={user.backendUser.displayName || user.backendUser.username} />
             ) : (
-              <AvatarFallback>{(user.displayName || user.username)?.[0]?.toUpperCase() || '?'}</AvatarFallback>
+              <AvatarFallback>{(user.backendUser.displayName || user.backendUser.username)?.[0]?.toUpperCase() || '?'}</AvatarFallback>
             )}
           </Avatar>
           
           <div className="flex-1">
-            <div className="font-medium text-lg">{user.displayName || user.username}</div>
+            <div className="font-medium text-lg">{user.backendUser.displayName || user.backendUser.username}</div>
             <div className="text-sm text-muted-foreground">{streakLevel} Learner</div>
           </div>
         </div>
