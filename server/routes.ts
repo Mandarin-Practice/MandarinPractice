@@ -1298,6 +1298,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+  
+  // Get leaderboard of top users by score
+  app.get("/api/leaderboard", async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+      const leaderboard = await storage.getLeaderboard(limit);
+      return res.json(leaderboard);
+    } catch (error) {
+      console.error("Error fetching leaderboard:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // Update user streak and score 
+  app.post("/api/user/streak", requireAuth, async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const { isCorrect } = req.body;
+      
+      if (typeof isCorrect !== 'boolean') {
+        return res.status(400).json({ message: "isCorrect is required and must be a boolean" });
+      }
+      
+      // Get current user data
+      const user = await storage.getUserById(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Default values if not set
+      const currentStreak = user.currentStreak || 0;
+      const highestStreak = user.highestStreak || 0;
+      const currentScore = user.currentScore || 0;
+      const highestScore = user.highestScore || 0;
+      
+      let newCurrentStreak = currentStreak;
+      let newHighestStreak = highestStreak;
+      let newCurrentScore = currentScore;
+      let newHighestScore = highestScore;
+      
+      // Calculate new values based on answer correctness
+      if (isCorrect) {
+        // Increment streak and calculate new score
+        newCurrentStreak = currentStreak + 1;
+        
+        // Score increases exponentially with streak
+        // Score = base_score * (1.5 ^ streak)
+        // This makes each consecutive correct answer worth more
+        const baseScore = 10;
+        const multiplier = 1.5;
+        const streakBonus = Math.pow(multiplier, Math.min(10, newCurrentStreak - 1)); // Cap for massive streaks
+        newCurrentScore = currentScore + Math.ceil(baseScore * streakBonus);
+        
+        // Update highest streak if current streak is higher
+        if (newCurrentStreak > highestStreak) {
+          newHighestStreak = newCurrentStreak;
+        }
+        
+        // Update highest score if current score is higher
+        if (newCurrentScore > highestScore) {
+          newHighestScore = newCurrentScore;
+        }
+      } else {
+        // Reset streak and score on incorrect answer
+        newCurrentStreak = 0;
+        newCurrentScore = 0;
+      }
+      
+      // Update user in database
+      const updatedUser = await storage.updateUser(userId, {
+        currentStreak: newCurrentStreak,
+        highestStreak: newHighestStreak,
+        currentScore: newCurrentScore,
+        highestScore: newHighestScore,
+        lastPracticeDate: new Date()
+      });
+      
+      return res.json({
+        currentStreak: updatedUser.currentStreak,
+        highestStreak: updatedUser.highestStreak,
+        currentScore: updatedUser.currentScore,
+        highestScore: updatedUser.highestScore
+      });
+    } catch (error) {
+      console.error("Error updating user streak:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
 
   // ============= CHARACTER DICTIONARY API ENDPOINTS =============
 

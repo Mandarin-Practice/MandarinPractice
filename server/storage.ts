@@ -330,16 +330,7 @@ export class DatabaseStorage implements IStorage {
     try {
       // Get top users ordered by highest score
       const leaderboard = await db
-        .select({
-          id: users.id,
-          username: users.username,
-          displayName: users.displayName,
-          photoUrl: users.photoUrl,
-          currentStreak: users.currentStreak,
-          highestStreak: users.highestStreak, 
-          currentScore: users.currentScore,
-          highestScore: users.highestScore
-        })
+        .select()
         .from(users)
         .orderBy(desc(users.highestScore))
         .limit(limit);
