@@ -413,6 +413,25 @@ export default function Practice() {
       return response.json();
     }
   });
+  
+  // Update user streak when an answer is correct or incorrect
+  const updateStreak = useMutation<
+    { currentStreak: number, highestStreak: number, currentScore: number, highestScore: number }, 
+    unknown, 
+    { isCorrect: boolean }
+  >({
+    mutationFn: async (params: { isCorrect: boolean }) => {
+      const response = await apiRequest('POST', '/api/user/streak', {
+        isCorrect: params.isCorrect
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update streak');
+      }
+      
+      return response.json();
+    }
+  });
 
   // Calculate score based on accuracy and speed
   const calculateScore = (similarity: number) => {
@@ -635,6 +654,16 @@ export default function Practice() {
       setFeedbackStatus("correct");
       calculateScore(similarity);
       
+      // Update streak for correct answer
+      updateStreak.mutate({ isCorrect: true }, {
+        onSuccess: (streakData) => {
+          console.log('Streak updated:', streakData);
+        },
+        onError: (error) => {
+          console.error('Failed to update streak:', error);
+        }
+      });
+      
       // Play correct answer sound
       playCorrectSound();
       
@@ -672,6 +701,17 @@ export default function Practice() {
       trackIncorrectAnswer();
     } else {
       setFeedbackStatus("incorrect");
+      
+      // Update streak for incorrect answer (resets streak)
+      updateStreak.mutate({ isCorrect: false }, {
+        onSuccess: (streakData) => {
+          console.log('Streak reset:', streakData);
+        },
+        onError: (error) => {
+          console.error('Failed to update streak:', error);
+        }
+      });
+      
       // Play incorrect answer sound
       playIncorrectSound();
       // Track this as incorrect for stats
