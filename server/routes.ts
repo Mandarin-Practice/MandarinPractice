@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { vocabularySchema, characterSchema, characterDefinitionSchema, learnedDefinitionSchema } from "@shared/schema";
+import { vocabularySchema, characterSchema, characterDefinitionSchema, learnedDefinitionSchema, type Vocabulary } from "@shared/schema";
 import { ZodError } from "zod";
 import { generateSentence, generateSentenceWithWord, checkSynonyms, validateSentenceWithAI, verifyTranslationQuality } from "./openai";
 import dictionaryAdminRoutes from "./routes/dictionary-admin";
