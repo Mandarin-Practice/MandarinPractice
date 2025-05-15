@@ -542,11 +542,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Background cache filler function - runs in the background to keep the cache filled
   async function fillSentenceCache() {
     try {
-      // Get all vocabulary words once for efficiency
-      const allVocabulary = await storage.getAllVocabulary();
-      const activeVocabulary = allVocabulary.filter(word => word.active === "true");
+      // Try to get vocabulary from user accounts first
+      const users = await storage.getAllUsers();
+      let userVocabulary: Vocabulary[] = [];
       
-      if (activeVocabulary.length === 0) return; // Nothing to cache if no vocabulary
+      // If we have users, try to use their vocabulary for more relevant sentences
+      if (users && users.length > 0) {
+        // Get a random user's word list
+        const randomUser = users[Math.floor(Math.random() * users.length)];
+        try {
+          const userProficiencies = await storage.getUserWordProficiencies(randomUser.id);
+          
+          if (userProficiencies.length > 0) {
+            // Get all the words the user has practiced
+            const wordIds = userProficiencies.map(prof => prof.wordId);
+            const allUserWords = await Promise.all(
+              wordIds.map(id => storage.getVocabulary(Number(id)))
+            );
+            
+            // Filter out undefined entries and inactive words
+            userVocabulary = allUserWords
+              .filter(word => word && word.active === "true");
+            
+            console.log(`Found ${userVocabulary.length} words in sample user's vocabulary for cache fill`);
+          }
+        } catch (error) {
+          console.error("Error fetching sample user vocabulary:", error);
+        }
+      }
+      
+      // Fall back to all vocabulary if user vocabulary is not available
+      if (userVocabulary.length < 10) {
+        // Get all vocabulary words once for efficiency
+        const allVocabulary = await storage.getAllVocabulary();
+        const activeVocabulary = allVocabulary.filter(word => word.active === "true");
+        userVocabulary = activeVocabulary;
+      }
+      
+      if (userVocabulary.length === 0) return; // Nothing to cache if no vocabulary
       
       // Function to select words, prioritizing newer lesson words and less frequently used words
       const selectWords = (wordsList: Array<{ id: number, chinese: string, lessonId?: number | null, [key: string]: any }>, count: number) => {
@@ -656,7 +689,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           try {
             // Select a subset of vocabulary words, prioritizing less used words
             const selectedWords = selectWords(
-              activeVocabulary, 
+              userVocabulary, 
               wordCounts[difficulty]
             );
             
@@ -817,7 +850,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // First check if user is authenticated
       const userId = req.user?.id;
-      let userVocabulary = [];
+      let userVocabulary: Vocabulary[] = [];
       
       if (userId) {
         // Get user's personal word list first

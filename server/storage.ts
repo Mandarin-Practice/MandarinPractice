@@ -28,6 +28,7 @@ import { convertNumericPinyinToTonal, isNumericPinyin } from './utils/pinyin-con
 // Interface for CRUD operations on vocabulary
 export interface IStorage {
   // User authentication methods
+  getAllUsers(): Promise<User[]>;
   getUserById(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
@@ -88,6 +89,11 @@ export class MemStorage implements IStorage {
   }
   
   // User authentication methods (stubs)
+  async getAllUsers(): Promise<User[]> {
+    // Return an empty array for MemStorage since it doesn't store users
+    return [];
+  }
+
   async getUserById(_id: number): Promise<User | undefined> {
     return undefined;
   }
@@ -249,6 +255,16 @@ export class MemStorage implements IStorage {
 // Database storage implementation
 export class DatabaseStorage implements IStorage {
   // User authentication methods
+  async getAllUsers(): Promise<User[]> {
+    try {
+      const allUsers = await db.select().from(users);
+      return allUsers;
+    } catch (error) {
+      console.error("Error fetching all users:", error);
+      return [];
+    }
+  }
+  
   async getUserById(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
