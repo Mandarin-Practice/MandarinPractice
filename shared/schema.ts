@@ -12,6 +12,11 @@ export const users = pgTable("users", {
   email: text("email").unique(),
   displayName: text("display_name"),
   photoUrl: text("photo_url"),
+  currentStreak: integer("current_streak").default(0), // Current streak of correct answers
+  highestStreak: integer("highest_streak").default(0), // Highest streak ever achieved
+  currentScore: integer("current_score").default(0), // Current score based on streak
+  highestScore: integer("highest_score").default(0), // Highest score ever achieved
+  lastPracticeDate: timestamp("last_practice_date"), // To track daily streaks
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -22,6 +27,11 @@ export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
   displayName: true,
   photoUrl: true,
+  currentStreak: true,
+  highestStreak: true,
+  currentScore: true,
+  highestScore: true,
+  lastPracticeDate: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;

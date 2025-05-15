@@ -35,6 +35,7 @@ export interface IStorage {
   getUserByFirebaseUid(firebaseUid: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, updates: Partial<InsertUser>): Promise<User>;
+  getLeaderboard(limit?: number): Promise<User[]>;
   
   // Vocabulary methods
   getAllVocabulary(): Promise<Vocabulary[]>;
@@ -116,6 +117,11 @@ export class MemStorage implements IStorage {
   
   async updateUser(_id: number, _updates: Partial<InsertUser>): Promise<User> {
     throw new Error("Method not implemented");
+  }
+  
+  async getLeaderboard(limit: number = 10): Promise<User[]> {
+    // MemStorage doesn't store users, so return empty array
+    return [];
   }
   
   // User word proficiency methods (stubs)
@@ -318,6 +324,31 @@ export class DatabaseStorage implements IStorage {
     }
     
     return updatedUser;
+  }
+  
+  async getLeaderboard(limit: number = 10): Promise<User[]> {
+    try {
+      // Get top users ordered by highest score
+      const leaderboard = await db
+        .select({
+          id: users.id,
+          username: users.username,
+          displayName: users.displayName,
+          photoUrl: users.photoUrl,
+          currentStreak: users.currentStreak,
+          highestStreak: users.highestStreak, 
+          currentScore: users.currentScore,
+          highestScore: users.highestScore
+        })
+        .from(users)
+        .orderBy(desc(users.highestScore))
+        .limit(limit);
+      
+      return leaderboard;
+    } catch (error) {
+      console.error("Error fetching leaderboard:", error);
+      return [];
+    }
   }
   // Vocabulary methods
   async getAllVocabulary(): Promise<Vocabulary[]> {
