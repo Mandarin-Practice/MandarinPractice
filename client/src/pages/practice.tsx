@@ -5,6 +5,8 @@ import { Card } from "@/components/ui/card";
 import SentenceCard from "@/components/sentence-card";
 import ScoreCard from "@/components/score-card";
 import SuccessConfetti from "@/components/success-confetti";
+import { StreakDisplay } from "@/components/streak-display";
+import { Leaderboard } from "@/components/leaderboard";
 import { apiRequest } from "@/lib/queryClient";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTextToSpeech } from "@/hooks/use-text-to-speech";
@@ -830,6 +832,19 @@ export default function Practice() {
           onToggleShowChinese={() => setShowChinese(prev => !prev)}
           onToggleShowPinyin={() => setShowPinyin(prev => !prev)}
         />
+        
+        {/* Streak Display */}
+        <div className="mt-6">
+          <StreakDisplay />
+        </div>
+      </div>
+      
+      {/* Right sidebar with leaderboard */}
+      <div className="hidden md:block w-80 pl-6">
+        <Card className="p-4">
+          <h3 className="text-xl font-bold mb-4">Leaderboard</h3>
+          <Leaderboard />
+        </Card>
       </div>
     </div>
   );
