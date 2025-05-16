@@ -131,6 +131,8 @@ export default function SentenceCard({
   onCheckAnswer,
   onChangeDifficulty
 }: SentenceCardProps) {
+  // Get user data for streak display
+  const { user } = useAuth();
   
   const renderFeedback = () => {
     if (!feedbackStatus) return null;
