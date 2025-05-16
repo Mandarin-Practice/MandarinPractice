@@ -7,6 +7,7 @@ import Settings from "@/pages/settings";
 import CharacterDictionary from "@/pages/character-dictionary";
 import DictionaryAdmin from "@/pages/dictionary-admin";
 import Profile from "@/pages/profile";
+import LeaderboardPage from "@/pages/leaderboard-page";
 import AuthPage from "@/pages/auth-page";
 import Navbar from "@/components/navbar";
 import NotFound from "@/pages/not-found";
@@ -65,6 +66,7 @@ function App() {
             <ProtectedRoute path="/word/:id" component={WordDetail} />
             <ProtectedRoute path="/dictionary" component={CharacterDictionary} />
             <ProtectedRoute path="/dictionary/admin" component={DictionaryAdmin} />
+            <ProtectedRoute path="/leaderboard" component={LeaderboardPage} />
             <ProtectedRoute path="/settings" component={Settings} />
             <ProtectedRoute path="/profile" component={Profile} />
             <Route component={NotFound} />

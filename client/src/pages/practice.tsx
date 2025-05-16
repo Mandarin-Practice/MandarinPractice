@@ -802,61 +802,43 @@ export default function Practice() {
     );
   }
 
-  // State for active tab
-  const [activeTab, setActiveTab] = useState<string>("practice");
-  
   return (
     <div className="practice-section">
       {/* Confetti animation when answer is correct */}
       <SuccessConfetti active={showConfetti} duration={600} />
       
-      <Tabs defaultValue="practice" value={activeTab} onValueChange={setActiveTab} className="w-full mb-6">
-        <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
-          <TabsTrigger value="practice">Practice</TabsTrigger>
-          <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
-        </TabsList>
+      <div className="grid grid-cols-1 gap-6">
+        <SentenceCard
+          sentence={generateSentenceMutation.data}
+          showChinese={showChinese}
+          showPinyin={showPinyin}
+          userTranslation={userTranslation}
+          feedbackStatus={feedbackStatus}
+          onUpdateTranslation={updateTranslation}
+          onPlayAudio={playAudio}
+          onNextSentence={nextSentence}
+          onKeyPress={handleKeyPress}
+          onCheckAnswer={handleCheckAnswer}
+          onChangeDifficulty={handleChangeDifficulty}
+          isLoading={generateSentenceMutation.isPending}
+          isPlaying={isPlaying}
+          vocabularyWords={vocabularyWords}
+        />
         
-        <TabsContent value="practice" className="mt-4">
-          <div className="grid grid-cols-1 gap-6">
-            <SentenceCard
-              sentence={generateSentenceMutation.data}
-              showChinese={showChinese}
-              showPinyin={showPinyin}
-              userTranslation={userTranslation}
-              feedbackStatus={feedbackStatus}
-              onUpdateTranslation={updateTranslation}
-              onPlayAudio={playAudio}
-              onNextSentence={nextSentence}
-              onKeyPress={handleKeyPress}
-              onCheckAnswer={handleCheckAnswer}
-              onChangeDifficulty={handleChangeDifficulty}
-              isLoading={generateSentenceMutation.isPending}
-              isPlaying={isPlaying}
-              vocabularyWords={vocabularyWords}
-            />
-            
-            <ScoreCard
-              score={score}
-              stats={stats}
-              showChinese={showChinese}
-              showPinyin={showPinyin}
-              onToggleShowChinese={() => setShowChinese(prev => !prev)}
-              onToggleShowPinyin={() => setShowPinyin(prev => !prev)}
-            />
-            
-            {/* Streak Display */}
-            <div className="mt-6">
-              <StreakDisplay />
-            </div>
-          </div>
-        </TabsContent>
+        <ScoreCard
+          score={score}
+          stats={stats}
+          showChinese={showChinese}
+          showPinyin={showPinyin}
+          onToggleShowChinese={() => setShowChinese(prev => !prev)}
+          onToggleShowPinyin={() => setShowPinyin(prev => !prev)}
+        />
         
-        <TabsContent value="leaderboard" className="mt-4">
-          <Card className="p-6">
-            <Leaderboard />
-          </Card>
-        </TabsContent>
-      </Tabs>
+        {/* Streak Display */}
+        <div className="mt-6">
+          <StreakDisplay />
+        </div>
+      </div>
     </div>
   );
 }
