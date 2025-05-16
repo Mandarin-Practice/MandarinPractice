@@ -222,7 +222,7 @@ export default function SentenceCard({
         
         <div className="p-6 flex-grow" style={{ overflow: 'visible' }}>
           {/* Streak display in top-right corner */}
-          <div className="absolute top-6 right-6 flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full shadow-md">
+          <div className="absolute top-20 right-6 flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full shadow-md">
             <Flame className="h-4 w-4 text-yellow-200" />
             <span className="font-bold">
               {user?.backendUser?.currentStreak || 0}
