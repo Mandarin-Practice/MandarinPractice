@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -134,6 +135,18 @@ export default function SentenceCard({
   // Get user data for streak display
   const { user } = useAuth();
   
+  // Local streak counter state
+  const [localStreak, setLocalStreak] = useState(user?.backendUser?.currentStreak || 0);
+  
+  // Update local streak when feedback changes to correct
+  useEffect(() => {
+    if (feedbackStatus === "correct") {
+      setLocalStreak(prev => prev + 1);
+    } else if (feedbackStatus === "incorrect") {
+      setLocalStreak(0);
+    }
+  }, [feedbackStatus]);
+  
   const renderFeedback = () => {
     if (!feedbackStatus) return null;
     
@@ -225,7 +238,7 @@ export default function SentenceCard({
           <div className="absolute top-20 right-6 flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full shadow-md">
             <Flame className="h-4 w-4 text-yellow-200" />
             <span className="font-bold">
-              {user?.backendUser?.currentStreak || 0}
+              {localStreak}
             </span>
           </div>
           
