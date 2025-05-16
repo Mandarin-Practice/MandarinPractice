@@ -1,8 +1,9 @@
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Play, SkipForward, ChevronDown } from "lucide-react";
+import { Play, SkipForward, ChevronDown, Flame } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/hooks/use-auth";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { compareWordByWord } from "@/lib/string-similarity";
 import InteractiveChineseText from "./interactive-chinese-text";
@@ -218,6 +219,14 @@ export default function SentenceCard({
         </div>
         
         <div className="p-6 flex-grow" style={{ overflow: 'visible' }}>
+          {/* Streak display in top-right corner */}
+          <div className="absolute top-6 right-6 flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full shadow-md">
+            <Flame className="h-4 w-4 text-yellow-200" />
+            <span className="font-bold">
+              {user?.backendUser?.currentStreak || 0}
+            </span>
+          </div>
+          
           {isLoading ? (
             <div className="space-y-4">
               <Skeleton className="h-8 w-full" />
