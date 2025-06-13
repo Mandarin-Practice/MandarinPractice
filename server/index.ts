@@ -73,11 +73,12 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  const port = 3000;
+  const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+  const host = process.env.NODE_ENV === "development" ? "127.0.0.1" : "0.0.0.0";
   server.listen(
     {
       port,
-      host: "127.0.0.1",
+      host,
     },
     () => {
       log(`serving on port ${port}`);
