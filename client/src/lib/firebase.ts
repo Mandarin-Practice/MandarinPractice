@@ -7,7 +7,9 @@ const firebaseConfig = {
   authDomain: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
   storageBucket: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.appspot.com`,
+  messagingSenderId: import.meta.env.VITE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_MEASUREMENT_ID,
 };
 
 // Initialize Firebase app (prevent duplicate initialization)
@@ -21,5 +23,5 @@ export const googleProvider = new GoogleAuthProvider();
 
 // Configure Google provider to prompt account selection
 googleProvider.setCustomParameters({
-  prompt: "select_account"
+  prompt: "select_account",
 });
