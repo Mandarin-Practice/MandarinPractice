@@ -3,8 +3,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { auth, googleProvider } from "@/lib/firebase";
 import {
-  signInWithRedirect,
-  getRedirectResult,
+  signInWithPopup, // Changed from signInWithRedirect
+  getRedirectResult, // Still imported for now, but will be removed from useEffect
   signOut as firebaseSignOut,
   User as FirebaseUser,
   onAuthStateChanged,
@@ -202,64 +202,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => unsubscribe();
   }, [queryClient, refetchBackendUser]);
 
-  // Check for redirect result on component mount
-  useEffect(() => {
-    const checkRedirectResult = async () => {
-      try {
-        console.log("Checking redirect result...");
-        // Create a periodic check for redirect result
-        let checkCount = 0;
-        const maxChecks = 5;
-
-        // First immediate check
-        const result = await getRedirectResult(auth);
-        console.log("Redirect result:", result);
-
-        if (result && result.user) {
-          console.log("Got user from redirect:", result.user);
-          await registerOrLoginWithBackend(result.user);
-          queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
-          // Force refresh user data
-          await refetchBackendUser();
-          console.log("User data refreshed after redirect");
-          return; // Successfully handled redirect
-        }
-
-        // If no result on first try, set up periodic checks
-        // This helps when redirect completes but result isn't immediately available
-        const checkInterval = setInterval(async () => {
-          checkCount++;
-          console.log(`Checking redirect result (attempt ${checkCount})...`);
-
-          try {
-            const retryResult = await getRedirectResult(auth);
-            if (retryResult && retryResult.user) {
-              console.log("Got user from redirect (retry):", retryResult.user);
-              clearInterval(checkInterval);
-
-              await registerOrLoginWithBackend(retryResult.user);
-              queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
-              await refetchBackendUser();
-              console.log("User data refreshed after redirect");
-            } else if (checkCount >= maxChecks) {
-              console.log("Max redirect checks reached, giving up");
-              clearInterval(checkInterval);
-            }
-          } catch (err) {
-            console.error("Error in redirect check:", err);
-            clearInterval(checkInterval);
-          }
-        }, 1000);
-
-        // Clean up the interval if component unmounts
-        return () => clearInterval(checkInterval);
-      } catch (error) {
-        console.error("Redirect sign in error:", error);
-      }
-    };
-
-    checkRedirectResult();
-  }, [queryClient, refetchBackendUser, registerOrLoginWithBackend]);
 
   // Login with username and password (local auth)
   const loginWithCredentials = async (credentials: LoginCredentials) => {
@@ -390,9 +332,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
         login_hint: "user@example.com",
       });
 
-      await signInWithRedirect(auth, googleProvider);
-      // Note: The redirect will take the user away from the page,
-      // and they'll be redirected back after authentication
+      // Use signInWithPopup instead of signInWithRedirect
+      const result = await signInWithPopup(auth, googleProvider);
+      console.log("Google sign in popup result:", result);
+
+      if (result.user) {
+        console.log("Got user from popup:", result.user);
+        await registerOrLoginWithBackend(result.user);
+        queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
+        await refetchBackendUser();
+        console.log("User data refreshed after popup sign-in");
+      }
     } catch (error) {
       console.error("Sign in error:", error);
       toast({
