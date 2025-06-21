@@ -7,6 +7,7 @@ import { generateSentence, generateSentenceWithWord, checkSynonyms, validateSent
 import dictionaryAdminRoutes from "./routes/dictionary-admin";
 import authRoutes from "./routes/auth";
 import { requireAuth, optionalAuth } from "./middleware/auth";
+import { checkSimilarity } from "@/lib/string-similarity";
 
 // List of unnatural or grammatically incorrect sentence patterns to filter out
 const unnaturalPatterns = [
@@ -1686,6 +1687,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(404).json({ message: error instanceof Error ? error.message : "Learned definition not found" });
     }
   });
+
+  // Get user settings
+app.get("/api/user/settings", requireAuth, async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    const user = await storage.getUserById(userId);
+    
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
+    res.json({
+      speechRate: parseFloat(user.speechRate || "1.0"),
+      selectedVoiceURI: user.selectedVoiceURI || "",
+      autoReplay: user.autoReplay || false,
+      matchStrictness: user.matchStrictness || "moderate",
+      timeWeight: user.timeWeight || 3,
+      difficulty: user.difficulty || "beginner"
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch settings" });
+  }
+});
+
+// Update user settings
+app.patch("/api/user/settings", requireAuth, async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    const updates = req.body;
+    
+    const updatedUser = await storage.updateUser(userId, updates);
+    res.json(updatedUser);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to update settings" });
+  }
+});
+
+  // Grade user's translation answer
+app.post("/api/sentence/grade", requireAuth, async (req, res) => {
+  try {
+    const { userAnswer, correctAnswer, difficulty } = req.body;
+    const userId = req.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    // Get user preferences for grading
+    const user = await storage.getUserById(userId);
+    const matchStrictness = user?.matchStrictness || 'moderate';
+    const timeWeight = user?.timeWeight || 3;
+    
+    // Use your existing similarity checking logic
+    const similarity = checkSimilarity(userAnswer, correctAnswer, matchStrictness);
+    
+    // Determine feedback status
+    let feedbackStatus;
+    if (similarity >= 0.7) {
+      feedbackStatus = "correct";
+    } else if (similarity >= 0.4) {
+      feedbackStatus = "partial";
+    } else {
+      feedbackStatus = "incorrect";
+    }
+    
+    res.json({
+      similarity,
+      feedbackStatus,
+      feedback: "Your translation analysis..." // Add detailed feedback
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to grade answer" });
+  }
+});
 
   // Register dictionary admin routes
   app.use('/api', dictionaryAdminRoutes);
