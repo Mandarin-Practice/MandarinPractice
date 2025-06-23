@@ -1315,7 +1315,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update user streak and score 
   app.post("/api/user/streak", requireAuth, async (req, res) => {
     try {
-      const userId = req.user?.id;
+      const userId = req.authenticatedUserId;
+
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
