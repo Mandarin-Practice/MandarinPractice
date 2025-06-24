@@ -44,18 +44,30 @@ export default function Settings() {
 
   // Save settings to localStorage
   const saveSettings = () => {
-    localStorage.setItem("difficulty", difficulty);
-    localStorage.setItem("speechRate", speechRate.toString());
-    localStorage.setItem("selectedVoiceURI", selectedVoiceURI);
-    localStorage.setItem("autoReplay", autoReplay.toString());
-    localStorage.setItem("matchStrictness", matchStrictness);
-    localStorage.setItem("timeWeight", timeWeight.toString());
-
+    // Replace localStorage with API calls
+const saveSettings = async () => {
+  try {
+    await apiRequest('PATCH', '/api/user/settings', {
+      speechRate,
+      selectedVoiceURI,
+      autoReplay,
+      matchStrictness,
+      timeWeight,
+      difficulty
+    });
+    
     toast({
       title: "Settings saved",
-      description: "Your preferences have been updated.",
-      variant: "default",
+      description: "Your preferences have been synced.",
     });
+  } catch (error) {
+    toast({
+      title: "Save failed", 
+      description: "Could not save settings.",
+      variant: "destructive"
+    });
+  }
+};
   };
 
   // Export user data as JSON file

@@ -15,6 +15,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useSoundEffects } from "@/hooks/use-sound-effects";
 import { useUserWordList } from "@/hooks/use-user-word-list";
 import { checkSimilarity } from "@/lib/string-similarity";
+import { useAuth } from "@/hooks/use-auth";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Sentence {
   id: string;
@@ -35,6 +37,9 @@ interface Stats {
 }
 
 export default function Practice() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
   const [, navigate] = useLocation();
   const [userTranslation, setUserTranslation] = useState("");
   const [feedbackStatus, setFeedbackStatus] = useState<"correct" | "partial" | "incorrect" | null>(null);
@@ -424,8 +429,13 @@ export default function Practice() {
     { isCorrect: boolean }
   >({
     mutationFn: async (params: { isCorrect: boolean }) => {
+      if (!user?.backendUser?.id) {
+        throw new Error("User not authenticated");
+      }
+
       const response = await apiRequest('POST', '/api/user/streak', {
-        isCorrect: params.isCorrect
+        isCorrect: params.isCorrect,
+        userId: user.backendUser.id
       });
       
       if (!response.ok) {
@@ -433,6 +443,18 @@ export default function Practice() {
       }
       
       return response.json();
+    },
+    onSuccess: (streakData) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user', user?.firebaseUser?.uid]});
+      console.log('Streak updated:', streakData);
+    },
+    onError: (error) => {
+      console.error('Failed to update streak:', error);
+      toast({
+        title: "Streak update failed",
+        description: "There was an error updating your streak. Please try again later.",
+        variant: "destructive",
+      });
     }
   });
 
