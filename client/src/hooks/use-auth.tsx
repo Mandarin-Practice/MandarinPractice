@@ -2,12 +2,12 @@ import { createContext, ReactNode, useContext, useEffect, useState, useCallback 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { auth, googleProvider } from "@/lib/firebase";
-import { 
+import {
   signInWithRedirect,
   getRedirectResult,
-  signOut as firebaseSignOut, 
-  User as FirebaseUser, 
-  onAuthStateChanged 
+  signOut as firebaseSignOut,
+  User as FirebaseUser,
+  onAuthStateChanged,
 } from "firebase/auth";
 
 // Backend user type from database
@@ -77,7 +77,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [firebaseLoading, setFirebaseLoading] = useState(true);
   const [firebaseError, setFirebaseError] = useState<Error | null>(null);
-  
+
   // Local authentication state
   const [localUser, setLocalUser] = useState<BackendUser | null>(null);
   const [localUserLoading, setLocalUserLoading] = useState(false);
@@ -92,25 +92,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
     queryKey: ["/api/auth/user", firebaseUser?.uid],
     queryFn: async () => {
       if (!firebaseUser) return null;
-      
+
       try {
         // Get Firebase ID token
         const idToken = await firebaseUser.getIdToken();
-        
+
         // Fetch user data from backend
         const response = await fetch("/api/auth/user", {
           headers: {
-            Authorization: `Bearer ${idToken}`
-          }
+            Authorization: `Bearer ${idToken}`,
+          },
         });
-        
+
         if (!response.ok) {
           if (response.status === 401) {
             return null; // Not authenticated with backend yet
           }
           throw new Error("Failed to fetch user data");
         }
-        
+
         return response.json();
       } catch (error) {
         console.error("Error fetching backend user:", error);
@@ -121,53 +121,56 @@ export function AuthProvider({ children }: AuthProviderProps) {
   });
 
   // Register or login user with backend
-  const registerOrLoginWithBackend = useCallback(async (firebaseUser: FirebaseUser) => {
-    try {
-      console.log("Registering user with backend:", firebaseUser.email);
-      // Get user token
-      const idToken = await firebaseUser.getIdToken();
-      
-      // Register/login with backend
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${idToken}`
-        },
-        body: JSON.stringify({
-          username: firebaseUser.displayName || firebaseUser.email?.split("@")[0] || `user${Date.now()}`,
-          email: firebaseUser.email,
-          displayName: firebaseUser.displayName,
-          photoUrl: firebaseUser.photoURL,
-          firebaseUid: firebaseUser.uid
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error("Failed to register user with backend");
+  const registerOrLoginWithBackend = useCallback(
+    async (firebaseUser: FirebaseUser) => {
+      try {
+        console.log("Registering user with backend:", firebaseUser.email);
+        // Get user token
+        const idToken = await firebaseUser.getIdToken();
+
+        // Register/login with backend
+        const response = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${idToken}`,
+          },
+          body: JSON.stringify({
+            username: firebaseUser.displayName || firebaseUser.email?.split("@")[0] || `user${Date.now()}`,
+            email: firebaseUser.email,
+            displayName: firebaseUser.displayName,
+            photoUrl: firebaseUser.photoURL,
+            firebaseUid: firebaseUser.uid,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to register user with backend");
+        }
+
+        console.log("Successfully registered with backend, refreshing data");
+
+        // Fetch the updated user data
+        await refetchBackendUser();
+
+        toast({
+          title: "Welcome!",
+          description: "You have successfully signed in.",
+        });
+
+        return true;
+      } catch (error) {
+        console.error("Backend registration error:", error);
+        toast({
+          title: "Sign in failed",
+          description: "There was a problem signing in. Please try again.",
+          variant: "destructive",
+        });
+        throw error;
       }
-      
-      console.log("Successfully registered with backend, refreshing data");
-      
-      // Fetch the updated user data
-      await refetchBackendUser();
-      
-      toast({
-        title: "Welcome!",
-        description: "You have successfully signed in.",
-      });
-      
-      return true;
-    } catch (error) {
-      console.error("Backend registration error:", error);
-      toast({
-        title: "Sign in failed",
-        description: "There was a problem signing in. Please try again.",
-        variant: "destructive",
-      });
-      throw error;
-    }
-  }, [refetchBackendUser, toast]);
+    },
+    [refetchBackendUser, toast],
+  );
 
   // Listen for Firebase auth state changes
   useEffect(() => {
@@ -178,7 +181,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         console.log("Firebase auth state changed:", user ? "User authenticated" : "No user");
         setFirebaseUser(user);
         setFirebaseLoading(false);
-        
+
         // If user is authenticated, immediately refetch backend data
         if (user) {
           console.log("User authenticated, refreshing data");
@@ -192,7 +195,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         console.error("Firebase auth error:", error);
         setFirebaseError(error);
         setFirebaseLoading(false);
-      }
+      },
     );
 
     // Cleanup subscription
@@ -207,11 +210,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         // Create a periodic check for redirect result
         let checkCount = 0;
         const maxChecks = 5;
-        
+
         // First immediate check
         const result = await getRedirectResult(auth);
         console.log("Redirect result:", result);
-        
+
         if (result && result.user) {
           console.log("Got user from redirect:", result.user);
           await registerOrLoginWithBackend(result.user);
@@ -221,19 +224,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
           console.log("User data refreshed after redirect");
           return; // Successfully handled redirect
         }
-        
+
         // If no result on first try, set up periodic checks
         // This helps when redirect completes but result isn't immediately available
         const checkInterval = setInterval(async () => {
           checkCount++;
           console.log(`Checking redirect result (attempt ${checkCount})...`);
-          
+
           try {
             const retryResult = await getRedirectResult(auth);
             if (retryResult && retryResult.user) {
               console.log("Got user from redirect (retry):", retryResult.user);
               clearInterval(checkInterval);
-              
+
               await registerOrLoginWithBackend(retryResult.user);
               queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
               await refetchBackendUser();
@@ -247,55 +250,55 @@ export function AuthProvider({ children }: AuthProviderProps) {
             clearInterval(checkInterval);
           }
         }, 1000);
-        
+
         // Clean up the interval if component unmounts
         return () => clearInterval(checkInterval);
       } catch (error) {
         console.error("Redirect sign in error:", error);
       }
     };
-    
+
     checkRedirectResult();
   }, [queryClient, refetchBackendUser, registerOrLoginWithBackend]);
-  
+
   // Login with username and password (local auth)
   const loginWithCredentials = async (credentials: LoginCredentials) => {
     try {
       setLocalUserLoading(true);
       console.log("Logging in with username and password");
-      
-      const response = await fetch('/api/auth/login/local', {
-        method: 'POST',
+
+      const response = await fetch("/api/auth/login/local", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           username: credentials.username,
           password: credentials.password,
         }),
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Login failed');
+        throw new Error(errorData.error || "Login failed");
       }
-      
+
       // Save user data
       const userData = await response.json();
       setLocalUser(userData);
-      
+
       // Store user authentication token
-      localStorage.setItem('auth_type', 'local');
-      localStorage.setItem('auth_user_id', userData.id.toString());
-      
+      localStorage.setItem("auth_type", "local");
+      localStorage.setItem("auth_user_id", userData.id.toString());
+
       // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
-      
+
       toast({
         title: "Login successful",
         description: `Welcome back, ${userData.displayName || userData.username}!`,
       });
-      
+
       return userData;
     } catch (error) {
       console.error("Login failed:", error);
@@ -309,17 +312,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setLocalUserLoading(false);
     }
   };
-  
+
   // Register a new user with username and password
   const registerWithCredentials = async (credentials: RegisterCredentials) => {
     try {
       setLocalUserLoading(true);
       console.log("Registering new user with username and password");
-      
-      const response = await fetch('/api/auth/register/local', {
-        method: 'POST',
+
+      const response = await fetch("/api/auth/register/local", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           username: credentials.username,
@@ -328,28 +331,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
           displayName: credentials.displayName || credentials.username,
         }),
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Registration failed');
+        throw new Error(errorData.error || "Registration failed");
       }
-      
+
       // Save user data
       const userData = await response.json();
       setLocalUser(userData);
-      
+
       // Store user authentication info
-      localStorage.setItem('auth_type', 'local');
-      localStorage.setItem('auth_user_id', userData.id.toString());
-      
+      localStorage.setItem("auth_type", "local");
+      localStorage.setItem("auth_user_id", userData.id.toString());
+
       // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
-      
+
       toast({
         title: "Registration successful",
         description: `Welcome, ${userData.displayName || userData.username}!`,
       });
-      
+
       return userData;
     } catch (error) {
       console.error("Registration failed:", error);
@@ -363,30 +366,30 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setLocalUserLoading(false);
     }
   };
-  
+
   // Sign in with Google
   const signIn = async () => {
     try {
       console.log("Starting Google sign in with redirect");
       setFirebaseLoading(true);
-      
+
       // Add URL to authorized domains message
       const currentUrl = window.location.origin;
       console.log(`Important: Make sure ${currentUrl} is added to authorized domains in Firebase console`);
-      
+
       // Add debug log for Firebase config
       console.log("Firebase config check:", {
         projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID ? "✓" : "✗",
-        apiKey: import.meta.env.VITE_FIREBASE_API_KEY ? "✓" : "✗", 
-        appId: import.meta.env.VITE_FIREBASE_APP_ID ? "✓" : "✗"
+        apiKey: import.meta.env.VITE_FIREBASE_API_KEY ? "✓" : "✗",
+        appId: import.meta.env.VITE_FIREBASE_APP_ID ? "✓" : "✗",
       });
-      
+
       // Use redirect method directly as it's more reliable
       googleProvider.setCustomParameters({
         prompt: "select_account",
-        login_hint: "user@example.com"
+        login_hint: "user@example.com",
       });
-      
+
       await signInWithRedirect(auth, googleProvider);
       // Note: The redirect will take the user away from the page,
       // and they'll be redirected back after authentication
@@ -426,7 +429,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const saveWordToList = async (wordId: number) => {
     // Get user ID from either Firebase or local auth
     const effectiveBackendUser = localUser || backendUser;
-    
+
     if (!effectiveBackendUser) {
       toast({
         title: "Not signed in",
@@ -435,7 +438,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       });
       return;
     }
-    
+
     try {
       // Regular API call to save word
       const response = await fetch(`/api/auth/wordlist`, {
@@ -448,14 +451,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
           wordId,
         }),
       });
-      
+
       if (!response.ok) {
         throw new Error("Failed to save word to list");
       }
-      
+
       // Invalidate queries
       queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
-      
+
       toast({
         title: "Word saved",
         description: "Word has been added to your list.",
@@ -474,7 +477,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const removeWordFromList = async (wordId: number) => {
     // Get user ID from either Firebase or local auth
     const effectiveBackendUser = localUser || backendUser;
-    
+
     if (!effectiveBackendUser) {
       toast({
         title: "Not signed in",
@@ -483,7 +486,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       });
       return;
     }
-    
+
     try {
       // Regular API call to remove word
       const response = await fetch(`/api/auth/wordlist`, {
@@ -496,14 +499,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
           wordId,
         }),
       });
-      
+
       if (!response.ok) {
         throw new Error("Failed to remove word from list");
       }
-      
+
       // Invalidate queries
       queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
-      
+
       toast({
         title: "Word removed",
         description: "Word has been removed from your list.",
@@ -523,7 +526,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Check if we have a local or Firebase user
     const isLocalAuth = !!localUser;
     const effectiveUser = localUser || backendUser;
-    
+
     if (!effectiveUser) {
       toast({
         title: "Not signed in",
@@ -532,12 +535,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       });
       return;
     }
-    
+
     try {
       // Handle local authentication
       if (isLocalAuth) {
         console.log("Updating local user profile:", updates);
-        
+
         // Update user profile in backend with local auth
         const response = await fetch(`/api/auth/user/${effectiveUser.id}`, {
           method: "PATCH",
@@ -546,30 +549,30 @@ export function AuthProvider({ children }: AuthProviderProps) {
           },
           body: JSON.stringify(updates),
         });
-        
+
         if (!response.ok) {
           throw new Error("Failed to update profile");
         }
-        
+
         // Get updated user data
         const userData = await response.json();
         setLocalUser(userData);
-        
+
         // Invalidate related queries
         queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-        
+
         toast({
           title: "Profile updated",
           description: "Your profile has been updated successfully.",
         });
-        
+
         return;
       }
-      
+
       // If we're here, it's a Firebase user
       // Get Firebase ID token
       const idToken = await firebaseUser!.getIdToken();
-      
+
       // Update user profile in backend
       const response = await fetch("/api/auth/user", {
         method: "PATCH",
@@ -579,17 +582,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
         },
         body: JSON.stringify(updates),
       });
-      
+
       if (!response.ok) {
         throw new Error("Failed to update profile");
       }
-      
+
       // Refetch user data
       await refetchBackendUser();
-      
+
       // Invalidate related queries
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      
+
       toast({
         title: "Profile updated",
         description: "Your profile has been updated successfully.",
@@ -606,89 +609,87 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   // Combine user data from Firebase and backend
-  const combinedUser = firebaseUser && backendUser
-    ? { firebaseUser, backendUser }
-    : null;
+  const combinedUser = firebaseUser && backendUser ? { firebaseUser, backendUser } : null;
 
   // Check for local authentication persistence
   useEffect(() => {
-    const authType = localStorage.getItem('auth_type');
-    const userId = localStorage.getItem('auth_user_id');
-    
-    if (authType === 'local' && userId && !localUser) {
+    const authType = localStorage.getItem("auth_type");
+    const userId = localStorage.getItem("auth_user_id");
+
+    if (authType === "local" && userId && !localUser) {
       console.log("Restoring local authentication session");
-      
+
       // Fetch user data based on stored ID
       const fetchLocalUser = async () => {
         try {
           setLocalUserLoading(true);
-          
+
           const response = await fetch(`/api/auth/user/${userId}`, {
-            method: 'GET',
+            method: "GET",
             headers: {
-              'Content-Type': 'application/json',
-            }
+              "Content-Type": "application/json",
+            },
           });
-          
+
           if (response.ok) {
             const userData = await response.json();
             setLocalUser(userData);
             console.log("Local user session restored", userData);
           } else {
             console.log("Failed to restore local user session, clearing stored data");
-            localStorage.removeItem('auth_type');
-            localStorage.removeItem('auth_user_id');
+            localStorage.removeItem("auth_type");
+            localStorage.removeItem("auth_user_id");
           }
         } catch (error) {
           console.error("Error restoring local user session:", error);
-          localStorage.removeItem('auth_type');
-          localStorage.removeItem('auth_user_id');
+          localStorage.removeItem("auth_type");
+          localStorage.removeItem("auth_user_id");
         } finally {
           setLocalUserLoading(false);
         }
       };
-      
+
       fetchLocalUser();
     }
   }, [localUser, setLocalUserLoading]);
-  
+
   // Handle both local and Firebase authentication
-  
+
   // Create the combined user
-  const effectiveUser = localUser 
-    ? { 
+  const effectiveUser = localUser
+    ? {
         // Local authentication user
         backendUser: localUser,
-        firebaseUser: null as any // Local auth doesn't have Firebase user
-      } 
-    : (combinedUser || null); // Fall back to Firebase auth if available
-    
+        firebaseUser: null as any, // Local auth doesn't have Firebase user
+      }
+    : combinedUser || null; // Fall back to Firebase auth if available
+
   // Update signOut to handle local authentication
   const effectiveSignOut = async (): Promise<void> => {
     // Check if we're using local authentication
-    if (localStorage.getItem('auth_type') === 'local') {
+    if (localStorage.getItem("auth_type") === "local") {
       console.log("Signing out local user");
-      localStorage.removeItem('auth_type');
-      localStorage.removeItem('auth_user_id');
+      localStorage.removeItem("auth_type");
+      localStorage.removeItem("auth_user_id");
       setLocalUser(null);
-      
+
       // Clear any data
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
-      
+
       toast({
         title: "Signed out",
         description: "You have been signed out successfully.",
       });
-      
+
       return Promise.resolve();
-    } 
+    }
     // Otherwise use Firebase signout
     else {
       return signOut();
     }
   };
-  
+
   // Create the auth context value with local authentication support
   const authContextValue: AuthContextType = {
     user: effectiveUser,
@@ -714,11 +715,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     });
   }, [effectiveUser, firebaseUser, backendUser, localUser, firebaseLoading, backendLoading, localUserLoading]);
 
-  return (
-    <AuthContext.Provider value={authContextValue}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={authContextValue}>{children}</AuthContext.Provider>;
 }
 
 // Hook to use the auth context

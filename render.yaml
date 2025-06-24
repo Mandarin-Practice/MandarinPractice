@@ -1,0 +1,61 @@
+# This file configures the deployment of your application to Render.com
+# It defines the services (database, backend, frontend, jobs) and their configurations.
+
+services:
+  # PostgreSQL Database Service
+  - type: postgres
+    name: mandarin-practice-db
+    plan: free # Or a paid plan if needed
+    databaseName: mandarin_practice
+    user: mandarin_practice_user
+
+  # Backend Web Service
+  - type: web
+    name: mandarin-practice-backend
+    env: node
+    plan: free # Or a paid plan if needed
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    healthCheckPath: / # Replace with a suitable health check endpoint if available
+    autoDeploy: true
+    # Environment variables needed for the backend
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: mandarin-practice-db
+          property: connectionString
+      # Add other required environment variables here:
+      # - key: FIREBASE_API_KEY
+      #   sync: false # Set to true if you want to sync from Render dashboard
+      # - key: FIREBASE_AUTH_DOMAIN
+      #   sync: false
+      # - key: FIREBASE_PROJECT_ID
+      #   sync: false
+      # - key: FIREBASE_STORAGE_BUCKET
+      #   sync: false
+      # - key: FIREBASE_MESSAGING_SENDER_ID
+      #   sync: false
+      # - key: FIREBASE_APP_ID
+      #   sync: false
+      # - key: FIREBASE_MEASUREMENT_ID
+      #   sync: false
+      # - key: OPENAI_API_KEY
+      #   sync: false
+      # - key: ANTHROPIC_API_KEY
+      #   sync: false
+      # - key: SESSION_SECRET # For express-session
+      #   generateValue: true # Generate a random secret
+      # - key: NODE_ENV # Set by start script, but can be explicitly set here
+      #   value: production
+
+  # Frontend Static Site Service
+  - type: static
+    name: mandarin-practice-frontend
+    env: node # Although it's a static site, build requires node
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist/public
+    autoDeploy: true
+    # Environment variables for the frontend (if any are needed client-side)
+    # envVars:
+    # - key: VITE_SOME_ENV_VAR # Example
+    #   sync: false
