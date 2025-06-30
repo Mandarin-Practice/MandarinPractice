@@ -450,7 +450,7 @@ export async function generateSentence(
       requestedPattern: randomPattern // Include the pattern that was requested
     };
   } catch (error) {
-    console.error("Error generating sentence:", error);
+    // console.error("Error generating sentence:", error);
     throw new Error("Failed to generate sentence. Please try again.");
   }
 }
@@ -582,7 +582,7 @@ export async function generateSentenceWithWord(
       requestedPattern: randomPattern // Include the pattern that was requested
     };
   } catch (error) {
-    console.error("Error generating sentence:", error);
+    // console.error("Error generating sentence:", error);
     throw new Error("Failed to generate example sentence. Please try again.");
   }
 }
