@@ -38,7 +38,7 @@ export function useTextToSpeech() {
           // Set Google TW voice as default in localStorage
           localStorage.setItem('selectedVoiceURI', googleTWVoice.voiceURI);
           setPreferredVoice(googleTWVoice);
-          console.log('Set default voice to Google Taiwan:', googleTWVoice.name);
+          // console.log('Set default voice to Google Taiwan:', googleTWVoice.name);
         }
 
         // Check for saved voice preference (this will override only if user has explicitly set a preference)
@@ -47,7 +47,7 @@ export function useTextToSpeech() {
           const savedVoice = availableVoices.find(v => v.voiceURI === savedVoiceURI);
           if (savedVoice) {
             setPreferredVoice(savedVoice);
-            console.log('Loaded preferred voice:', savedVoice.name);
+            // console.log('Loaded preferred voice:', savedVoice.name);
           }
         }
 

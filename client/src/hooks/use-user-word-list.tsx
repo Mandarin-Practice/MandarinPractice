@@ -45,7 +45,7 @@ export function useUserWordList() {
       const isDevMode = localStorage.getItem('dev_auth') === 'true';
       
       if (isDevMode) {
-        console.log("[Dev mode] Fetching saved words from localStorage");
+        // console.log("[Dev mode] Fetching saved words from localStorage");
         
         try {
           // Get saved word IDs from localStorage
@@ -53,7 +53,7 @@ export function useUserWordList() {
           const savedWordIds = JSON.parse(savedWordsStr) as number[];
           
           if (savedWordIds.length === 0) {
-            console.log("[Dev mode] No saved words found");
+            // console.log("[Dev mode] No saved words found");
             return [];
           }
           
@@ -87,7 +87,7 @@ export function useUserWordList() {
             }
           }
           
-          console.log(`[Dev mode] Loaded ${wordListItems.length} saved words`);
+          // console.log(`[Dev mode] Loaded ${wordListItems.length} saved words`);
           return wordListItems;
         } catch (error) {
           console.error("[Dev mode] Error fetching word list:", error);
@@ -137,7 +137,7 @@ export function useUserWordList() {
 
     if (isDevMode) {
       try {
-        console.log(`[Dev mode] Adding word ${wordId} to user's list`);
+        // console.log(`[Dev mode] Adding word ${wordId} to user's list`);
         
         // Get current saved words from localStorage
         const savedWordsStr = localStorage.getItem('dev_saved_words') || '[]';
@@ -219,7 +219,7 @@ export function useUserWordList() {
 
     if (isDevMode) {
       try {
-        console.log(`[Dev mode] Removing word ${wordId} from user's list`);
+        // console.log(`[Dev mode] Removing word ${wordId} from user's list`);
         
         // Get current saved words from localStorage
         const savedWordsStr = localStorage.getItem('dev_saved_words') || '[]';

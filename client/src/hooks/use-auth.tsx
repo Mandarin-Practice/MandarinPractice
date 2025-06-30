@@ -124,7 +124,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const registerOrLoginWithBackend = useCallback(
     async (firebaseUser: FirebaseUser) => {
       try {
-        console.log("Registering user with backend:", firebaseUser.email);
+        // console.log("Registering user with backend:", firebaseUser.email);
         // Get user token
         const idToken = await firebaseUser.getIdToken();
 
@@ -148,7 +148,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           throw new Error("Failed to register user with backend");
         }
 
-        console.log("Successfully registered with backend, refreshing data");
+        // console.log("Successfully registered with backend, refreshing data");
 
         // Fetch the updated user data
         await refetchBackendUser();
@@ -174,17 +174,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Listen for Firebase auth state changes
   useEffect(() => {
-    console.log("Setting up Firebase auth state listener");
+    // console.log("Setting up Firebase auth state listener");
     const unsubscribe = onAuthStateChanged(
       auth,
       (user) => {
-        console.log("Firebase auth state changed:", user ? "User authenticated" : "No user");
+        // console.log("Firebase auth state changed:", user ? "User authenticated" : "No user");
         setFirebaseUser(user);
         setFirebaseLoading(false);
 
         // If user is authenticated, immediately refetch backend data
         if (user) {
-          console.log("User authenticated, refreshing data");
+          // console.log("User authenticated, refreshing data");
           setTimeout(() => {
             refetchBackendUser();
             queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
@@ -207,7 +207,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const loginWithCredentials = async (credentials: LoginCredentials) => {
     try {
       setLocalUserLoading(true);
-      console.log("Logging in with username and password");
+      // console.log("Logging in with username and password");
 
       const response = await fetch("/api/auth/login/local", {
         method: "POST",
@@ -259,7 +259,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const registerWithCredentials = async (credentials: RegisterCredentials) => {
     try {
       setLocalUserLoading(true);
-      console.log("Registering new user with username and password");
+      // console.log("Registering new user with username and password");
 
       const response = await fetch("/api/auth/register/local", {
         method: "POST",
@@ -312,19 +312,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Sign in with Google
   const signIn = async () => {
     try {
-      console.log("Starting Google sign in with redirect");
+      // console.log("Starting Google sign in with redirect");
       setFirebaseLoading(true);
 
       // Add URL to authorized domains message
       const currentUrl = window.location.origin;
-      console.log(`Important: Make sure ${currentUrl} is added to authorized domains in Firebase console`);
+      // console.log(`Important: Make sure ${currentUrl} is added to authorized domains in Firebase console`);
 
       // Add debug log for Firebase config
-      console.log("Firebase config check:", {
-        projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID ? "✓" : "✗",
-        apiKey: import.meta.env.VITE_FIREBASE_API_KEY ? "✓" : "✗",
-        appId: import.meta.env.VITE_FIREBASE_APP_ID ? "✓" : "✗",
-      });
+      // console.log("Firebase config check:", {
+      //   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID ? "✓" : "✗",
+      //   apiKey: import.meta.env.VITE_FIREBASE_API_KEY ? "✓" : "✗",
+      //   appId: import.meta.env.VITE_FIREBASE_APP_ID ? "✓" : "✗",
+      // });
 
       // Use redirect method directly as it's more reliable
       googleProvider.setCustomParameters({
@@ -334,14 +334,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       // Use signInWithPopup instead of signInWithRedirect
       const result = await signInWithPopup(auth, googleProvider);
-      console.log("Google sign in popup result:", result);
+      // console.log("Google sign in popup result:", result);
 
       if (result.user) {
-        console.log("Got user from popup:", result.user);
+        // console.log("Got user from popup:", result.user);
         await registerOrLoginWithBackend(result.user);
         queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
         await refetchBackendUser();
-        console.log("User data refreshed after popup sign-in");
+        // console.log("User data refreshed after popup sign-in");
       }
     } catch (error) {
       console.error("Sign in error:", error);
@@ -357,7 +357,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Sign out
   const signOut = async () => {
     try {
-      console.log("Signing out...");
+      // console.log("Signing out...");
       await firebaseSignOut(auth);
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
@@ -489,7 +489,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       // Handle local authentication
       if (isLocalAuth) {
-        console.log("Updating local user profile:", updates);
+        // console.log("Updating local user profile:", updates);
 
         // Update user profile in backend with local auth
         const response = await fetch(`/api/auth/user/${effectiveUser.id}`, {
@@ -567,7 +567,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const userId = localStorage.getItem("auth_user_id");
 
     if (authType === "local" && userId && !localUser) {
-      console.log("Restoring local authentication session");
+      // console.log("Restoring local authentication session");
 
       // Fetch user data based on stored ID
       const fetchLocalUser = async () => {
@@ -584,9 +584,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
           if (response.ok) {
             const userData = await response.json();
             setLocalUser(userData);
-            console.log("Local user session restored", userData);
+            // console.log("Local user session restored", userData);
           } else {
-            console.log("Failed to restore local user session, clearing stored data");
+            // console.log("Failed to restore local user session, clearing stored data");
             localStorage.removeItem("auth_type");
             localStorage.removeItem("auth_user_id");
           }
@@ -618,7 +618,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const effectiveSignOut = async (): Promise<void> => {
     // Check if we're using local authentication
     if (localStorage.getItem("auth_type") === "local") {
-      console.log("Signing out local user");
+      // console.log("Signing out local user");
       localStorage.removeItem("auth_type");
       localStorage.removeItem("auth_user_id");
       setLocalUser(null);
@@ -656,13 +656,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Log auth state for debugging
   useEffect(() => {
-    console.log("Auth context updated:", {
-      user: effectiveUser ? "authenticated" : "unauthenticated",
-      firebaseUser: firebaseUser ? "authenticated" : "unauthenticated",
-      backendUser: backendUser ? "found" : "not found",
-      localUser: localUser ? "active" : "inactive",
-      isLoading: firebaseLoading || backendLoading || localUserLoading,
-    });
+    // console.log("Auth context updated:", {
+    //   user: effectiveUser ? "authenticated" : "unauthenticated",
+    //   firebaseUser: firebaseUser ? "authenticated" : "unauthenticated",
+    //   backendUser: backendUser ? "found" : "not found",
+    //   localUser: localUser ? "active" : "inactive",
+    //   isLoading: firebaseLoading || backendLoading || localUserLoading,
+    // });
   }, [effectiveUser, firebaseUser, backendUser, localUser, firebaseLoading, backendLoading, localUserLoading]);
 
   return <AuthContext.Provider value={authContextValue}>{children}</AuthContext.Provider>;

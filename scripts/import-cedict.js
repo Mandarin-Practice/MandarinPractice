@@ -19,7 +19,7 @@ const TEMP_FILE_PATH = './cedict_data.txt.gz';
 
 // Function to download the file
 async function downloadFile(url, destination) {
-  console.log(`Downloading dictionary data from ${url}...`);
+  // console.log(`Downloading dictionary data from ${url}...`);
   
   return new Promise((resolve, reject) => {
     const file = fs.createWriteStream(destination);
@@ -27,7 +27,7 @@ async function downloadFile(url, destination) {
       response.pipe(file);
       file.on('finish', () => {
         file.close();
-        console.log('Download completed');
+        // console.log('Download completed');
         resolve();
       });
     }).on('error', (err) => {
@@ -39,7 +39,7 @@ async function downloadFile(url, destination) {
 
 // Function to extract and process the file
 async function processFile() {
-  console.log('Extracting and processing dictionary data...');
+  // console.log('Extracting and processing dictionary data...');
   
   // Unzip and process the file
   const { exec } = require('child_process');
@@ -49,7 +49,7 @@ async function processFile() {
       return;
     }
     
-    console.log('File extracted, now processing entries...');
+    // console.log('File extracted, now processing entries...');
     
     // Now read and process the unzipped file
     const fileStream = fs.createReadStream('cedict_data.txt');
@@ -84,14 +84,14 @@ async function processFile() {
         charactersAdded++;
         
         if (charactersAdded % 1000 === 0) {
-          console.log(`Processed ${charactersAdded} characters...`);
+          // console.log(`Processed ${charactersAdded} characters...`);
         }
       } catch (err) {
         console.error('Error processing line:', line, err);
       }
     }
     
-    console.log(`Import completed: Added ${charactersAdded} characters and ${definitionsAdded} definitions.`);
+    // console.log(`Import completed: Added ${charactersAdded} characters and ${definitionsAdded} definitions.`);
     
     // Clean up temp files
     fs.unlinkSync(TEMP_FILE_PATH);

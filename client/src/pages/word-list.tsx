@@ -285,13 +285,13 @@ export default function WordList() {
         active: "true"
       }));
       
-      console.log('[IMPORT CLIENT] Preparing import of', words.length, 'words');
-      console.log('[IMPORT CLIENT] First few words:', words.slice(0, 3));
-      console.log('[IMPORT CLIENT] Authentication status:', {
-        isLoggedIn: !!user,
-        hasBackendUser: !!user?.backendUser,
-        userId: user?.backendUser?.id || 'not logged in'
-      });
+      // console.log('[IMPORT CLIENT] Preparing import of', words.length, 'words');
+      // console.log('[IMPORT CLIENT] First few words:', words.slice(0, 3));
+      // console.log('[IMPORT CLIENT] Authentication status:', {
+      //   isLoggedIn: !!user,
+      //   hasBackendUser: !!user?.backendUser,
+      //   userId: user?.backendUser?.id || 'not logged in'
+      // });
       
       // If user is logged in, include userId to add words to their list
       const userId = user?.backendUser?.id;
@@ -323,7 +323,7 @@ export default function WordList() {
         const batch = words.slice(i, i + BATCH_SIZE);
         const batchPayload = userId ? { words: batch, userId } : { words: batch };
         
-        console.log(`[IMPORT CLIENT] Sending batch ${Math.floor(i/BATCH_SIZE) + 1} with ${batch.length} words (${i+1} to ${Math.min(i+BATCH_SIZE, words.length)} of ${words.length})`);
+        // console.log(`[IMPORT CLIENT] Sending batch ${Math.floor(i/BATCH_SIZE) + 1} with ${batch.length} words (${i+1} to ${Math.min(i+BATCH_SIZE, words.length)} of ${words.length})`);
         
         try {
           // Add a slight delay between batches to prevent overwhelming the server
@@ -353,7 +353,7 @@ export default function WordList() {
             throw new Error('Invalid response format from server');
           }
           
-          console.log(`[IMPORT CLIENT] Batch ${Math.floor(i/BATCH_SIZE) + 1} result:`, batchResult);
+          // console.log(`[IMPORT CLIENT] Batch ${Math.floor(i/BATCH_SIZE) + 1} result:`, batchResult);
           
           // Add this batch's saved words to the combined results
           if (batchResult.savedWords) {
@@ -383,7 +383,7 @@ export default function WordList() {
         }
       }
       
-      console.log('[IMPORT CLIENT] All batches processed, combined results:', allResults);
+      // console.log('[IMPORT CLIENT] All batches processed, combined results:', allResults);
       return allResults;
     },
     onSuccess: (data) => {
@@ -457,8 +457,8 @@ export default function WordList() {
   const handleImportWordList = (listId: string) => {
     const list = SAMPLE_WORD_LISTS.find(l => l.id === listId);
     if (list) {
-      console.log(`[IMPORT] Starting import of word list: ${list.name} (${list.id})`);
-      console.log(`[IMPORT] First few words:`, list.words.slice(0, 3));
+      // console.log(`[IMPORT] Starting import of word list: ${list.name} (${list.id})`);
+      // console.log(`[IMPORT] First few words:`, list.words.slice(0, 3));
       importWordListMutation.mutateAsync({ wordList: list.words });
     }
   };

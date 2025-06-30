@@ -19,20 +19,20 @@ async function removeDuplicateDefinitions() {
   const client = await pool.connect();
   
   try {
-    console.log('Identifying duplicate definitions...');
+    // console.log('Identifying duplicate definitions...');
     
     // Start a transaction
     await client.query('BEGIN');
     
     // Get all characters with definitions
     const characters = await client.query('SELECT id, character FROM characters');
-    console.log(`Found ${characters.rows.length} characters to check for duplicate definitions`);
+    // console.log(`Found ${characters.rows.length} characters to check for duplicate definitions`);
     
     let totalDuplicatesRemoved = 0;
     
     // For each character, find and remove duplicate definitions
     for (const char of characters.rows) {
-      console.log(`Checking ${char.character} (ID: ${char.id}) for duplicates...`);
+      // console.log(`Checking ${char.character} (ID: ${char.id}) for duplicates...`);
       
       // Find definitions with the same text for this character
       const duplicatesQuery = await client.query(`
@@ -58,7 +58,7 @@ async function removeDuplicateDefinitions() {
       // Delete the duplicates (keeping the one with the lowest ID)
       for (const dup of duplicatesQuery.rows) {
         if (dup.delete_ids.length > 0) {
-          console.log(`Found ${dup.delete_ids.length} duplicates for "${dup.definition}" (${dup.part_of_speech})`);
+          // console.log(`Found ${dup.delete_ids.length} duplicates for "${dup.definition}" (${dup.part_of_speech})`);
           
           // Delete the duplicates
           await client.query(`
@@ -74,8 +74,8 @@ async function removeDuplicateDefinitions() {
     // Commit the transaction
     await client.query('COMMIT');
     
-    console.log(`\nCleanup completed successfully!`);
-    console.log(`Removed ${totalDuplicatesRemoved} duplicate definitions`);
+    // console.log(`\nCleanup completed successfully!`);
+    // console.log(`Removed ${totalDuplicatesRemoved} duplicate definitions`);
     
   } catch (err) {
     // Rollback in case of error
@@ -89,7 +89,7 @@ async function removeDuplicateDefinitions() {
 
 // Main function
 async function main() {
-  console.log('Starting duplicate definition cleanup...');
+  // console.log('Starting duplicate definition cleanup...');
   
   try {
     await removeDuplicateDefinitions();

@@ -20,7 +20,7 @@ export default function ProfilePage() {
 
   // Debug user state
   useEffect(() => {
-    console.log("Profile page - Auth state:", { user, isLoading });
+    // console.log("Profile page - Auth state:", { user, isLoading });
   }, [user, isLoading]);
 
   // Load user display name when user data changes

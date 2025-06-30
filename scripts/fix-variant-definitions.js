@@ -96,7 +96,7 @@ async function findReferencedCharacterDefinition(character) {
 // Main function to fix variant definitions
 async function fixVariantDefinitions() {
   try {
-    console.log('Finding definitions with "variant of" pattern...');
+    // console.log('Finding definitions with "variant of" pattern...');
     
     // Get all definitions with the "variant of" pattern
     const variantDefsResult = await pool.query(
@@ -107,23 +107,23 @@ async function fixVariantDefinitions() {
     );
     
     const variantDefs = variantDefsResult.rows;
-    console.log(`Found ${variantDefs.length} "variant of" definitions to fix`);
+    // console.log(`Found ${variantDefs.length} "variant of" definitions to fix`);
     
     // Process definitions in batches
     for (let i = 0; i < variantDefs.length; i += BATCH_SIZE) {
       const batch = variantDefs.slice(i, i + BATCH_SIZE);
-      console.log(`Processing batch ${Math.floor(i/BATCH_SIZE) + 1}/${Math.ceil(variantDefs.length/BATCH_SIZE)}`);
+      // console.log(`Processing batch ${Math.floor(i/BATCH_SIZE) + 1}/${Math.ceil(variantDefs.length/BATCH_SIZE)}`);
       
       // Process each definition one by one
       for (const def of batch) {
         try {
-          console.log(`Processing: ${def.character} (${def.definition})`);
+          // console.log(`Processing: ${def.character} (${def.definition})`);
           
           // Extract the referenced character
           const referencedChar = extractReferencedCharacter(def.definition);
           
           if (referencedChar) {
-            console.log(`Referenced character: ${referencedChar}`);
+            // console.log(`Referenced character: ${referencedChar}`);
             
             // First try to find the definition of the referenced character
             const referencedDef = await findReferencedCharacterDefinition(referencedChar);
@@ -139,7 +139,7 @@ async function fixVariantDefinitions() {
                 [newDefinition, def.id]
               );
               
-              console.log(`Updated definition for ${def.character}: "${newDefinition}"`);
+              // console.log(`Updated definition for ${def.character}: "${newDefinition}"`);
               stats.definitionsUpdated++;
             } else {
               // If no referenced definition found, generate a new one with AI
@@ -153,14 +153,14 @@ async function fixVariantDefinitions() {
                   [generatedDef, def.id]
                 );
                 
-                console.log(`Generated new definition for ${def.character}: "${generatedDef}"`);
+                // console.log(`Generated new definition for ${def.character}: "${generatedDef}"`);
                 stats.definitionsUpdated++;
               } else {
                 stats.definitionsSkipped++;
               }
             }
           } else {
-            console.log(`Could not extract referenced character from: ${def.definition}`);
+            // console.log(`Could not extract referenced character from: ${def.definition}`);
             stats.definitionsSkipped++;
           }
         } catch (err) {
@@ -169,7 +169,7 @@ async function fixVariantDefinitions() {
         }
       }
       
-      console.log(`Batch ${Math.floor(i/BATCH_SIZE) + 1} complete, updated ${stats.definitionsUpdated} definitions so far`);
+      // console.log(`Batch ${Math.floor(i/BATCH_SIZE) + 1} complete, updated ${stats.definitionsUpdated} definitions so far`);
     }
     
     return { 
@@ -184,17 +184,17 @@ async function fixVariantDefinitions() {
 
 // Main execution
 async function main() {
-  console.log('Starting variant definition fixes...');
+  // console.log('Starting variant definition fixes...');
   
   try {
     const results = await fixVariantDefinitions();
     
     // Print summary
-    console.log('\nProcess completed successfully!');
-    console.log('Summary:');
-    console.log(`- Definitions updated: ${results.definitionsUpdated}`);
-    console.log(`- Definitions skipped: ${results.definitionsSkipped}`);
-    console.log(`- Errors encountered: ${stats.errors}`);
+    // console.log('\nProcess completed successfully!');
+    // console.log('Summary:');
+    // console.log(`- Definitions updated: ${results.definitionsUpdated}`);
+    // console.log(`- Definitions skipped: ${results.definitionsSkipped}`);
+    // console.log(`- Errors encountered: ${stats.errors}`);
     
     await pool.end();
     process.exit(0);
