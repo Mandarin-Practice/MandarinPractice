@@ -129,17 +129,6 @@ function validateSentence(chinese: string): { isValid: boolean; reason?: string 
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Get dictionary vocabulary words (accessible only when logged in)
-  app.get("/api/vocabulary/dictionary", requireAuth, async (req, res) => {
-    console.log("\n\nDICTIONARY\n\n")
-    try {
-      const vocabulary = await storage.getAllVocabulary();
-      res.json(vocabulary);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch vocabulary" });
-    }
-  });
-  
   // Get user's vocabulary words (requires authentication)
   app.get("/api/vocabulary", async (req, res) => {
     console.log("\n\nALL VOCAB WORDS GET\n\n")
