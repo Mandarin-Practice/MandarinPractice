@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, varchar, numeric } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
@@ -18,6 +18,12 @@ export const users = pgTable("users", {
   highestScore: integer("highest_score").default(0), // Highest score ever achieved
   lastPracticeDate: timestamp("last_practice_date"), // To track daily streaks
   createdAt: timestamp("created_at").defaultNow(),
+  speechRate: numeric("speech_rate").default("1.0"),
+  selectedVoiceURI: text("selected_voice_uri"),
+  autoReplay: boolean("auto_replay").default(false),
+  matchStrictness: text("match_strictness").default("moderate"),
+  timeWeight: integer("time_weight").default(3),
+  difficulty: text("difficulty").default("beginner")
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
