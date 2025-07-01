@@ -18,7 +18,6 @@ export interface WordListItem {
     attemptCount: string;
     lastPracticed: string;
     userId: number;
-    isSaved: boolean;
   };
 }
 
@@ -76,7 +75,6 @@ export function useUserWordList() {
                     attemptCount: "0",
                     lastPracticed: new Date().toISOString(),
                     userId: 9999, // Dev user ID
-                    isSaved: true
                   }
                 };
                 

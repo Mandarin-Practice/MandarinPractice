@@ -321,12 +321,9 @@ authRouter.get("/wordlist", async (req: Request, res: Response) => {
     // Get user's word proficiencies
     const proficiencies = await storage.getUserWordProficiencies(userId);
 
-    // Filter only saved words
-    const savedWords = proficiencies.filter((prof) => prof.isSaved);
-
     // Get vocabulary details for each saved word
     const wordList = await Promise.all(
-      savedWords.map(async (prof) => {
+      proficiencies.map(async (prof) => {
         const wordId = parseInt(prof.wordId);
         const word = await storage.getVocabulary(wordId);
 

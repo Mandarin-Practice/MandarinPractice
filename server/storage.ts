@@ -21,9 +21,13 @@ import {
   wordProficiency,
   users
 } from "@shared/schema";
-import { db } from "./db";
+import { db, pool } from "./db";
 import { eq, like, desc, asc, and, or, sql, inArray, not } from "drizzle-orm";
 import { convertNumericPinyinToTonal, isNumericPinyin } from './utils/pinyin-converter';
+
+setInterval(() => {
+  console.log(`📊 Pool status: ${pool.totalCount} total, ${pool.idleCount} idle, ${pool.waitingCount} waiting`);
+}, 5000);
 
 // Interface for CRUD operations on vocabulary
 export interface IStorage {
@@ -40,18 +44,23 @@ export interface IStorage {
   // Vocabulary methods
   getAllVocabulary(): Promise<Vocabulary[]>;
   getVocabulary(id: number): Promise<Vocabulary | undefined>;
+  getVocabularyBatch(ids: number[]): Promise<Vocabulary[] | undefined>;
   getVocabularyByChineseAndPinyin(chinese: string, pinyin: string): Promise<Vocabulary | undefined>;
   addVocabulary(word: InsertVocabulary): Promise<Vocabulary>;
+  addVocabularyBatch(words: InsertVocabulary[]): Promise<Vocabulary[]>;
   updateVocabulary(id: number, updates: Partial<InsertVocabulary>): Promise<Vocabulary>;
   deleteVocabulary(id: number): Promise<void>;
   deleteAllVocabulary(): Promise<void>;
   
   // Word proficiency methods
   getWordProficiency(wordId: number): Promise<WordProficiency | undefined>;
+  getWordProficiencyBatch(wordIds: number[]): Promise<WordProficiency[] | undefined>;
+  updateWordProficiencyBatch(proficiencyDiff: {wordId: number, correct: boolean}[], userId?: number): Promise<WordProficiency[]>;
   getUserWordProficiencies(userId: number): Promise<WordProficiency[]>;
   updateWordProficiency(wordId: number, isCorrect: boolean, userId?: number): Promise<WordProficiency>;
   resetWordProficiency(wordId: number): Promise<void>;
   saveWordToUserList(userId: number, wordId: number): Promise<WordProficiency>;
+  saveWordBatchToUserList(userId: number, wordIds: number[]): Promise<WordProficiency[]>;
   removeWordFromUserList(userId: number, wordId: number): Promise<void>;
   
   // Chinese character dictionary methods
@@ -72,190 +81,6 @@ export interface IStorage {
   getLearnedDefinitions(userId: number): Promise<LearnedDefinition[]>;
   toggleLearnedDefinition(userId: number, definitionId: number, isLearned: boolean): Promise<LearnedDefinition>;
   updateLearnedDefinitionNotes(id: number, notes: string): Promise<LearnedDefinition>;
-}
-
-// Don't use MemStorage anymore, this is just a stub to satisfy the interface
-// We're using DatabaseStorage instead
-export class MemStorage implements IStorage {
-  private vocabulary: Map<number, Vocabulary>;
-  private wordProficiency: Map<number, WordProficiency>;
-  private currentVocabularyId: number;
-  private currentProficiencyId: number;
-
-  constructor() {
-    this.vocabulary = new Map();
-    this.wordProficiency = new Map();
-    this.currentVocabularyId = 1;
-    this.currentProficiencyId = 1;
-  }
-  
-  // User authentication methods (stubs)
-  async getAllUsers(): Promise<User[]> {
-    // Return an empty array for MemStorage since it doesn't store users
-    return [];
-  }
-
-  async getUserById(_id: number): Promise<User | undefined> {
-    return undefined;
-  }
-  
-  async getUserByUsername(_username: string): Promise<User | undefined> {
-    return undefined;
-  }
-  
-  async getUserByEmail(_email: string): Promise<User | undefined> {
-    return undefined;
-  }
-  
-  async getUserByFirebaseUid(_firebaseUid: string): Promise<User | undefined> {
-    return undefined;
-  }
-  
-  async createUser(_user: InsertUser): Promise<User> {
-    throw new Error("Method not implemented");
-  }
-  
-  async updateUser(_id: number, _updates: Partial<InsertUser>): Promise<User> {
-    throw new Error("Method not implemented");
-  }
-  
-  async getLeaderboard(limit: number = 10): Promise<User[]> {
-    // MemStorage doesn't store users, so return empty array
-    return [];
-  }
-  
-  // User word proficiency methods (stubs)
-  async getUserWordProficiencies(_userId: number): Promise<WordProficiency[]> {
-    return [];
-  }
-  
-  async saveWordToUserList(_userId: number, _wordId: number): Promise<WordProficiency> {
-    throw new Error("Method not implemented");
-  }
-  
-  async removeWordFromUserList(_userId: number, _wordId: number): Promise<void> {
-    // Do nothing
-  }
-
-  async getAllVocabulary(): Promise<Vocabulary[]> {
-    return Array.from(this.vocabulary.values());
-  }
-
-  async getVocabulary(id: number): Promise<Vocabulary | undefined> {
-    return this.vocabulary.get(id);
-  }
-  
-  async getVocabularyByChineseAndPinyin(chinese: string, pinyin: string): Promise<Vocabulary | undefined> {
-    // Convert entries to an array and find matching word
-    const words = Array.from(this.vocabulary.values());
-    return words.find(word => word.chinese === chinese && word.pinyin === pinyin);
-  }
-
-  async addVocabulary(word: InsertVocabulary): Promise<Vocabulary> {
-    const id = this.currentVocabularyId++;
-    const newWord: Vocabulary = { ...word, id, active: word.active || "true" };
-    this.vocabulary.set(id, newWord);
-    return newWord;
-  }
-
-  async updateVocabulary(id: number, updates: Partial<InsertVocabulary>): Promise<Vocabulary> {
-    const word = this.vocabulary.get(id);
-    if (!word) {
-      throw new Error(`Vocabulary with ID ${id} not found`);
-    }
-    
-    const updatedWord: Vocabulary = { ...word, ...updates };
-    this.vocabulary.set(id, updatedWord);
-    return updatedWord;
-  }
-
-  async deleteVocabulary(id: number): Promise<void> {
-    this.vocabulary.delete(id);
-  }
-
-  async deleteAllVocabulary(): Promise<void> {
-    this.vocabulary.clear();
-  }
-
-  // Word proficiency methods
-  async getWordProficiency(wordId: number): Promise<WordProficiency | undefined> {
-    return undefined;
-  }
-
-  async updateWordProficiency(wordId: number, isCorrect: boolean, userId?: number): Promise<WordProficiency> {
-    const id = this.currentProficiencyId++;
-    const now = Date.now().toString();
-    const proficiency: WordProficiency = {
-      id,
-      wordId: wordId.toString(),
-      userId: userId || null,
-      correctCount: isCorrect ? "1" : "0",
-      attemptCount: "1",
-      lastPracticed: now,
-      isSaved: false,
-      createdAt: new Date()
-    };
-    return proficiency;
-  }
-
-  async resetWordProficiency(wordId: number): Promise<void> {
-    // Do nothing
-  }
-  
-  // Stub implementations for character dictionary
-  async searchCharacters(query: string): Promise<Character[]> {
-    return [];
-  }
-  
-  async getCharacter(id: number): Promise<Character | undefined> {
-    return undefined;
-  }
-  
-  async getCharacterByValue(char: string): Promise<Character | undefined> {
-    return undefined;
-  }
-  
-  async addCharacter(character: InsertCharacter): Promise<Character> {
-    throw new Error("Method not implemented");
-  }
-  
-  async getCharacterDefinitions(characterId: number): Promise<CharacterDefinition[]> {
-    return [];
-  }
-  
-  async addCharacterDefinition(definition: InsertCharacterDefinition): Promise<CharacterDefinition> {
-    throw new Error("Method not implemented");
-  }
-  
-  async updateCharacterDefinition(id: number, updates: Partial<InsertCharacterDefinition>): Promise<CharacterDefinition> {
-    throw new Error("Method not implemented");
-  }
-  
-  async deleteCharacterDefinition(id: number): Promise<void> {
-    // Do nothing
-  }
-  
-  // Stub implementations for learned definitions
-  async getLearnedDefinitions(userId: number): Promise<LearnedDefinition[]> {
-    return [];
-  }
-  
-  async toggleLearnedDefinition(userId: number, definitionId: number, isLearned: boolean): Promise<LearnedDefinition> {
-    throw new Error("Method not implemented");
-  }
-  
-  async updateLearnedDefinitionNotes(id: number, notes: string): Promise<LearnedDefinition> {
-    throw new Error("Method not implemented");
-  }
-  
-  // Character compound relationship methods
-  async getCharacterCompounds(componentId: number): Promise<{ compound: Character, position: number }[]> {
-    return [];
-  }
-  
-  async getCompoundComponents(compoundId: number): Promise<{ component: Character, position: number }[]> {
-    return [];
-  }
 }
 
 // Database storage implementation
@@ -361,6 +186,11 @@ export class DatabaseStorage implements IStorage {
     return vocab;
   }
 
+  async getVocabularyBatch(ids: number[]): Promise<Vocabulary[] | undefined> {
+    const vocab = await db.select().from(vocabulary).where(inArray(vocabulary.id, ids));
+    return vocab;
+  }
+
   async addVocabulary(word: InsertVocabulary): Promise<Vocabulary> {
     // Check for exact duplicate
     const [exactDuplicate] = await db.select().from(vocabulary).where(
@@ -405,6 +235,48 @@ export class DatabaseStorage implements IStorage {
     return newVocab;
   }
 
+  async printTables() {
+    const result = await db.execute(sql`SELECT 1`);
+    console.log("[IMPORT DEBUG] Current database tables:", result);
+    return result;
+  }
+
+  async addVocabularyBatch(words: InsertVocabulary[]): Promise<Vocabulary[]> {
+    console.log(`[IMPORT DEBUG] Received batch request for ${words.length} words at time ${new Date().getMinutes()}:${new Date().getSeconds()}`);
+    
+    if (words.length === 0) {
+      return [];
+    }
+  
+    // Add connection timing
+    const connectionStart = Date.now();
+    
+    try {
+      // Log connection pool status if available (this doesn't use a connection)
+      if (db.$client && typeof db.$client.totalCount !== 'undefined') {
+        console.log(`[IMPORT DEBUG] Connection pool status:`, {
+          total: db.$client.totalCount,
+          idle: db.$client.idleCount,
+          waiting: db.$client.waitingCount
+        });
+      }
+      
+      const insertStart = Date.now();
+      const insertedWords = await db.insert(vocabulary)
+        .values(words)
+        .onConflictDoNothing()
+        .returning();
+      
+      const insertTime = Date.now() - insertStart;
+      console.log(`[IMPORT DEBUG] Insert operation took ${insertTime}ms for ${insertedWords.length} words`);
+      
+      return insertedWords;
+    } catch (error) {
+      console.error('[IMPORT DEBUG] Database error:', error);
+      throw error;
+    }
+  }
+
   async updateVocabulary(id: number, updates: Partial<InsertVocabulary>): Promise<Vocabulary> {
     const [updated] = await db.update(vocabulary)
       .set(updates)
@@ -430,6 +302,12 @@ export class DatabaseStorage implements IStorage {
   async getWordProficiency(wordId: number): Promise<WordProficiency | undefined> {
     const [proficiency] = await db.select().from(wordProficiency)
       .where(eq(wordProficiency.wordId, wordId.toString()));
+    return proficiency;
+  }
+
+  async getWordProficiencyBatch(wordIds: number[]): Promise<WordProficiency[] | undefined> {
+    const proficiency = await db.select().from(wordProficiency)
+      .where(inArray(wordProficiency.wordId, wordIds.map(id => id.toString())));
     return proficiency;
   }
   
@@ -478,12 +356,37 @@ export class DatabaseStorage implements IStorage {
           correctCount: isCorrect ? "1" : "0",
           attemptCount: "1",
           lastPracticed: now,
-          isSaved: false
         })
         .returning();
         
       return newProf;
     }
+  }
+
+  async updateWordProficiencyBatch(proficiencyDiff: {wordId: number, correct: boolean}[], userId?: number): Promise<WordProficiency[]> {
+    const now = Date.now().toString();
+
+    const values = proficiencyDiff.map(item => ({
+      wordId: item.wordId.toString(),
+      userId: userId || null,
+      correctCount: item.correct ? "1" : "0",
+      attemptCount: "1",
+      lastPracticed: now,
+    }));
+    
+    const updated = await db.insert(wordProficiency)
+      .values(values)
+      .onConflictDoUpdate({
+        target: userId ? [wordProficiency.wordId, wordProficiency.userId] : [wordProficiency.wordId],
+        set: {
+          correctCount: sql`${wordProficiency.correctCount} + CASE WHEN excluded.correctCount = '1' THEN 1 ELSE 0 END`,
+          attemptCount: sql`${wordProficiency.attemptCount} + 1`,
+          lastPracticed: now
+        }
+      })
+      .returning();
+      
+    return updated;
   }
 
   async resetWordProficiency(wordId: number): Promise<void> {
@@ -492,63 +395,50 @@ export class DatabaseStorage implements IStorage {
   }
   
   async saveWordToUserList(userId: number, wordId: number): Promise<WordProficiency> {
-    // Check if the word is already in the user's list
-    const [existingProf] = await db.select().from(wordProficiency)
-      .where(
-        and(
-          eq(wordProficiency.userId, userId),
-          eq(wordProficiency.wordId, wordId.toString())
-        )
-      );
+    // Create a new proficiency record with the word marked as saved
+    const now = Date.now().toString();
+    const [newProf] = await db.insert(wordProficiency)
+      .values({
+        userId,
+        wordId: wordId.toString(),
+        correctCount: "0",
+        attemptCount: "0",
+        lastPracticed: now,
+      })
+      .onConflictDoNothing()
+      .returning();
       
-    if (existingProf) {
-      // Update the existing record to mark it as saved
-      const [updated] = await db.update(wordProficiency)
-        .set({ isSaved: true })
-        .where(eq(wordProficiency.id, existingProf.id))
-        .returning();
-        
-      return updated;
-    } else {
-      // Create a new proficiency record with the word marked as saved
-      const now = Date.now().toString();
-      const [newProf] = await db.insert(wordProficiency)
-        .values({
-          userId,
-          wordId: wordId.toString(),
-          correctCount: "0",
-          attemptCount: "0",
-          lastPracticed: now,
-          isSaved: true
-        })
-        .returning();
-        
-      return newProf;
+    return newProf;
+  }
+
+  async saveWordBatchToUserList(userId: number, wordIds: number[]): Promise<WordProficiency[]> {
+    console.log("WordIds: " + wordIds + " userId:" + userId);
+
+    if (wordIds.length === 0) {
+      return [];
     }
+  
+    // 4. Batch insert new proficiency records
+    const now = Date.now().toString();
+    const newProficiencies = wordIds.map(wordId => ({
+      userId,
+      wordId: wordId.toString(),
+      correctCount: "0",
+      attemptCount: "0", 
+      lastPracticed: now,
+    }));
+  
+    const profs = await db.insert(wordProficiency)
+      .values(newProficiencies)  // ✅ Single INSERT for all new words
+      .onConflictDoNothing()
+      .returning();
+  
+    return profs;
   }
   
   async removeWordFromUserList(userId: number, wordId: number): Promise<void> {
-    // Find the word proficiency record
-    const [existingProf] = await db.select().from(wordProficiency)
-      .where(
-        and(
-          eq(wordProficiency.userId, userId),
-          eq(wordProficiency.wordId, wordId.toString())
-        )
-      );
-      
-    if (existingProf) {
-      // If the word has practice history, just mark it as not saved
-      if (parseInt(existingProf.attemptCount) > 0) {
-        await db.update(wordProficiency)
-          .set({ isSaved: false })
-          .where(eq(wordProficiency.id, existingProf.id));
-      } else {
-        // If no practice history, remove it completely
-        await db.delete(wordProficiency)
-          .where(eq(wordProficiency.id, existingProf.id));
-      }
-    }
+      await db.delete(wordProficiency)
+        .where(and(eq(wordProficiency.id, wordId), eq(wordProficiency.userId, userId)));
   }
   
   // Chinese character dictionary methods
@@ -1115,5 +1005,4 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-// Use Database storage instead of MemStorage
 export const storage = new DatabaseStorage();

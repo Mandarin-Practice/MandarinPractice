@@ -35,30 +35,26 @@ interface WordList {
   name: string;
   description: string;
   category?: string; // Category/folder to group word lists
-  words: {
-    chinese: string;
-    pinyin: string;
-    english: string;
-  }[];
+  words: number[];
 }
 
 const SAMPLE_WORD_LISTS: WordList[] = [
-  LESSON20_WORDLIST,
-  LESSON19_WORDLIST,
-  LESSON18_WORDLIST,
-  LESSON17_WORDLIST,
-  LESSON16_WORDLIST,
-  LESSON15_WORDLIST,
-  LESSON14_WORDLIST,
-  LESSON13_WORDLIST,
-  LESSON12_WORDLIST,
-  LESSON11_WORDLIST,
-  LESSON10_WORDLIST,
-  LESSON9_WORDLIST,
-  LESSON8_WORDLIST,
-  LESSON7_WORDLIST,
-  LESSON6_WORDLIST,
-  LESSON5_WORDLIST,
+  // LESSON20_WORDLIST,
+  // LESSON19_WORDLIST,
+  // LESSON18_WORDLIST,
+  // LESSON17_WORDLIST,
+  // LESSON16_WORDLIST,
+  // LESSON15_WORDLIST,
+  // LESSON14_WORDLIST,
+  // LESSON13_WORDLIST,
+  // LESSON12_WORDLIST,
+  // LESSON11_WORDLIST,
+  // LESSON10_WORDLIST,
+  // LESSON9_WORDLIST,
+  // LESSON8_WORDLIST,
+  // LESSON7_WORDLIST,
+  // LESSON6_WORDLIST,
+  // LESSON5_WORDLIST,
   LESSON4_WORDLIST,
   LESSON3_WORDLIST,
   LESSON2_WORDLIST,
@@ -92,12 +88,7 @@ export default function WordList() {
   const { data: vocabulary, isLoading: vocabularyLoading } = useQuery({
     queryKey: ['/api/vocabulary', user?.backendUser?.id],
     queryFn: async () => {
-      let url = '/api/vocabulary';
-      
-      // If user is logged in, fetch their personal word list
-      if (user?.backendUser?.id) {
-        url = `${url}?userId=${user.backendUser.id}`;
-      }
+      let url = `/api/vocabulary?userId=${user?.backendUser?.id}`;
       
       const response = await fetch(url);
       if (!response.ok) {
@@ -105,6 +96,7 @@ export default function WordList() {
       }
       return response.json();
     },
+    enabled: !!user?.backendUser?.id,
     refetchOnWindowFocus: false,
   });
 
@@ -267,124 +259,36 @@ export default function WordList() {
 
   // Import word list mutation
   const importWordListMutation = useMutation({
-    mutationFn: async (data: { wordList: { chinese: string; pinyin: string; english: string }[] }): Promise<{
+    mutationFn: async (data: { wordList: number[] }): Promise<{
       savedWords: any[];
       stats: {
         totalRequested: number;
-        validWords: number;
         savedWords: number;
-        validationErrors: number;
-        saveErrors: number;
       };
     }> => {
+      const words = data.wordList;
+
       // Change the data structure to match what the server expects
-      const words = data.wordList.map(word => ({
-        chinese: word.chinese,
-        pinyin: word.pinyin,
-        english: word.english,
-        active: "true"
-      }));
-      
-      // console.log('[IMPORT CLIENT] Preparing import of', words.length, 'words');
-      // console.log('[IMPORT CLIENT] First few words:', words.slice(0, 3));
-      // console.log('[IMPORT CLIENT] Authentication status:', {
-      //   isLoggedIn: !!user,
-      //   hasBackendUser: !!user?.backendUser,
-      //   userId: user?.backendUser?.id || 'not logged in'
-      // });
+      console.log('[IMPORT CLIENT] Preparing import of', words.length, 'words');
+      console.log('[IMPORT CLIENT] First few words:', words.slice(0, 3));
+      console.log('[IMPORT CLIENT] Authentication status:', {
+        isLoggedIn: !!user,
+        hasBackendUser: !!user?.backendUser,
+        userId: user?.backendUser?.id || 'not logged in'
+      });
       
       // If user is logged in, include userId to add words to their list
       const userId = user?.backendUser?.id;
       
       // Split words into smaller batches to avoid issues with large imports
-      const BATCH_SIZE = 5; // Reduced batch size for better reliability
-      const allResults: {
-        savedWords: any[];
-        stats: {
-          totalRequested: number;
-          validWords: number;
-          savedWords: number;
-          validationErrors: number;
-          saveErrors: number;
-        }
-      } = {
-        savedWords: [],
-        stats: {
-          totalRequested: words.length,
-          validWords: 0,
-          savedWords: 0,
-          validationErrors: 0,
-          saveErrors: 0
-        }
-      };
       
-      // Process words in batches with more robust error handling
-      for (let i = 0; i < words.length; i += BATCH_SIZE) {
-        const batch = words.slice(i, i + BATCH_SIZE);
-        const batchPayload = userId ? { words: batch, userId } : { words: batch };
-        
-        // console.log(`[IMPORT CLIENT] Sending batch ${Math.floor(i/BATCH_SIZE) + 1} with ${batch.length} words (${i+1} to ${Math.min(i+BATCH_SIZE, words.length)} of ${words.length})`);
-        
-        try {
-          // Add a slight delay between batches to prevent overwhelming the server
-          if (i > 0) {
-            await new Promise(resolve => setTimeout(resolve, 500));
-          }
-          
-          const response = await apiRequest('POST', '/api/vocabulary/import', batchPayload);
-          
-          // Enhanced error handling
-          if (!response.ok) {
-            const errorText = await response.text().catch(() => 'Unknown error');
-            console.error(`[IMPORT CLIENT] Batch ${Math.floor(i/BATCH_SIZE) + 1} failed:`, {
-              status: response.status,
-              statusText: response.statusText,
-              body: errorText
-            });
-            throw new Error(`Failed to import batch ${Math.floor(i/BATCH_SIZE) + 1}: ${response.status} ${response.statusText}`);
-          }
-          
-          // Parse JSON response with error handling
-          let batchResult;
-          try {
-            batchResult = await response.json();
-          } catch (jsonError) {
-            console.error('[IMPORT CLIENT] Failed to parse JSON response:', jsonError);
-            throw new Error('Invalid response format from server');
-          }
-          
-          // console.log(`[IMPORT CLIENT] Batch ${Math.floor(i/BATCH_SIZE) + 1} result:`, batchResult);
-          
-          // Add this batch's saved words to the combined results
-          if (batchResult.savedWords) {
-            allResults.savedWords = [...allResults.savedWords, ...batchResult.savedWords];
-            
-            // Update the stats
-            if (batchResult.stats) {
-              allResults.stats.validWords += batchResult.stats.validWords;
-              allResults.stats.savedWords += batchResult.stats.savedWords;
-              allResults.stats.validationErrors += batchResult.stats.validationErrors;
-              allResults.stats.saveErrors += batchResult.stats.saveErrors;
-            }
-          } else {
-            // Handle old response format
-            allResults.savedWords = [...allResults.savedWords, ...(Array.isArray(batchResult) ? batchResult : [])];
-            allResults.stats.savedWords += Array.isArray(batchResult) ? batchResult.length : 0;
-            allResults.stats.validWords += Array.isArray(batchResult) ? batchResult.length : 0;
-          }
-        } catch (batchError) {
-          console.error(`[IMPORT CLIENT] Error processing batch ${Math.floor(i/BATCH_SIZE) + 1}:`, batchError);
-          // Continue with next batch instead of failing the entire import
-          toast({
-            title: `Batch ${Math.floor(i/BATCH_SIZE) + 1} failed`,
-            description: batchError instanceof Error ? batchError.message : 'Unknown error',
-            variant: 'destructive',
-          });
-        }
+      const response = await apiRequest('POST', '/api/vocabulary/import', { words: words, userId });
+
+      if (!response.ok) {
+        throw new Error('Failed to import word list');
       }
       
-      // console.log('[IMPORT CLIENT] All batches processed, combined results:', allResults);
-      return allResults;
+      return response.json();
     },
     onSuccess: (data) => {
       // Invalidate both general vocabulary and user-specific word list queries
@@ -410,10 +314,6 @@ export default function WordList() {
         message = user?.backendUser?.id 
           ? `${stats.savedWords} out of ${stats.totalRequested} words were added to your personal word list` 
           : `${stats.savedWords} out of ${stats.totalRequested} words were added to the vocabulary database`;
-          
-        if (stats.validationErrors > 0) {
-          message += `\n${stats.validationErrors} words had validation errors`;
-        }
       }
       
       toast({
@@ -457,8 +357,8 @@ export default function WordList() {
   const handleImportWordList = (listId: string) => {
     const list = SAMPLE_WORD_LISTS.find(l => l.id === listId);
     if (list) {
-      // console.log(`[IMPORT] Starting import of word list: ${list.name} (${list.id})`);
-      // console.log(`[IMPORT] First few words:`, list.words.slice(0, 3));
+      console.log(`[IMPORT] Starting import of word list: ${list.name} (${list.id})`);
+      console.log(`[IMPORT] First few words:`, list.words.slice(0, 3));
       importWordListMutation.mutateAsync({ wordList: list.words });
     }
   };
@@ -619,10 +519,7 @@ export default function WordList() {
     
     list.words.forEach(word => {
       // Check if this word already exists in the vocabulary
-      const exists = vocabulary.some(v => 
-        v.chinese === word.chinese && 
-        normalizePinyin(v.pinyin) === normalizePinyin(word.pinyin)
-      );
+      const exists = vocabulary.some(v => v.id === word);
       
       if (exists) {
         imported++;
