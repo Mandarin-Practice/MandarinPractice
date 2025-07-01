@@ -291,11 +291,11 @@ export async function generateSentence(
 
   // Extract all individual characters from the vocabulary words
   const allChars = vocabulary.map(word => word.chinese.split('')).flat();
-  console.log(`Available characters from vocabulary: ${allChars.join(', ')}`);
+  // console.log(`Available characters from vocabulary: ${allChars.join(', ')}`);
   
   // Get the original words to provide context
   const originalWords = vocabulary.map(word => word.chinese);
-  console.log(`Original vocabulary words: ${originalWords.join(', ')}`);
+  // console.log(`Original vocabulary words: ${originalWords.join(', ')}`);
   
   try {
     const response = await openai.chat.completions.create({
@@ -412,7 +412,7 @@ export async function generateSentence(
       );
       
       if (unknownChars.length > 0) {
-        console.log(`Beginner sentence has unknown characters: ${unknownChars.join(', ')}`);
+        // console.log(`Beginner sentence has unknown characters: ${unknownChars.join(', ')}`);
         // Only throw error if there are actually unknown characters
         throw new Error("Beginner level sentences must only use vocabulary from the list");
       }
@@ -433,9 +433,9 @@ export async function generateSentence(
       const unknownRatio = unknownChars.length / uniqueSentenceWords.length;
       
       // Log detailed information for debugging
-      console.log(`${difficulty} sentence check: ${unknownChars.length} unknown chars out of ${uniqueSentenceWords.length} total (ratio: ${unknownRatio.toFixed(2)})`);
+      // console.log(`${difficulty} sentence check: ${unknownChars.length} unknown chars out of ${uniqueSentenceWords.length} total (ratio: ${unknownRatio.toFixed(2)})`);
       if (unknownChars.length > 0) {
-        console.log(`Unknown chars: ${unknownChars.join(', ')}`);
+        // console.log(`Unknown chars: ${unknownChars.join(', ')}`);
       }
       
       // Reject sentences with too many unknown characters
@@ -450,7 +450,7 @@ export async function generateSentence(
       requestedPattern: randomPattern // Include the pattern that was requested
     };
   } catch (error) {
-    console.error("Error generating sentence:", error);
+    // console.error("Error generating sentence:", error);
     throw new Error("Failed to generate sentence. Please try again.");
   }
 }
@@ -582,7 +582,7 @@ export async function generateSentenceWithWord(
       requestedPattern: randomPattern // Include the pattern that was requested
     };
   } catch (error) {
-    console.error("Error generating sentence:", error);
+    // console.error("Error generating sentence:", error);
     throw new Error("Failed to generate example sentence. Please try again.");
   }
 }

@@ -356,7 +356,7 @@ export function checkSimilarity(
   let finalSimilarity = Math.min(1, combinedSimilarity * strictnessFactors[matchLevel]);
   
   // For debugging (can be removed in production)
-  // console.log('Semantic:', semanticSimilarity, 'Word-based:', wordBasedSimilarity, 'Edit-distance:', similarity, 'Final:', finalSimilarity);
+  // // console.log('Semantic:', semanticSimilarity, 'Word-based:', wordBasedSimilarity, 'Edit-distance:', similarity, 'Final:', finalSimilarity);
   
   return finalSimilarity;
 }

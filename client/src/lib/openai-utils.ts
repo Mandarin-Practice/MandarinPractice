@@ -51,7 +51,7 @@ export async function generateSentence(word: string): Promise<{
     
     return await response.json();
   } catch (error) {
-    console.error('Error generating sentence:', error);
+    // console.error('Error generating sentence:', error);
     throw error;
   }
 }

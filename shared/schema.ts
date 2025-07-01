@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, varchar, numeric, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
@@ -18,6 +18,12 @@ export const users = pgTable("users", {
   highestScore: integer("highest_score").default(0), // Highest score ever achieved
   lastPracticeDate: timestamp("last_practice_date"), // To track daily streaks
   createdAt: timestamp("created_at").defaultNow(),
+  speechRate: numeric("speech_rate").default("1.0"),
+  selectedVoiceURI: text("selected_voice_uri"),
+  autoReplay: boolean("auto_replay").default(false),
+  matchStrictness: text("match_strictness").default("moderate"),
+  timeWeight: integer("time_weight").default(3),
+  difficulty: text("difficulty").default("beginner")
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -37,16 +43,18 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
-// Vocabulary schema for Mandarin words
 export const vocabulary = pgTable("vocabulary", {
   id: serial("id").primaryKey(),
   chinese: text("chinese").notNull(),
   pinyin: text("pinyin").notNull(),
   english: text("english").notNull(),
   active: text("active").default("true").notNull(),
-  lessonId: integer("lesson_id"), // Track which lesson this vocabulary word is from (11-20 for advanced)
+  lessonId: integer("lesson_id"),
   category: text("category"), // Category like "food", "travel", etc.
-});
+}, (table) => ({
+  // Add unique constraint on chinese + pinyin combination
+  chinesePinyinUnique: unique().on(table.chinese, table.pinyin),
+}));
 
 export const vocabularySchema = createInsertSchema(vocabulary).pick({
   chinese: true,
@@ -95,9 +103,11 @@ export const wordProficiency = pgTable("word_proficiency", {
   correctCount: text("correct_count").default("0").notNull(),
   attemptCount: text("attempt_count").default("0").notNull(),
   lastPracticed: text("last_practiced").default("0").notNull(),
-  isSaved: boolean("is_saved").default(false), // Whether this word is saved to user's list
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  // Add unique constraint on chinese + pinyin combination
+  chinesePinyinUnique: unique().on(table.userId, table.wordId),
+}));
 
 export const wordProficiencySchema = createInsertSchema(wordProficiency).pick({
   userId: true,
@@ -105,7 +115,6 @@ export const wordProficiencySchema = createInsertSchema(wordProficiency).pick({
   correctCount: true,
   attemptCount: true,
   lastPracticed: true,
-  isSaved: true,
 });
 
 export type InsertWordProficiency = z.infer<typeof wordProficiencySchema>;

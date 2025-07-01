@@ -48,9 +48,9 @@ try {
       }),
     });
     firebaseInitialized = true;
-    console.log("Firebase Admin SDK initialized successfully");
+    // console.log("Firebase Admin SDK initialized successfully");
   } else {
-    console.log("Firebase Admin SDK not initialized - missing credentials");
+    // console.log("Firebase Admin SDK not initialized - missing credentials");
   }
 } catch (error) {
   console.error("Error initializing Firebase Admin SDK:", error);
@@ -74,7 +74,7 @@ declare global {
 const verifyFirebaseToken = async (req: Request, res: Response, next: Function) => {
   // If Firebase is not initialized, use mock verification for development
   if (!firebaseInitialized) {
-    console.log("Firebase not initialized, using mock verification");
+    // console.log("Firebase not initialized, using mock verification");
     req.user = {
       firebaseUid: "mock-uid",
       email: "mock@example.com",
@@ -321,12 +321,9 @@ authRouter.get("/wordlist", async (req: Request, res: Response) => {
     // Get user's word proficiencies
     const proficiencies = await storage.getUserWordProficiencies(userId);
 
-    // Filter only saved words
-    const savedWords = proficiencies.filter((prof) => prof.isSaved);
-
     // Get vocabulary details for each saved word
     const wordList = await Promise.all(
-      savedWords.map(async (prof) => {
+      proficiencies.map(async (prof) => {
         const wordId = parseInt(prof.wordId);
         const word = await storage.getVocabulary(wordId);
 

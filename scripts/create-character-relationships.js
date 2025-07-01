@@ -21,12 +21,12 @@ let stats = {
 async function createCharacterRelationships() {
   try {
     // Get all characters from the database
-    console.log('Fetching all characters from database...');
+    // console.log('Fetching all characters from database...');
     const allCharsResult = await pool.query(
       "SELECT id, character FROM characters WHERE character ~ '^[\\u4e00-\\u9fff]+$' ORDER BY id"
     );
     const allChars = allCharsResult.rows;
-    console.log(`Found ${allChars.length} characters to process for relationships`);
+    // console.log(`Found ${allChars.length} characters to process for relationships`);
     
     // Create a map for faster lookups
     const charMap = new Map();
@@ -39,7 +39,7 @@ async function createCharacterRelationships() {
       "SELECT id, character FROM characters WHERE LENGTH(character) = 1 AND character ~ '^[\\u4e00-\\u9fff]$'"
     );
     const singleChars = singleCharsResult.rows;
-    console.log(`Found ${singleChars.length} single characters for components`);
+    // console.log(`Found ${singleChars.length} single characters for components`);
     
     // Create another map for single characters
     const singleCharMap = new Map();
@@ -56,7 +56,7 @@ async function createCharacterRelationships() {
       "SELECT MAX(compound_id) as last_compound_id FROM character_compounds"
     );
     const lastCompoundId = progressResult.rows[0].last_compound_id || 0;
-    console.log(`Resuming from compound ID: ${lastCompoundId}`);
+    // console.log(`Resuming from compound ID: ${lastCompoundId}`);
     
     // Process multi-character compounds, starting from where we left off
     const multiCharsResult = await pool.query(
@@ -64,7 +64,7 @@ async function createCharacterRelationships() {
       [lastCompoundId]
     );
     const multiChars = multiCharsResult.rows;
-    console.log(`Processing ${multiChars.length} multi-character compounds`);
+    // console.log(`Processing ${multiChars.length} multi-character compounds`);
     
     // Prepare batch inserts to improve performance
     const relationshipsToCreate = [];
@@ -93,18 +93,18 @@ async function createCharacterRelationships() {
       
       // Log progress periodically
       if (compoundsProcessed % 100 === 0) {
-        console.log(`Prepared ${compoundsProcessed}/${multiChars.length} compounds, found ${relationshipsToCreate.length} potential relationships...`);
+        // console.log(`Prepared ${compoundsProcessed}/${multiChars.length} compounds, found ${relationshipsToCreate.length} potential relationships...`);
       }
     }
     
-    console.log(`\nPrepared ${relationshipsToCreate.length} potential relationships. Now filtering duplicates...`);
+    // console.log(`\nPrepared ${relationshipsToCreate.length} potential relationships. Now filtering duplicates...`);
     
     // Process in batches of 500 for better performance
     const batchSize = 500;
     for (let i = 0; i < relationshipsToCreate.length; i += batchSize) {
       const batch = relationshipsToCreate.slice(i, i + batchSize);
       
-      console.log(`Processing batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(relationshipsToCreate.length/batchSize)}`);
+      // console.log(`Processing batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(relationshipsToCreate.length/batchSize)}`);
       
       for (const rel of batch) {
         // Check if this relationship already exists to avoid duplicates
@@ -123,15 +123,15 @@ async function createCharacterRelationships() {
           
           // Log progress periodically
           if (relationshipsCreated % 100 === 0) {
-            console.log(`Created ${relationshipsCreated} relationships...`);
+            // console.log(`Created ${relationshipsCreated} relationships...`);
           }
         }
       }
     }
     
-    console.log(`\nCompound relationship processing complete!`);
-    console.log(`- Compounds processed: ${compoundsProcessed}`);
-    console.log(`- Relationships created: ${relationshipsCreated}`);
+    // console.log(`\nCompound relationship processing complete!`);
+    // console.log(`- Compounds processed: ${compoundsProcessed}`);
+    // console.log(`- Relationships created: ${relationshipsCreated}`);
     
     return { compoundsProcessed, relationshipsCreated };
   } catch (err) {
@@ -143,17 +143,17 @@ async function createCharacterRelationships() {
 
 // Main execution
 async function main() {
-  console.log('Starting character relationship creation...');
+  // console.log('Starting character relationship creation...');
   
   try {
     const results = await createCharacterRelationships();
     
     // Print summary
-    console.log('\nProcess completed successfully!');
-    console.log('Summary:');
-    console.log(`- Compounds processed: ${results.compoundsProcessed}`);
-    console.log(`- Relationships created: ${results.relationshipsCreated}`);
-    console.log(`- Errors encountered: ${stats.errors}`);
+    // console.log('\nProcess completed successfully!');
+    // console.log('Summary:');
+    // console.log(`- Compounds processed: ${results.compoundsProcessed}`);
+    // console.log(`- Relationships created: ${results.relationshipsCreated}`);
+    // console.log(`- Errors encountered: ${stats.errors}`);
     
     await pool.end();
     process.exit(0);
