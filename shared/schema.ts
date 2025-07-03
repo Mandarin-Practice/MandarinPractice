@@ -1,7 +1,7 @@
-import { pgTable, text, serial, integer, boolean, timestamp, varchar, numeric, unique } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, varchar, numeric, unique, doublePrecision } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 
 // User schema with Firebase authentication support
 export const users = pgTable("users", {
@@ -43,31 +43,6 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
-export const vocabulary = pgTable("vocabulary", {
-  id: serial("id").primaryKey(),
-  chinese: text("chinese").notNull(),
-  pinyin: text("pinyin").notNull(),
-  english: text("english").notNull(),
-  active: text("active").default("true").notNull(),
-  lessonId: integer("lesson_id"),
-  category: text("category"), // Category like "food", "travel", etc.
-}, (table) => ({
-  // Add unique constraint on chinese + pinyin combination
-  chinesePinyinUnique: unique().on(table.chinese, table.pinyin),
-}));
-
-export const vocabularySchema = createInsertSchema(vocabulary).pick({
-  chinese: true,
-  pinyin: true,
-  english: true,
-  active: true,
-  lessonId: true,
-  category: true,
-});
-
-export type InsertVocabulary = z.infer<typeof vocabularySchema>;
-export type Vocabulary = typeof vocabulary.$inferSelect;
-
 // Practice session schema to track user progress
 export const practiceSession = pgTable("practice_session", {
   id: serial("id").primaryKey(),
@@ -96,29 +71,52 @@ export type InsertPracticeSession = z.infer<typeof practiceSessionSchema>;
 export type PracticeSession = typeof practiceSession.$inferSelect;
 
 // Word proficiency schema to track mastery of individual words
-export const wordProficiency = pgTable("word_proficiency", {
+export const wordProficiency = pgTable("word_proficiencies", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id), // Link to user account
-  wordId: text("word_id").notNull(),
-  correctCount: text("correct_count").default("0").notNull(),
-  attemptCount: text("attempt_count").default("0").notNull(),
-  lastPracticed: text("last_practiced").default("0").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
+  userId: integer("user_id").references(() => users.id).notNull(), // Link to user account
+  chinese: text("chinese").notNull(),
+  pinyin: text("pinyin").notNull(),
+  english: text("english").notNull(),
+  correctCount: integer("correct_count").default(0).notNull(),
+  attemptCount: integer("attempt_count").default(0).notNull(),
+  percentCorrect: doublePrecision("percent_correct")
+    .generatedAlwaysAs(sql`CASE WHEN attempt_count = 0 THEN 0 ELSE ROUND((correct_count * 100.0) / attempt_count, 2) END`)
+    .notNull(),
+  lastPracticed: timestamp("last_practiced").defaultNow().notNull(),
+  active: boolean("active").default(true).notNull(),
+  category: text("category"), // Category like "food", "travel", etc.
 }, (table) => ({
   // Add unique constraint on chinese + pinyin combination
-  chinesePinyinUnique: unique().on(table.userId, table.wordId),
+  chinesePinyinUnique: unique().on(table.userId, table.chinese, table.pinyin),
 }));
 
 export const wordProficiencySchema = createInsertSchema(wordProficiency).pick({
   userId: true,
-  wordId: true,
+  chinese: true,
+  pinyin: true,
+  english: true,
   correctCount: true,
   attemptCount: true,
   lastPracticed: true,
+  active: true,
+  category: true,
 });
 
-export type InsertWordProficiency = z.infer<typeof wordProficiencySchema>;
-export type WordProficiency = typeof wordProficiency.$inferSelect;
+export type InsertFullProficiency = z.infer<typeof wordProficiencySchema>;
+export type FullProficiency = typeof wordProficiency.$inferSelect;
+export type Vocabulary = {
+  chinese: string;
+  pinyin: string;
+  english: string;
+  active: boolean;
+}
+export type Proficiency = {
+  correctCount: number;
+  attemptCount: number;
+  percentCorrect: number;
+  lastPracticed: Date;
+  category: string | null;
+}
 
 // Chinese Characters schema - for the character dictionary
 export const characters = pgTable("characters", {
@@ -166,6 +164,7 @@ export const characterDefinitionSchema = createInsertSchema(characterDefinitions
 export type InsertCharacterDefinition = z.infer<typeof characterDefinitionSchema>;
 export type CharacterDefinition = typeof characterDefinitions.$inferSelect;
 
+// TODO remove this table if possible
 // User's learned character definitions - for tracking which definitions a user has learned
 export const learnedDefinitions = pgTable("learned_definitions", {
   id: serial("id").primaryKey(),
