@@ -17,7 +17,8 @@ import {
   characterCompounds,
   wordProficiency,
   users,
-  Proficiency
+  Proficiency,
+  FullProficiency
 } from "@shared/schema";
 import { db, pool } from "./db";
 import { eq, like, desc, asc, and, or, sql, inArray, not } from "drizzle-orm";
@@ -38,6 +39,12 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, updates: Partial<InsertUser>): Promise<User>;
   getLeaderboard(limit?: number): Promise<User[]>;
+
+  // Joint Vocab + Proficiency getters
+  getAllVocabularyWithProficiency(userId: number): Promise<FullProficiency[]>;
+  getVocabularyWithProficiency(userId: number, wordId: number): Promise<FullProficiency | undefined>;
+  getVocabularyWithProficiencyBatch(userId: number, wordIds: number[]): Promise<(FullProficiency)[]>;
+  getVocabularyWithProficiencyByChineseAndPinyin(userId: number, chinese: string, pinyin: string): Promise<FullProficiency | undefined>;
   
   // Vocabulary methods
   getAllVocabulary(userId: number): Promise<Vocabulary[]>;
@@ -161,6 +168,40 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  // Joint Vocab + Proficiency getters
+
+  async getAllVocabularyWithProficiency(userId: number): Promise<FullProficiency[]> {
+    return await db.select().from(wordProficiency).where(eq(wordProficiency.userId, userId));
+  }
+
+  async getVocabularyWithProficiency(userId: number, wordId: number): Promise<FullProficiency | undefined> {
+    const [result] = await db.select()
+      .from(wordProficiency)
+      .where(and(eq(wordProficiency.userId, userId), eq(wordProficiency.id, wordId)));
+
+    return result;
+  }
+
+  async getVocabularyWithProficiencyBatch(userId: number, wordIds: number[]): Promise<FullProficiency[]> {
+    return await db.select()
+      .from(wordProficiency)
+      .where(and(eq(wordProficiency.userId, userId), inArray(wordProficiency.id, wordIds)));
+  }
+
+  async getVocabularyWithProficiencyByChineseAndPinyin(userId: number, chinese: string, pinyin: string): Promise<FullProficiency | undefined> {
+    const [result] = await db.select()
+      .from(wordProficiency)
+      .where(
+        and(
+          eq(wordProficiency.userId, userId),
+          eq(wordProficiency.chinese, chinese),
+          eq(wordProficiency.pinyin, pinyin)
+        )
+      );
+
+    return result;
+  }
+
   // Vocabulary methods
 
   private readonly VOCABULARY_SELECT = {
@@ -189,7 +230,6 @@ export class DatabaseStorage implements IStorage {
     );
     return vocab;
   }
-
 
   async getVocabularyBatch(userId: number, wordIds: number[]): Promise<Vocabulary[]> {
     const vocab = await db.select(this.VOCABULARY_SELECT).from(wordProficiency).where(and(eq(wordProficiency.userId, userId), inArray(wordProficiency.id, wordIds)));
