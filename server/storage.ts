@@ -51,6 +51,7 @@ export interface IStorage {
   getVocabulary(userId: number, wordId: number): Promise<Vocabulary | undefined>;
   getVocabularyBatch(userId: number, wordIds: number[]): Promise<Vocabulary[]>;
   getVocabularyByChineseAndPinyin(userId: number, chinese: string, pinyin: string): Promise<Vocabulary | undefined>;
+  updateVocabulary(userId: number, wordId: number, updates: Partial<Vocabulary>): Promise<Vocabulary>;
   addVocabulary(userId: number, word: Vocabulary): Promise<Vocabulary>;
   addVocabularyBatch(userId: number, words: Vocabulary[]): Promise<Vocabulary[]>;
   deleteVocabulary(userId: number, id: number): Promise<void>;
@@ -58,7 +59,7 @@ export interface IStorage {
   
   // Word proficiency methods
   getWordProficiency(userId: number, wordId: number): Promise<Proficiency | undefined>;
-  getWordProficiencyBatch(userId: number, wordIds: number[]): Promise<Proficiency[] | undefined>;
+  getWordProficiencyBatch(userId: number, wordIds: number[]): Promise<Proficiency[]>;
   updateWordProficiencyBatch(userId: number, proficiencyDiff: {wordId: number, correct: boolean}[]): Promise<Proficiency[]>;
   getWordProficiencies(userId: number): Promise<Proficiency[]>;
   updateWordProficiency(userId: number, wordId: number, isCorrect: boolean): Promise<Proficiency>;
@@ -270,6 +271,21 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async updateVocabulary(userId: number, wordId: number, updates: Partial<Vocabulary>): Promise<Vocabulary> {
+    return db.transaction(async (tx) => {
+      const [updated] = await tx.update(wordProficiency)
+        .set(updates)
+        .where(and(eq(wordProficiency.userId, userId), eq(wordProficiency.id, wordId)))
+        .returning(this.VOCABULARY_SELECT);
+        
+      if (!updated) {
+        throw new Error(`Vocabulary with ID ${wordId} not found for user ${userId}`);
+      }
+      
+      return updated;
+    });
+  }
+
   async deleteVocabulary(userId: number, id: number): Promise<void> {
     await db.delete(wordProficiency).where(and(eq(wordProficiency.userId, userId), eq(wordProficiency.id, id)));
   }
@@ -294,7 +310,7 @@ export class DatabaseStorage implements IStorage {
     return proficiency;
   }
 
-  async getWordProficiencyBatch(userId: number, wordIds: number[]): Promise<Proficiency[] | undefined> {
+  async getWordProficiencyBatch(userId: number, wordIds: number[]): Promise<Proficiency[]> {
     const proficiency = await db.select(this.PROFICIENCY_SELECT).from(wordProficiency)
       .where(and(eq(wordProficiency.userId, userId), inArray(wordProficiency.id, wordIds)));
 
