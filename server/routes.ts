@@ -1089,6 +1089,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get proficiency for a specific word
+  app.get("/api/full-proficiency/:wordId", authenticateFirebaseUser, async (req, res) => {
+    try {
+      const userId = req.authenticatedUserId;
+
+      if (!userId) {
+        return res.status(400).json({ message: "Unauthorized" });
+      }
+
+      const wordId = parseInt(req.params.wordId); // Before: const wordId = req.body.wordId;
+      
+      if (isNaN(wordId)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      const proficiency = await storage.getVocabularyWithProficiency(userId, wordId);
+
+      if (!proficiency) {
+        console.error("No proficiency found for word ID:", wordId);
+        return res.status(400).json({ message: `Failed to fetch proficiency ${wordId} with userId: ${userId}` });
+      }
+      
+      res.json({
+        proficiency
+      });
+    } catch (error) {
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to get word proficiency" });
+    }
+  });
+
+  // Get proficiency for a specific word
+  app.post("/api/full-proficiency/batch", authenticateFirebaseUser, async (req, res) => {
+    console.log("\n\nBATCH WORD PROF REQUEST\n\n")
+    try {
+      const userId = req.authenticatedUserId;
+      
+      if (!userId) {
+        return res.status(400).json({ message: "Unauthorized" });
+      }
+
+      const { wordIds } = req.body;
+      
+      if (!Array.isArray(wordIds)) {
+        return res.status(400).json({ message: "Invalid word ID format" });
+      }
+      
+      const proficiencies = await storage.getVocabularyWithProficiencyBatch(userId, wordIds);
+      
+      res.json({proficiencies});
+    } catch (error) {
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to get word proficiencies" });
+    }
+  });
+
   // Check if two words are synonyms
   app.post("/api/synonym-check", async (req, res) => {
     try {
