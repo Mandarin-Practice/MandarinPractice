@@ -170,7 +170,7 @@ export default function WordDetail() {
                 <div className="space-y-3">
                   <div className="flex justify-between items-center text-sm">
                     <span>Mastery Level</span>
-                    <span className="font-medium">{proficiency.proficiencyPercent}%</span>
+                    <span className="font-medium">{proficiency.percentCorrect}%</span>
                   </div>
 
                   <div className="relative pt-1">

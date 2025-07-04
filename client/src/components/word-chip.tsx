@@ -10,9 +10,9 @@ interface WordChipProps {
     active: string;
   };
   proficiency?: {
-    proficiencyPercent: number;
-    correctCount: string;
-    attemptCount: string;
+    correctCount: number;
+    attemptCount: number;
+    percentCorrect: number;
   } | null;
   onRemove: () => void;
   onToggleActive?: () => void;
@@ -52,8 +52,8 @@ export default function WordChip({
       {/* Proficiency indicator */}
       {proficiency && Number(proficiency.attemptCount) > 0 && (
         <span 
-          className={`ml-2 flex items-center ${getProficiencyColor(proficiency.proficiencyPercent)}`}
-          title={`Proficiency: ${proficiency.proficiencyPercent}% (${proficiency.correctCount}/${proficiency.attemptCount})`}
+          className={`ml-2 flex items-center ${getProficiencyColor(proficiency.percentCorrect)}`}
+          title={`Proficiency: ${proficiency.percentCorrect}% (${proficiency.correctCount}/${proficiency.attemptCount})`}
         >
           <Star className="h-3.5 w-3.5 fill-current" />
         </span>
