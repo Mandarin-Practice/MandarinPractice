@@ -1,14 +1,15 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { vocabularySchema, characterSchema, characterDefinitionSchema, learnedDefinitionSchema, type Vocabulary } from "@shared/schema";
+import { wordProficiencySchema, characterSchema, characterDefinitionSchema, learnedDefinitionSchema, type Vocabulary, FullProficiency } from "@shared/schema";
 import { ZodError } from "zod";
 import { generateSentence, generateSentenceWithWord, checkSynonyms, validateSentenceWithAI, verifyTranslationQuality } from "./openai";
 import dictionaryAdminRoutes from "./routes/dictionary-admin";
 import authRoutes from "./routes/auth";
-import { requireAuth, optionalAuth } from "./middleware/auth";
-import { checkSimilarity } from "@/lib/string-similarity";
-import { pool } from "./db";
+import { requireAuth } from "./middleware/auth";
+import  authenticateFirebaseUser from "./routes/auth";
+import authRouter from "./routes/auth";
+import { auth } from "firebase-admin";
 
 // List of unnatural or grammatically incorrect sentence patterns to filter out
 const unnaturalPatterns = [
@@ -130,51 +131,22 @@ function validateSentence(chinese: string): { isValid: boolean; reason?: string 
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Get user's vocabulary words (requires authentication)
-  app.get("/api/vocabulary", async (req, res) => {
+  app.get("/api/vocabulary", authenticateFirebaseUser, async (req, res) => {
     console.log("\n\nALL VOCAB WORDS GET\n\n")
-    console.log(`📊 Vocab Pool status: ${pool.totalCount} total, ${pool.idleCount} idle, ${pool.waitingCount} waiting`);
     try {
-      // The requireAuth middleware ensures userId exists, but we need to properly type it
-      const userId = parseInt(req.query.userId as string);
-      
-      // Get user's word proficiencies
-      const proficiencies = await storage.getUserWordProficiencies(userId);
-      
-      console.log("Proficiencies length: " + proficiencies.length);
+      const userId = req.authenticatedUserId;
 
-      const wordsNoProf = await storage.getVocabularyBatch(proficiencies.map(prof => parseInt(prof.wordId)));
-
-      console.log("WordsNoProf: " + wordsNoProf?.length);
-      
-      if (!Array.isArray(wordsNoProf)) {
-        return res.json([]);
+      if (!userId) {
+        return res.status(400).json({ message: "Unauthorized" });
       }
+      
+      const vocabulary = await storage.getAllVocabulary(userId);
 
-      if (wordsNoProf.length === 0) {
-        return res.json([]);
+      if (!Array.isArray(vocabulary)) {
+        return res.status(400).json({ message: "Failed to fetch all vocab with userId: " + userId });
       }
-
-      // Create a map of word ID to word for easier lookup
-      const wordMap = new Map(wordsNoProf.map(word => [word.id, word]));
-
-      // Get vocabulary details for each saved word
-      const wordList = proficiencies.map(prof => {
-        const word = wordMap.get(parseInt(prof.wordId));
-        if (!word) {
-          return null;
-        }
-        return {
-          ...word,
-          proficiency: prof
-        };
-      }).filter(word => word !== null);
       
-      // Filter out any null values
-      const filteredWordList = wordList.filter(word => word !== null);
-
-      console.log("FILTERED WORD LIST LENGTH" + filteredWordList.length);
-      
-      res.json(filteredWordList);
+      res.json(vocabulary);
     } catch (error) {
       console.log("Failed to fetch vocabulary with error" + error);
       res.status(500).json({ message: "Failed to fetch vocabulary with error" + error});
@@ -182,29 +154,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Add vocabulary words
-  app.post("/api/vocabulary", async (req, res) => {
+  app.post("/api/vocabulary", authenticateFirebaseUser, async (req, res) => {
     console.log("\n\nALL VOCAB WORDS POST\n\n")
     try {
+      const userId = req.authenticatedUserId;
+
+      if (!userId) {
+        return res.status(400).json({ message: "Unauthorized" });
+      }
+
       const { words } = req.body;
       
       if (!Array.isArray(words)) {
         return res.status(400).json({ message: "Words must be an array" });
       }
       
-      const validatedWords = words.map(word => {
-        try {
-          return vocabularySchema.parse(word);
-        } catch (error) {
-          if (error instanceof ZodError) {
-            throw new Error(`Invalid word format: ${error.errors.map(e => e.message).join(', ')}`);
-          }
-          throw error;
-        }
-      });
-      
-      const savedWords = await Promise.all(
-        validatedWords.map(word => storage.addVocabulary(word))
-      );
+      const savedWords = await storage.addVocabularyBatch(userId, words);
       
       res.status(201).json(savedWords);
     } catch (error) {
@@ -212,82 +177,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/vocabulary/import/actual-vocab", async (req, res) => {
+  app.post("/api/vocabulary/import", authenticateFirebaseUser, async (req, res) => {
     console.log("\n\nIMPORTING ACTUAL VOCAB WORDS\n\n")
     try {
-      const words = req.body;
+      const userId = req.authenticatedUserId;
+
+      if (!userId) {
+        return res.status(400).json({ message: "Unauthorized" });
+      }
+
+      const words = req.body as Vocabulary[];
 
       if (!Array.isArray(words)) {
         return res.status(400).json({ message: "Words must be an array" });
       }
             
       // Add the word to the vocabulary
-      const savedWord = await storage.addVocabularyBatch(words);
+      const savedWord = await storage.addVocabularyBatch(userId, words);
       
       res.status(201).json(savedWord);
     } catch (error) {
       res.status(400).json({ message: error instanceof Error ? error.message : "Failed to import vocabulary" });
     }
-  })
-
-  // Import a list of vocabulary words
-  app.post("/api/vocabulary/import", optionalAuth, async (req, res) => {
-    console.log(`[IMPORT DEBUG] Receiving import request at time ${new Date().getMinutes()}:${new Date().getSeconds()}`);
-    
-    try {
-      const { words, userId } = req.body;
-      
-      if (!Array.isArray(words)) {
-        return res.status(400).json({ message: "Words must be an array" });
-      }
-      
-      console.log(`[IMPORT DEBUG] Request received with ${words.length} words${userId ? ` for user ${userId}` : ''}`);
-      console.log(`[IMPORT DEBUG] Input words array:`, JSON.stringify(words));
-      
-      // Process each validated word individually and track results
-      const savedWords = await storage.saveWordBatchToUserList(userId, words);
-
-      console.log(`[IMPORT DEBUG] Got response from vocab batch at time ${new Date().getMinutes()}:${new Date().getSeconds()}`);
-      
-      // If userId is provided, also add these words to the user's personal list
-      let effectiveUserId = userId;
-      
-      // Use authenticatedUserId from middleware if available
-      if (req.authenticatedUserId) {
-        effectiveUserId = req.authenticatedUserId;
-        console.log(`[IMPORT DEBUG] Using authenticatedUserId from middleware: ${effectiveUserId}`);
-      }
-      
-      if (effectiveUserId && !isNaN(parseInt(String(effectiveUserId)))) {
-        const userIdNum = parseInt(String(effectiveUserId));
-        console.log(`[IMPORT DEBUG] Adding ${savedWords.length} words to user ${userIdNum}'s personal list`);
-        storage.saveWordBatchToUserList(userId, savedWords.map(word => word.id));
-      } else {
-        console.log(`[IMPORT DEBUG] No valid user ID provided, words added to global dictionary only`);
-      }
-      
-      console.log(`[IMPORT DEBUG] Successfully saved ${savedWords.length} words out of ${words.length} total at time ${new Date().getMinutes()}:${new Date().getSeconds()}`);
-      
-      // Return all the saved words, including validation stats
-      console.log(`[IMPORT DEBUG] Sending response with ${savedWords.length} saved words at time ${new Date().getMinutes()}:${new Date().getSeconds()}`);
-      res.status(201).json({
-        savedWords,
-        stats: {
-          totalRequested: words.length,
-          savedWords: savedWords.length,
-        }
-      });
-    } catch (error) {
-      console.error(`[IMPORT DEBUG] Import failed with unhandled error: ${error instanceof Error ? error.message : String(error)}`);
-      console.error(error);
-      res.status(400).json({ message: error instanceof Error ? error.message : "Failed to import vocabulary" });
-    }
   });
 
   // Update a vocabulary word
-  app.patch("/api/vocabulary/:id", async (req, res) => {
+  app.patch("/api/vocabulary/:id", authenticateFirebaseUser, async (req, res) => {
     console.log("\n\nUPDATING EXACTLY ONE VOCAB WORD\n\n")
     try {
+      const userId = req.authenticatedUserId;
+
+      if (!userId) {
+        return res.status(400).json({ message: "Unauthorized" });
+      }
+
       const id = parseInt(req.params.id);
       
       if (isNaN(id)) {
@@ -295,7 +218,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const updates = req.body;
-      const updatedWord = await storage.updateVocabulary(id, updates);
+      const updatedWord = await storage.updateVocabulary(userId, id, updates);
       res.status(200).json(updatedWord);
     } catch (error) {
       res.status(404).json({ message: error instanceof Error ? error.message : "Vocabulary not found" });
@@ -303,16 +226,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete a vocabulary word
-  app.delete("/api/vocabulary/:id", async (req, res) => {
+  app.delete("/api/vocabulary/:id", authenticateFirebaseUser, async (req, res) => {
     console.log("\n\nDELETING EXACTLY ONE VOCAB WORD\n\n")
     try {
+      const userId = req.authenticatedUserId;
+
+      if (!userId) {
+        return res.status(400).json({ message: "Unauthorized" });
+      }
+
       const id = parseInt(req.params.id);
       
       if (isNaN(id)) {
         return res.status(400).json({ message: "Invalid ID format" });
       }
       
-      await storage.deleteVocabulary(id);
+      await storage.deleteVocabulary(userId, id);
       res.status(200).json({ message: "Vocabulary deleted" });
     } catch (error) {
       res.status(404).json({ message: "Vocabulary not found" });
@@ -320,10 +249,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete all vocabulary words
-  app.delete("/api/vocabulary", async (req, res) => {
+  app.delete("/api/vocabulary", authenticateFirebaseUser, async (req, res) => {
     console.log("\n\nDELETING ALL VOCAB WORDS\n\n")
     try {
-      await storage.deleteAllVocabulary();
+      const userId = req.authenticatedUserId;
+
+      if (!userId) {
+        return res.status(400).json({ message: "Unauthorized" });
+      }
+
+      await storage.deleteAllVocabulary(userId);
       res.status(200).json({ message: "All vocabulary deleted" });
     } catch (error) {
       res.status(500).json({ message: "Failed to delete vocabulary" });
@@ -331,16 +266,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get a specific vocabulary word by ID
-  app.get("/api/vocabulary/:id", async (req, res) => {
+  app.get("/api/vocabulary/:id", authenticateFirebaseUser, async (req, res) => {
     console.log("\n\nGETTING SPECIFIC VOCAB WORD\n\n")
     try {
+      const userId = req.authenticatedUserId;
+
+      if (!userId) {
+        return res.status(400).json({ message: "Unauthorized" });
+      }
+
       const id = parseInt(req.params.id);
       
       if (isNaN(id)) {
         return res.status(400).json({ message: "Invalid ID format" });
       }
       
-      const word = await storage.getVocabulary(id);
+      const word = await storage.getVocabulary(userId, id);
       
       if (!word) {
         return res.status(404).json({ message: "Vocabulary not found" });
@@ -431,45 +372,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Try to get vocabulary from user accounts first
       const users = await storage.getAllUsers();
-      let userVocabulary: Vocabulary[] = [];
+      let userVocabulary: FullProficiency[] = [];
       
       // If we have users, try to use their vocabulary for more relevant sentences
       if (users && users.length > 0) {
         // Get a random user's word list
         const randomUser = users[Math.floor(Math.random() * users.length)];
-        try {
-          const userProficiencies = await storage.getUserWordProficiencies(randomUser.id);
+        try {          
+          const allUserWords = await storage.getAllVocabularyWithProficiency(randomUser.id);
           
-          if (userProficiencies.length > 0) {
-            // Get all the words the user has practiced
-            const wordIds = userProficiencies.map(prof => prof.wordId);
-            const allUserWords = await Promise.all(
-              wordIds.map(id => storage.getVocabulary(Number(id)))
-            );
-            
-            // Filter out undefined entries and inactive words
-            userVocabulary = allUserWords
-              .filter(word => word && word.active === "true");
-            
-            // console.log(`Found ${userVocabulary.length} words in sample user's vocabulary for cache fill`);
-          }
+          // Filter out undefined entries and inactive words
+          userVocabulary = allUserWords.filter(word => word.active);
+          
+          // console.log(`Found ${userVocabulary.length} words in sample user's vocabulary for cache fill`);
         } catch (error) {
           console.error("Error fetching sample user vocabulary:", error);
         }
       }
       
-      // Fall back to all vocabulary if user vocabulary is not available
-      if (userVocabulary.length < 10) {
-        // Get all vocabulary words once for efficiency
-        const allVocabulary = await storage.getAllVocabulary();
-        const activeVocabulary = allVocabulary.filter(word => word.active === "true");
-        userVocabulary = activeVocabulary;
-      }
-      
       if (userVocabulary.length === 0) return; // Nothing to cache if no vocabulary
       
       // Function to select words, prioritizing newer lesson words and less frequently used words
-      const selectWords = (wordsList: Array<{ id: number, chinese: string, lessonId?: number | null, [key: string]: any }>, count: number) => {
+      const selectWords = (wordsList: Array<{ id: number, lessonId?: number | null, chinese: string, pinyin: string, english: string}>, count: number) => {
         // Ensure we don't try to select more words than available
         const selectionCount = Math.min(count, wordsList.length);
         
@@ -678,13 +602,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }, 5000);
 
   // Generate a sentence using the user's vocabulary
-  app.post("/api/sentence/generate", async (req, res) => {
+  app.post("/api/sentence/generate", authenticateFirebaseUser, async (req, res) => {
     try {
       const { difficulty = "beginner" } = req.body;
       const typedDifficulty = difficulty as 'beginner' | 'intermediate' | 'advanced';
       
       // Helper function to select words, prioritizing less frequently used words
-      const selectWords = (wordsList: Array<{ id: number, chinese: string, [key: string]: any }>, count: number) => {
+      const selectWords = (wordsList: Array<{ id: number, lessonId?: number | null, chinese: string, pinyin: string, english: string}>, count: number) => {
         // Ensure we don't try to select more words than available
         const selectionCount = Math.min(count, wordsList.length);
         
@@ -735,40 +659,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // If we reach here, there's no cache or we need a new sentence
       
-      // First check if user is authenticated
-      const userId = req.user?.id;
-      let userVocabulary: Vocabulary[] = [];
-      
-      if (userId) {
-        // Get user's personal word list first
-        try {
-          const userProficiencies = await storage.getUserWordProficiencies(userId);
-          
-          // Get all the words the user has practiced
-          const wordIds = userProficiencies.map(prof => prof.wordId);
-          const allUserWords = await Promise.all(
-            wordIds.map(id => storage.getVocabulary(Number(id)))
-          );
-          
-          // Filter out undefined entries and inactive words
-          userVocabulary = allUserWords
-            .filter(word => word && word.active === "true");
-          
-          // console.log(`Found ${userVocabulary.length} words in user's personal vocabulary`);
-        } catch (error) {
-          console.error("Error fetching user vocabulary:", error);
-          // Continue with default vocabulary if user-specific fetch fails
-        }
+      const userId = req.authenticatedUserId;
+
+      if (!userId) {
+        return res.status(400).json({ message: "Unauthorized" });
       }
+
+      let userVocabulary: FullProficiency[] = [];
       
-      // If user has no words or is not logged in, fall back to all vocabulary
-      if (userVocabulary.length === 0) {
-        // console.log("No user-specific vocabulary found, using all active vocabulary");
-        // Get all vocabulary words 
-        const allVocabulary = await storage.getAllVocabulary();
+      try {        
+        const allUserWords = await storage.getAllVocabularyWithProficiency(userId);
         
-        // Filter for only active words
-        userVocabulary = allVocabulary.filter(word => word.active === "true");
+        // Filter out undefined entries and inactive words
+        userVocabulary = allUserWords
+          .filter(word => word && word.active);
+        
+        // console.log(`Found ${userVocabulary.length} words in user's personal vocabulary`);
+      } catch (error) {
+        console.error("Error fetching user vocabulary:", error);
+        // Continue with default vocabulary if user-specific fetch fails
       }
       
       // Final check if we have any vocabulary
@@ -1076,34 +985,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get proficiency for a specific word
-  app.get("/api/word-proficiency/:wordId", async (req, res) => {
+  app.get("/api/word-proficiency/:wordId", authenticateFirebaseUser, async (req, res) => {
     try {
-      const wordId = parseInt(req.params.wordId);
+      const userId = req.authenticatedUserId;
+
+      if (!userId) {
+        return res.status(400).json({ message: "Unauthorized" });
+      }
+
+      const wordId = parseInt(req.params.wordId); // Before: const wordId = req.body.wordId;
       
       if (isNaN(wordId)) {
         return res.status(400).json({ message: "Invalid ID format" });
       }
       
-      const proficiency = await storage.getWordProficiency(wordId);
+      const proficiency = await storage.getWordProficiency(userId, wordId);
+
       if (!proficiency) {
-        console.log("No proficiency found for word ID:", wordId);
-        return res.json({ 
-          wordId: wordId.toString(),
-          correctCount: "0",
-          attemptCount: "0",
-          lastPracticed: "0",
-          proficiencyPercent: 0
-        });
+        console.error("No proficiency found for word ID:", wordId);
+        return res.status(400).json({ message: `Failed to fetch proficiency ${wordId} with userId: ${userId}` });
       }
       
-      // Calculate proficiency percentage
-      const correct = parseInt(proficiency.correctCount);
-      const attempts = parseInt(proficiency.attemptCount);
-      const proficiencyPercent = attempts > 0 ? Math.round((correct / attempts) * 100) : 0;
-      
       res.json({
-        ...proficiency,
-        proficiencyPercent
+        proficiency
       });
     } catch (error) {
       res.status(500).json({ message: error instanceof Error ? error.message : "Failed to get word proficiency" });
@@ -1111,42 +1015,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get proficiency for a specific word
-  app.post("/api/word-proficiency/batch", async (req, res) => {
+  app.post("/api/word-proficiency/batch", authenticateFirebaseUser, async (req, res) => {
     console.log("\n\nBATCH WORD PROF REQUEST\n\n")
     try {
+      const userId = req.authenticatedUserId;
+      
+      if (!userId) {
+        return res.status(400).json({ message: "Unauthorized" });
+      }
+
       const { wordIds } = req.body;
       
       if (!Array.isArray(wordIds)) {
         return res.status(400).json({ message: "Invalid word ID format" });
       }
       
-      const proficiencies = await storage.getWordProficiencyBatch(wordIds);
-      if (!proficiencies) {
-        return res.status(404).json({ message: "No proficiencies found" });
-      }
+      const proficiencies = await storage.getWordProficiencyBatch(userId, wordIds);
       
-      res.json({
-        proficienciesWithPercentages: proficiencies.map(proficiency => {
-          const correct = parseInt(proficiency.correctCount);
-          const attempts = parseInt(proficiency.attemptCount);
-          const proficiencyPercent = attempts > 0 ? Math.round((correct / attempts) * 100) : 0;
-          
-          return {
-            ...proficiency,
-            proficiencyPercent
-          };
-        })
-      });
+      res.json({proficiencies});
     } catch (error) {
       res.status(500).json({ message: error instanceof Error ? error.message : "Failed to get word proficiencies" });
     }
   });
 
   // Update proficiency for a word (after practice)
-  app.post("/api/word-proficiency/:wordId", async (req, res) => {
+  app.patch("/api/word-proficiency/:wordId", authenticateFirebaseUser, async (req, res) => {
     try {
+      const userId = req.authenticatedUserId;
+      if (!userId) {
+        return res.status(400).json({ message: "Unauthorized" });
+      }
+
       const wordId = parseInt(req.params.wordId);
-      
       if (isNaN(wordId)) {
         return res.status(400).json({ message: "Invalid ID format" });
       }
@@ -1156,16 +1056,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "isCorrect parameter is required and must be a boolean" });
       }
       
-      const proficiency = await storage.updateWordProficiency(wordId, isCorrect);
-      
-      // Calculate proficiency percentage
-      const correct = parseInt(proficiency.correctCount);
-      const attempts = parseInt(proficiency.attemptCount);
-      const proficiencyPercent = attempts > 0 ? Math.round((correct / attempts) * 100) : 0;
+      const proficiency = await storage.updateWordProficiency(userId, wordId, isCorrect);
       
       res.json({
-        ...proficiency,
-        proficiencyPercent
+        proficiency
       });
     } catch (error) {
       res.status(500).json({ message: error instanceof Error ? error.message : "Failed to update word proficiency" });
@@ -1173,16 +1067,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Reset proficiency for a word
-  app.delete("/api/word-proficiency/:wordId", async (req, res) => {
+  app.delete("/api/word-proficiency/:wordId", authenticateFirebaseUser, async (req, res) => {
     console.log("\n\nDELETE SPECIFIC WORD PROF\n\n")
     try {
+      const userId = req.authenticatedUserId;
+      
+      if (!userId) {
+        return res.status(400).json({ message: "Unauthorized" });
+      }
+
       const wordId = parseInt(req.params.wordId);
       
       if (isNaN(wordId)) {
         return res.status(400).json({ message: "Invalid ID format" });
       }
       
-      await storage.resetWordProficiency(wordId);
+      await storage.removeWordProficiency(userId, wordId);
       res.json({ message: "Word proficiency reset successfully" });
     } catch (error) {
       res.status(500).json({ message: error instanceof Error ? error.message : "Failed to reset word proficiency" });
@@ -1235,7 +1135,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update user streak and score 
   app.post("/api/user/streak", requireAuth, async (req, res) => {
     try {
-      const userId = req.user?.id;
+      const userId = req.authenticatedUserId;
+
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -1553,7 +1454,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = parseInt(req.params.userId);
       
       if (isNaN(userId)) {
-        return res.status(400).json({ message: "Invalid user ID format" });
+        return res.status(400).json({ message: "Unauthorized" });
       }
       
       const learnedDefinitions = await storage.getLearnedDefinitions(userId);
