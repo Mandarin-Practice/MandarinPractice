@@ -3,6 +3,7 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from './ui/hover-card';
 import { Button } from './ui/button';
 import { apiRequest } from '@/lib/queryClient';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Vocabulary } from '@shared/schema';
 
 interface CharacterDetails {
   character: string;
@@ -18,15 +19,7 @@ interface CharacterDetails {
 interface CharacterHoverViewProps {
   chinese: string;
   isInteractive: boolean;  // Only enable hover when interactive is true
-  vocabularyWords?: Array<{
-    id: number;
-    chinese: string;
-    pinyin: string;
-    english: string;
-    active: string;
-    lessonId?: number | null;
-    category?: string | null;
-  }>;
+  vocabularyWords?: Array<Vocabulary>;
   feedbackStatus?: "correct" | "partial" | "incorrect" | null;
 }
 
@@ -297,7 +290,6 @@ export default function CharacterHoverView({
             charData.pinyin = matchingWord.pinyin;
             charData.definition = matchingWord.english;
             charData.wordId = matchingWord.id;
-            charData.lessonId = matchingWord.lessonId;
             charData.category = matchingWord.category;
           }
         }
@@ -387,12 +379,14 @@ export default function CharacterHoverView({
       if (!word) return null;
       
       const response = await apiRequest('PATCH', `/api/vocabulary/${wordId}`, {
-        active: word.active === 'true' ? 'false' : 'true'
+        active: !word.active
       });
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/vocabulary'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/proficiency'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/full-proficiency'] });
     }
   });
 
@@ -404,6 +398,8 @@ export default function CharacterHoverView({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/vocabulary'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/proficiency'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/full-proficiency'] });
     }
   });
 
@@ -500,7 +496,7 @@ export default function CharacterHoverView({
                       onClick={() => toggleWordActive.mutate(charData.wordId as number)}
                       className="text-xs justify-start"
                     >
-                      {vocabularyWords?.find?.(w => w.id === charData.wordId)?.active === 'true' 
+                      {vocabularyWords?.find?.(w => w.id === charData.wordId)?.active 
                         ? 'Mark as Inactive' 
                         : 'Mark as Active'}
                     </Button>

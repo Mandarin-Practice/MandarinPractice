@@ -82,6 +82,8 @@ export default function WordDetail() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/vocabulary'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/proficiency'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/full-proficiency'] });
       toast({
         title: 'Word deleted',
         description: 'The word has been removed from your vocabulary',
@@ -328,6 +330,8 @@ export default function WordDetail() {
                   response.then(() => {
                     queryClient.invalidateQueries({ queryKey: ['/api/vocabulary', wordId] });
                     queryClient.invalidateQueries({ queryKey: ['/api/vocabulary'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/proficiency'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/full-proficiency'] });
                     toast({
                       title: 'Word deactivated',
                       description: 'This word will not be used in practice sessions',
@@ -348,6 +352,8 @@ export default function WordDetail() {
                   response.then(() => {
                     queryClient.invalidateQueries({ queryKey: ['/api/vocabulary', wordId] });
                     queryClient.invalidateQueries({ queryKey: ['/api/vocabulary'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/proficiency'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/full-proficiency'] });
                     toast({
                       title: 'Word activated',
                       description: 'This word will now be used in practice sessions',

@@ -133,6 +133,8 @@ export default function InteractiveChineseText({
     onSuccess: () => {
       // Invalidate vocabulary cache to refresh the list
       queryClient.invalidateQueries({ queryKey: ['/api/vocabulary'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/proficiency'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/full-proficiency'] });
     }
   });
   
@@ -145,6 +147,8 @@ export default function InteractiveChineseText({
     onSuccess: () => {
       // Invalidate vocabulary cache to refresh the list
       queryClient.invalidateQueries({ queryKey: ['/api/vocabulary'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/proficiency'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/full-proficiency'] });
     }
   });
   

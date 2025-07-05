@@ -13,8 +13,8 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTextToSpeech } from "@/hooks/use-text-to-speech";
 import { useToast } from "@/hooks/use-toast";
 import { useSoundEffects } from "@/hooks/use-sound-effects";
-import { useUserWordList } from "@/hooks/use-user-word-list";
 import { checkSimilarity } from "@/lib/string-similarity";
+import { FullProficiency } from "@shared/schema";
 
 interface Sentence {
   id: string;
@@ -83,13 +83,29 @@ export default function Practice() {
   const { speak, isPlaying } = useTextToSpeech();
   const { playCorrectSound, playIncorrectSound } = useSoundEffects();
 
-  // Fetch vocabulary words from user's word list with additional stability flags
-  const { 
-    wordList: vocabularyWords, 
+  const {
+    data: vocabularyWords,
     isLoading: isLoadingVocabulary,
-    isError: isVocabularyError,
-    hasWords 
-  } = useUserWordList();
+    error: isVocabularyError,
+    refetch: refetchBackendUser,
+  } = useQuery<FullProficiency[]>({
+    queryKey: ["/api/vocabulary/full-proficiency"],
+    queryFn: async () => {
+      try {
+        // Fetch user data from backend
+        const response = await fetch("/api/vocabulary/full-proficiency");
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch vocabulary");
+        }
+
+        return response.json();
+      } catch (error) {
+        console.error("Error fetching backend user:", error);
+        return null;
+      }
+    },
+  });
   
   // Set a local flag to prevent showing "no vocabulary" message too early
   const [fullyLoaded, setFullyLoaded] = useState(false);
@@ -298,7 +314,7 @@ export default function Practice() {
         // Only redirect if vocabulary is definitely not loading AND is empty
         if (!isLoadingVocabulary) {
           // Use the hasWords helper from useUserWordList to reliably check
-          const hasAnyWords = hasWords();
+          const hasAnyWords = vocabularyWords && vocabularyWords.length > 0;
           
           if (hasAnyWords) {
             // Words exist, mark as fully loaded and clear interval
@@ -325,11 +341,11 @@ export default function Practice() {
       return () => clearInterval(checkInterval);
     } else {
       // Not first visit, we can set fully loaded immediately if we have data
-      if (hasWords()) {
+      if (vocabularyWords && vocabularyWords.length > 0) {
         setFullyLoaded(true);
       }
     }
-  }, [vocabularyWords, isLoadingVocabulary, isVocabularyError, navigate, hasWords]);
+  }, [vocabularyWords, isLoadingVocabulary, isVocabularyError, navigate]);
 
   // Generate first sentence when component mounts and update totalWords count
   // Also start prefetching sentences for each difficulty level
@@ -767,7 +783,7 @@ export default function Practice() {
 
   // No vocabulary state: Only show if we've completely finished loading AND verified there are no words
   // We use both vocabulary list checks and the explicit hasWords() helper to verify
-  if (fullyLoaded && !hasWords()) {
+  if (fullyLoaded && !vocabularyWords) {
     return (
       <div className="text-center py-12 px-6 bg-white dark:bg-gray-800 rounded-lg shadow-md mb-6">
         <div className="text-5xl mb-4 text-gray-400 dark:text-gray-500">

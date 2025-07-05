@@ -196,6 +196,8 @@ export default function CharacterDictionary() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/vocabulary'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/proficiency'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/full-proficiency'] });
     },
     onError: (error: Error) => {
       toast({
@@ -218,6 +220,8 @@ export default function CharacterDictionary() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/vocabulary'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/proficiency'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/full-proficiency'] });
     },
     onError: (error: Error) => {
       toast({
@@ -284,6 +288,8 @@ export default function CharacterDictionary() {
       }
       
       queryClient.invalidateQueries({ queryKey: ['/api/vocabulary'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/proficiency'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/full-proficiency'] });
       
       toast({
         title: "Word List Cleared",
