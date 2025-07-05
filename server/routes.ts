@@ -131,10 +131,10 @@ function validateSentence(chinese: string): { isValid: boolean; reason?: string 
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Get user's vocabulary words (requires authentication)
-  app.get("/api/vocabulary", authenticateFirebaseUser, async (req, res) => {
+  app.get("/api/vocabulary", async (req, res) => {
     console.log("\n\nALL VOCAB WORDS GET\n\n")
     try {
-      const userId = req.authenticatedUserId;
+      const userId = 18;
 
       if (!userId) {
         return res.status(400).json({ message: "Unauthorized" });
@@ -154,10 +154,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Add vocabulary words
-  app.post("/api/vocabulary", authenticateFirebaseUser, async (req, res) => {
+  app.post("/api/vocabulary", async (req, res) => {
     console.log("\n\nALL VOCAB WORDS POST\n\n")
     try {
-      const userId = req.authenticatedUserId;
+      const userId = 18;
 
       if (!userId) {
         return res.status(400).json({ message: "Unauthorized" });
@@ -177,16 +177,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/vocabulary/import", authenticateFirebaseUser, async (req, res) => {
+  app.post("/api/vocabulary/import", async (req, res) => {
     console.log("\n\nIMPORTING ACTUAL VOCAB WORDS\n\n")
     try {
-      const userId = req.authenticatedUserId;
+      const userId = 18;
 
       if (!userId) {
         return res.status(400).json({ message: "Unauthorized" });
       }
 
-      const words = req.body as Vocabulary[];
+      const words = req.body.words;
 
       if (!Array.isArray(words)) {
         return res.status(400).json({ message: "Words must be an array" });
@@ -202,10 +202,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update a vocabulary word
-  app.patch("/api/vocabulary/:id", authenticateFirebaseUser, async (req, res) => {
+  app.patch("/api/vocabulary/:id", async (req, res) => {
     console.log("\n\nUPDATING EXACTLY ONE VOCAB WORD\n\n")
     try {
-      const userId = req.authenticatedUserId;
+      const userId = 18;
 
       if (!userId) {
         return res.status(400).json({ message: "Unauthorized" });
@@ -226,10 +226,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete a vocabulary word
-  app.delete("/api/vocabulary/:id", authenticateFirebaseUser, async (req, res) => {
+  app.delete("/api/vocabulary/by-chinese", async (req, res) => {
     console.log("\n\nDELETING EXACTLY ONE VOCAB WORD\n\n")
     try {
-      const userId = req.authenticatedUserId;
+      const userId = 18;
+
+      if (!userId) {
+        return res.status(400).json({ message: "Unauthorized" });
+      }
+
+      const word = req.body;
+      
+      if (!word) {
+        return res.status(400).json({ message: "Invalid word format" });
+      }
+      
+      await storage.deleteVocabularyByChineseAndPinyin(userId, word.chinese, word.pinyin);
+      res.status(200).json({ message: "Vocabulary deleted" });
+    } catch (error) {
+      res.status(404).json({ message: "Vocabulary not found" });
+    }
+  });
+
+  // Delete a vocabulary word using chinese and pinyin
+  app.delete("/api/vocabulary/:id", async (req, res) => {
+    console.log("\n\nDELETING EXACTLY ONE VOCAB WORD\n\n")
+    try {
+      const userId = 18;
 
       if (!userId) {
         return res.status(400).json({ message: "Unauthorized" });
@@ -249,10 +272,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete all vocabulary words
-  app.delete("/api/vocabulary", authenticateFirebaseUser, async (req, res) => {
+  app.delete("/api/vocabulary", async (req, res) => {
     console.log("\n\nDELETING ALL VOCAB WORDS\n\n")
     try {
-      const userId = req.authenticatedUserId;
+      const userId = 18;
 
       if (!userId) {
         return res.status(400).json({ message: "Unauthorized" });
@@ -266,10 +289,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get a specific vocabulary word by ID
-  app.get("/api/vocabulary/:id", authenticateFirebaseUser, async (req, res) => {
+  app.get("/api/vocabulary/:id", async (req, res) => {
     console.log("\n\nGETTING SPECIFIC VOCAB WORD\n\n")
     try {
-      const userId = req.authenticatedUserId;
+      const userId = 18;
 
       if (!userId) {
         return res.status(400).json({ message: "Unauthorized" });
@@ -602,7 +625,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }, 5000);
 
   // Generate a sentence using the user's vocabulary
-  app.post("/api/sentence/generate", authenticateFirebaseUser, async (req, res) => {
+  app.post("/api/sentence/generate", async (req, res) => {
     try {
       const { difficulty = "beginner" } = req.body;
       const typedDifficulty = difficulty as 'beginner' | 'intermediate' | 'advanced';
@@ -659,7 +682,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // If we reach here, there's no cache or we need a new sentence
       
-      const userId = req.authenticatedUserId;
+      const userId = 18;
 
       if (!userId) {
         return res.status(400).json({ message: "Unauthorized" });
@@ -985,9 +1008,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get proficiency for a specific word
-  app.get("/api/word-proficiency/:wordId", authenticateFirebaseUser, async (req, res) => {
+  app.get("/api/word-proficiency/:wordId", async (req, res) => {
     try {
-      const userId = req.authenticatedUserId;
+      const userId = 18;
 
       if (!userId) {
         return res.status(400).json({ message: "Unauthorized" });
@@ -1015,10 +1038,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get proficiency for a specific word
-  app.post("/api/word-proficiency/batch", authenticateFirebaseUser, async (req, res) => {
+  app.post("/api/word-proficiency/batch", async (req, res) => {
     console.log("\n\nBATCH WORD PROF REQUEST\n\n")
     try {
-      const userId = req.authenticatedUserId;
+      const userId = 18;
       
       if (!userId) {
         return res.status(400).json({ message: "Unauthorized" });
@@ -1039,9 +1062,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update proficiency for a word (after practice)
-  app.patch("/api/word-proficiency/:wordId", authenticateFirebaseUser, async (req, res) => {
+  app.patch("/api/word-proficiency/:wordId", async (req, res) => {
     try {
-      const userId = req.authenticatedUserId;
+      const userId = 18;
       if (!userId) {
         return res.status(400).json({ message: "Unauthorized" });
       }
@@ -1067,10 +1090,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Reset proficiency for a word
-  app.delete("/api/word-proficiency/:wordId", authenticateFirebaseUser, async (req, res) => {
+  app.delete("/api/word-proficiency/:wordId", async (req, res) => {
     console.log("\n\nDELETE SPECIFIC WORD PROF\n\n")
     try {
-      const userId = req.authenticatedUserId;
+      const userId = 18;
       
       if (!userId) {
         return res.status(400).json({ message: "Unauthorized" });
@@ -1090,9 +1113,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get proficiency for a specific word
-  app.get("/api/full-proficiency/:wordId", authenticateFirebaseUser, async (req, res) => {
+  app.get("/api/full-proficiency/:wordId", async (req, res) => {
     try {
-      const userId = req.authenticatedUserId;
+      const userId = 18;
 
       if (!userId) {
         return res.status(400).json({ message: "Unauthorized" });
@@ -1119,25 +1142,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get proficiency for a specific word
-  app.post("/api/full-proficiency/batch", authenticateFirebaseUser, async (req, res) => {
+  app.get("/api/full-proficiency", async (req, res) => {
     console.log("\n\nBATCH WORD PROF REQUEST\n\n")
     try {
-      const userId = req.authenticatedUserId;
+      const userId = 18;
       
       if (!userId) {
+        console.log("UNAUTHORIZED")
         return res.status(400).json({ message: "Unauthorized" });
       }
+      
+      const proficiencies = await storage.getAllVocabularyWithProficiency(userId);
 
-      const { wordIds } = req.body;
+      console.log("PROFICIENCY LENGTH:", proficiencies.length)
       
-      if (!Array.isArray(wordIds)) {
-        return res.status(400).json({ message: "Invalid word ID format" });
-      }
-      
-      const proficiencies = await storage.getVocabularyWithProficiencyBatch(userId, wordIds);
-      
-      res.json({proficiencies});
+      res.json(proficiencies);
     } catch (error) {
       res.status(500).json({ message: error instanceof Error ? error.message : "Failed to get word proficiencies" });
     }
@@ -1189,7 +1208,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update user streak and score 
   app.post("/api/user/streak", requireAuth, async (req, res) => {
     try {
-      const userId = req.authenticatedUserId;
+      const userId = 18;
 
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
