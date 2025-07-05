@@ -55,6 +55,7 @@ export interface IStorage {
   addVocabulary(userId: number, word: Vocabulary): Promise<Vocabulary>;
   addVocabularyBatch(userId: number, words: Vocabulary[]): Promise<Vocabulary[]>;
   deleteVocabulary(userId: number, id: number): Promise<void>;
+  deleteVocabularyByChineseAndPinyin(userId: number, chinese: string, pinyin: string): Promise<void>;
   deleteAllVocabulary(userId: number): Promise<void>;
   
   // Word proficiency methods
@@ -206,10 +207,12 @@ export class DatabaseStorage implements IStorage {
   // Vocabulary methods
 
   private readonly VOCABULARY_SELECT = {
+    id: wordProficiency.id,
     chinese: wordProficiency.chinese,
     pinyin: wordProficiency.pinyin,
     english: wordProficiency.english,
-    active: wordProficiency.active
+    active: wordProficiency.active,
+    category: wordProficiency.category
   };
 
   async getAllVocabulary(userId: number): Promise<Vocabulary[]> {
@@ -290,6 +293,14 @@ export class DatabaseStorage implements IStorage {
     await db.delete(wordProficiency).where(and(eq(wordProficiency.userId, userId), eq(wordProficiency.id, id)));
   }
 
+  async deleteVocabularyByChineseAndPinyin(userId: number, chinese: string, pinyin: string): Promise<void> {
+    await db.delete(wordProficiency).where(and(
+      eq(wordProficiency.userId, userId),
+      eq(wordProficiency.chinese, chinese),
+      eq(wordProficiency.pinyin, pinyin)
+    ));
+  }
+
   async deleteAllVocabulary(userId: number): Promise<void> {
     await db.delete(wordProficiency).where(eq(wordProficiency.userId, userId));
   }
@@ -297,11 +308,11 @@ export class DatabaseStorage implements IStorage {
   // Word proficiency methods
 
   private readonly PROFICIENCY_SELECT = {
+    id: wordProficiency.id,
     correctCount: wordProficiency.correctCount,
     attemptCount: wordProficiency.attemptCount,
     percentCorrect: wordProficiency.percentCorrect,
-    lastPracticed: wordProficiency.lastPracticed,
-    category: wordProficiency.category
+    lastPracticed: wordProficiency.lastPracticed
   };
 
   async getWordProficiency(userId: number, wordId: number): Promise<Proficiency | undefined> {
