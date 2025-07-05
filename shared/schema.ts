@@ -71,7 +71,7 @@ export type InsertPracticeSession = z.infer<typeof practiceSessionSchema>;
 export type PracticeSession = typeof practiceSession.$inferSelect;
 
 // Word proficiency schema to track mastery of individual words
-export const wordProficiency = pgTable("word_proficiencies", {
+export const wordProficiency = pgTable("word_proficiency", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull(), // Link to user account
   chinese: text("chinese").notNull(),
@@ -105,17 +105,19 @@ export const wordProficiencySchema = createInsertSchema(wordProficiency).pick({
 export type InsertFullProficiency = z.infer<typeof wordProficiencySchema>;
 export type FullProficiency = typeof wordProficiency.$inferSelect;
 export type Vocabulary = {
+  id: number;
   chinese: string;
   pinyin: string;
   english: string;
   active: boolean;
+  category: string | null;
 }
 export type Proficiency = {
+  id: number;
   correctCount: number;
   attemptCount: number;
   percentCorrect: number;
   lastPracticed: Date;
-  category: string | null;
 }
 
 // Chinese Characters schema - for the character dictionary
