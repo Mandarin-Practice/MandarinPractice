@@ -378,28 +378,24 @@ export default function CharacterHoverView({
       const word = vocabularyWords.find(w => w.id === wordId);
       if (!word) return null;
       
-      const response = await apiRequest('PATCH', `/api/vocabulary/${wordId}`, {
+      const response = await apiRequest('PATCH', `/api/vocabulary/words/${wordId}`, {
         active: !word.active
       });
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/vocabulary'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/proficiency'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/full-proficiency'] });
     }
   });
 
   // Mutation to delete a word
   const deleteWord = useMutation({
     mutationFn: async (wordId: number) => {
-      const response = await apiRequest('DELETE', `/api/vocabulary/${wordId}`);
+      const response = await apiRequest('DELETE', `/api/vocabulary/words/${wordId}`);
       return response.status === 204;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/vocabulary'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/proficiency'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/full-proficiency'] });
     }
   });
 

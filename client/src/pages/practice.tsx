@@ -89,11 +89,11 @@ export default function Practice() {
     error: isVocabularyError,
     refetch: refetchBackendUser,
   } = useQuery<FullProficiency[]>({
-    queryKey: ["/api/vocabulary/full-proficiency"],
+    queryKey: ["/api/vocabulary/words/full-proficiency"],
     queryFn: async () => {
       try {
         // Fetch user data from backend
-        const response = await fetch("/api/full-proficiency");
+        const response = await fetch("/api/vocabulary/full-proficiency");
 
         if (!response.ok) {
           throw new Error("Failed to fetch vocabulary");
@@ -426,7 +426,7 @@ export default function Practice() {
   // Update word proficiency in the backend
   const updateWordProficiency = useMutation<any, unknown, { wordId: number, isCorrect: boolean }>({
     mutationFn: async (params: { wordId: number, isCorrect: boolean }) => {
-      const response = await apiRequest('POST', `/api/word-proficiency/${params.wordId}`, {
+      const response = await apiRequest('POST', `/api/vocabulary/proficiency/${params.wordId}`, {
         isCorrect: params.isCorrect
       });
       return response.json();

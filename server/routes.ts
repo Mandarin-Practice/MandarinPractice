@@ -131,7 +131,7 @@ function validateSentence(chinese: string): { isValid: boolean; reason?: string 
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Get user's vocabulary words (requires authentication)
-  app.get("/api/vocabulary", async (req, res) => {
+  app.get("/api/vocabulary/words", async (req, res) => {
     console.log("\n\nALL VOCAB WORDS GET\n\n")
     try {
       const userId = 18;
@@ -154,7 +154,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Add vocabulary words
-  app.post("/api/vocabulary", async (req, res) => {
+  app.post("/api/vocabulary/words", async (req, res) => {
     console.log("\n\nALL VOCAB WORDS POST\n\n")
     try {
       const userId = 18;
@@ -177,7 +177,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/vocabulary/import", async (req, res) => {
+  app.post("/api/vocabulary/words/import", async (req, res) => {
     console.log("\n\nIMPORTING ACTUAL VOCAB WORDS\n\n")
     try {
       const userId = 18;
@@ -202,7 +202,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update a vocabulary word
-  app.patch("/api/vocabulary/:id", async (req, res) => {
+  app.patch("/api/vocabulary/words/:id", async (req, res) => {
     console.log("\n\nUPDATING EXACTLY ONE VOCAB WORD\n\n")
     try {
       const userId = 18;
@@ -226,7 +226,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete a vocabulary word
-  app.delete("/api/vocabulary/by-chinese", async (req, res) => {
+  app.delete("/api/vocabulary/words/by-chinese", async (req, res) => {
     console.log("\n\nDELETING EXACTLY ONE VOCAB WORD\n\n")
     try {
       const userId = 18;
@@ -249,7 +249,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete a vocabulary word using chinese and pinyin
-  app.delete("/api/vocabulary/:id", async (req, res) => {
+  app.delete("/api/vocabulary/words/:id", async (req, res) => {
     console.log("\n\nDELETING EXACTLY ONE VOCAB WORD\n\n")
     try {
       const userId = 18;
@@ -272,7 +272,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete all vocabulary words
-  app.delete("/api/vocabulary", async (req, res) => {
+  app.delete("/api/vocabulary/words", async (req, res) => {
     console.log("\n\nDELETING ALL VOCAB WORDS\n\n")
     try {
       const userId = 18;
@@ -289,7 +289,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get a specific vocabulary word by ID
-  app.get("/api/vocabulary/:id", async (req, res) => {
+  app.get("/api/vocabulary/words/:id", async (req, res) => {
     console.log("\n\nGETTING SPECIFIC VOCAB WORD\n\n")
     try {
       const userId = 18;
@@ -475,7 +475,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } else {
           // Fall back to original selection algorithm if no advanced lesson words available
           // Create a weighted list based on usage
-          const weightedWords = wordsList.map(word => {
+          const scrambledWords = [...wordsList] /* method that creates an array of references to the words in wordsList*/
+          scrambledWords.sort(() => 0.5 - Math.random()); // Shuffle the words randomly
+          const weightedWords = scrambledWords.map(word => {
             const stats = wordUsageStats[word.id] || { uses: 0, lastUsed: 0 };
             // Lower score = higher priority for selection
             // Weight by number of uses and how recently the word was used
@@ -530,14 +532,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // console.log(`Generating ${difficulty} sentence with words:`, 
               // selectedWords.map(w => w.chinese).join(', '));
             
-            // Generate a new sentence using the selected words
-            // We need to ensure the vocabulary has the right format for generateSentence
-            const sentenceVocabulary = selectedWords.map(word => ({
-              chinese: word.chinese,
-              pinyin: typeof word.pinyin === 'string' ? word.pinyin : "",
-              english: typeof word.english === 'string' ? word.english : ""
-            }));
-            
             // Add common grammatical particles if they aren't already in the vocabulary
             // This helps create more natural sentences while still focusing on the target vocabulary
             const commonWords = [
@@ -552,13 +546,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Only add common words if there are enough vocabulary words
             // For beginner level, ensure we have at least 3 actual vocabulary words
             let sentence;
-            if (sentenceVocabulary.length >= (difficulty === "beginner" ? 3 : 2)) {
+            if (selectedWords.length >= (difficulty === "beginner" ? 3 : 2)) {
               // Filter out common words that are already in vocabulary
-              const existingChars = new Set(sentenceVocabulary.flatMap(w => w.chinese.split('')));
+              const existingChars = new Set(selectedWords.flatMap(w => w.chinese.split('')));
               const additionalWords = commonWords.filter(w => !existingChars.has(w.chinese));
               
               // Add common words as supplementary vocabulary
-              const enhancedVocabulary = [...sentenceVocabulary, ...additionalWords];
+              const enhancedVocabulary = [...selectedWords, ...additionalWords];
               // console.log(`Enhanced vocabulary with ${additionalWords.length} common particles for more natural sentences`);
               
               try {
@@ -568,11 +562,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 const error = err as Error;
                 // console.log("Couldn't generate with enhanced vocabulary, falling back to strict mode:", error.message);
                 // Fall back to strict mode with only the original vocabulary
-                sentence = await generateSentence(sentenceVocabulary, difficulty);
+                sentence = await generateSentence(selectedWords, difficulty);
               }
             } else {
               // Not enough words for enhancement, use strict mode
-              sentence = await generateSentence(sentenceVocabulary, difficulty);
+              sentence = await generateSentence(selectedWords, difficulty);
             }
             
             // Update word usage statistics
@@ -634,9 +628,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const selectWords = (wordsList: Array<{ id: number, lessonId?: number | null, chinese: string, pinyin: string, english: string}>, count: number) => {
         // Ensure we don't try to select more words than available
         const selectionCount = Math.min(count, wordsList.length);
-        
+        const scrambledWords = [...wordsList] /* method that creates an array of references to the words in wordsList*/
+        scrambledWords.sort(() => 0.5 - Math.random()); // Shuffle the words randomly
         // Create a weighted list based on usage
-        const weightedWords = wordsList.map(word => {
+        const weightedWords = scrambledWords.map(word => {
           const stats = wordUsageStats[word.id] || { uses: 0, lastUsed: 0 };
           // Lower score = higher priority for selection
           // Weight by number of uses and how recently the word was used
@@ -726,14 +721,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // console.log(`Generating on-demand ${typedDifficulty} sentence with words:`, 
           // selectedWords.map(w => w.chinese).join(', '));
         
-        // Generate a sentence using the selected words
-        // We need to ensure the vocabulary has the right format for generateSentence
-        const sentenceVocabulary = selectedWords.map(word => ({
-          chinese: word.chinese,
-          pinyin: typeof word.pinyin === 'string' ? word.pinyin : "",
-          english: typeof word.english === 'string' ? word.english : ""
-        }));
-        
         // Add common grammatical particles for more natural sentences
         const commonWords = [
           { chinese: "的", pinyin: "de", english: "possessive particle" },
@@ -746,13 +733,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Only add common words if there are enough vocabulary words
         let sentence;
-        if (sentenceVocabulary.length >= (typedDifficulty === "beginner" ? 3 : 2)) {
+        if (selectedWords.length >= (typedDifficulty === "beginner" ? 3 : 2)) {
           // Filter out common words that are already in vocabulary
-          const existingChars = new Set(sentenceVocabulary.flatMap(w => w.chinese.split('')));
+          const existingChars = new Set(selectedWords.flatMap(w => w.chinese.split('')));
           const additionalWords = commonWords.filter(w => !existingChars.has(w.chinese));
           
           // Add common words as supplementary vocabulary
-          const enhancedVocabulary = [...sentenceVocabulary, ...additionalWords];
+          const enhancedVocabulary = [...selectedWords, ...additionalWords];
           // console.log(`Enhanced vocabulary with ${additionalWords.length} common particles for more natural sentences`);
           
           try {
@@ -762,11 +749,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const error = err as Error;
             // console.log("Couldn't generate with enhanced vocabulary, falling back to strict mode:", error.message);
             // Fall back to strict mode with only the original vocabulary
-            sentence = await generateSentence(sentenceVocabulary, typedDifficulty);
+            sentence = await generateSentence(selectedWords, typedDifficulty);
           }
         } else {
           // Not enough words for enhancement, use strict mode
-          sentence = await generateSentence(sentenceVocabulary, typedDifficulty);
+          sentence = await generateSentence(selectedWords, typedDifficulty);
         }
         
         // Update word usage statistics
@@ -909,7 +896,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           res.json(fallbackSentence);
         }
       } catch (generateError) {
-        // console.log("Error generating sentence with OpenAI, using fallback sentences");
+        // console.log("Error generating sentence with OpenAI, using fallback sentences. Error: " + generateError);
         
         // Select a random fallback sentence based on difficulty
         const fallbackOptions = fallbackSentences[typedDifficulty] || fallbackSentences.beginner;
@@ -1008,7 +995,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get proficiency for a specific word
-  app.get("/api/word-proficiency/:wordId", async (req, res) => {
+  app.get("/api/vocabulary/proficiency/:wordId", async (req, res) => {
     try {
       const userId = 18;
 
@@ -1038,7 +1025,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get proficiency for a specific word
-  app.post("/api/word-proficiency/batch", async (req, res) => {
+  app.post("/api/vocabulary/proficiency/batch", async (req, res) => {
     console.log("\n\nBATCH WORD PROF REQUEST\n\n")
     try {
       const userId = 18;
@@ -1062,7 +1049,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update proficiency for a word (after practice)
-  app.patch("/api/word-proficiency/:wordId", async (req, res) => {
+  app.patch("/api/vocabulary/proficiency/:wordId", async (req, res) => {
     try {
       const userId = 18;
       if (!userId) {
@@ -1090,7 +1077,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Reset proficiency for a word
-  app.delete("/api/word-proficiency/:wordId", async (req, res) => {
+  app.delete("/api/vocabulary/proficiency/:wordId", async (req, res) => {
     console.log("\n\nDELETE SPECIFIC WORD PROF\n\n")
     try {
       const userId = 18;
@@ -1113,7 +1100,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get proficiency for a specific word
-  app.get("/api/full-proficiency/:wordId", async (req, res) => {
+  app.get("/api/vocabulary/full-proficiency/:wordId", async (req, res) => {
     try {
       const userId = 18;
 
@@ -1142,7 +1129,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/full-proficiency", async (req, res) => {
+  app.get("/api/vocabulary/full-proficiency", async (req, res) => {
     console.log("\n\nBATCH WORD PROF REQUEST\n\n")
     try {
       const userId = 18;
@@ -1175,7 +1162,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // console.log(`Checking if "${word1}" and "${word2}" are synonyms`);
+      console.log(`Checking if "${word1}" and "${word2}" are synonyms`);
       
       // Use OpenAI to check if words are synonyms
       const result = await checkSynonyms(word1, word2);

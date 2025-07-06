@@ -35,7 +35,7 @@ async function importViaAPI() {
         category: wordlist.category,
       }));
 
-      const response = await fetch('http://localhost:3000/api/vocabulary/import/', {
+      const response = await fetch('http://localhost:3000/api/vocabulary/words/import/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

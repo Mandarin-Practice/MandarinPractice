@@ -185,9 +185,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
           // console.log("User authenticated, refreshing data");
           setTimeout(() => {
             refetchBackendUser();
-            queryClient.invalidateQueries({ queryKey: ["/api/vocabulary"] });
-            queryClient.invalidateQueries({ queryKey: ["/api/word-proficiency"] });
-            queryClient.invalidateQueries({ queryKey: ["/api/full-proficiency"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/vocabulary/words"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/vocabulary/proficiency"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/vocabulary/full-proficiency"] });
           }, 500); // Small delay to ensure Firebase auth is fully processed
         }
       },
@@ -234,9 +234,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       localStorage.setItem("auth_user_id", userData.id.toString());
 
       // Invalidate queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ["/api/vocabulary"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/word-proficiency"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/full-proficiency"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/vocabulary/words"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/vocabulary/proficiency"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/vocabulary/full-proficiency"] });
 
       toast({
         title: "Login successful",
@@ -290,9 +290,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       localStorage.setItem("auth_user_id", userData.id.toString());
 
       // Invalidate queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ["/api/vocabulary"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/word-proficiency"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/full-proficiency"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/vocabulary/words"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/vocabulary/proficiency"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/vocabulary/full-proficiency"] });
 
       toast({
         title: "Registration successful",
@@ -343,9 +343,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (result.user) {
         // console.log("Got user from popup:", result.user);
         await registerOrLoginWithBackend(result.user);
-        queryClient.invalidateQueries({ queryKey: ["/api/vocabulary"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/word-proficiency"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/full-proficiency"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/vocabulary/words"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/vocabulary/proficiency"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/vocabulary/full-proficiency"] });
         await refetchBackendUser();
         // console.log("User data refreshed after popup sign-in");
       }
@@ -366,9 +366,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // console.log("Signing out...");
       await firebaseSignOut(auth);
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/vocabulary"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/word-proficiency"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/full-proficiency"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/vocabulary/words"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/vocabulary/proficiency"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/vocabulary/full-proficiency"] });
       toast({
         title: "Signed out",
         description: "You have been signed out successfully.",
@@ -537,9 +537,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       // Clear any data
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/vocabulary"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/word-proficiency"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/full-proficiency"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/vocabulary/words"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/vocabulary/proficiency"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/vocabulary/full-proficiency"] });
 
       toast({
         title: "Signed out",

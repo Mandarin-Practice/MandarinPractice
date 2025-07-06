@@ -63,7 +63,7 @@ export default function WordChip({
       {/* Save button */}
       {!saved && (
         <button
-          onClick={async () => { await apiRequest('POST', "/api/vocabulary", word); }}
+          onClick={async () => { await apiRequest('POST', "/api/vocabulary/words", word); }}
           className="ml-2 text-emerald-600 hover:text-emerald-700 dark:text-emerald-500 dark:hover:text-emerald-600"
           aria-label="Save word to your list"
           title="Save to your list"

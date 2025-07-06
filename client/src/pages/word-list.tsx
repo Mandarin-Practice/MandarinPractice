@@ -81,9 +81,9 @@ export default function WordList() {
 
   // Fetch vocabulary data based on user login status
   const { data: vocabularyWithProficiency, isLoading: vocabularyLoading } = useQuery({
-    queryKey: ['/api/full-proficiency'],
+    queryKey: ['/api/vocabulary/full-proficiency'],
     queryFn: async (): Promise<FullProficiency[]> => {      
-      const response = await apiRequest('GET', '/api/full-proficiency');
+      const response = await apiRequest('GET', '/api/vocabulary/full-proficiency');
       if (!response.ok) {
         throw new Error('Failed to fetch vocabulary');
       }
@@ -96,7 +96,7 @@ export default function WordList() {
   // Add word mutation
   const addWordMutation = useMutation({
     mutationFn: async (data: { chinese: string; pinyin: string; english: string }) => {
-      const response = await apiRequest('POST', '/api/vocabulary', data);
+      const response = await apiRequest('POST', '/api/vocabulary/words', data);
       if (!response.ok) {
         throw new Error('Failed to add word');
       }
@@ -104,8 +104,6 @@ export default function WordList() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/vocabulary'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/proficiency'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/full-proficiency'] });
       setWordInput('');
       setShowSuccessAnimation(true);
       setTimeout(() => setShowSuccessAnimation(false), 2000);
@@ -192,7 +190,7 @@ export default function WordList() {
   const handleShowPreview = async (listId: string) => {
     const list = SAMPLE_WORD_LISTS.find(l => l.id === listId);
     if (list) {
-      const listVocab = await apiRequest('GET', `/api/vocabulary`, { wordIds: list.words})
+      const listVocab = await apiRequest('GET', `/api/vocabulary/words`, { wordIds: list.words})
       const listVocabData = await listVocab.json();
       setPreviewList({id: list.id, name: list.name, description: list.description, category: list.category, words: listVocabData});
       // Initialize all words as selected
@@ -243,7 +241,7 @@ export default function WordList() {
       
       // Split words into smaller batches to avoid issues with large imports
       
-      const response = await apiRequest('POST', '/api/vocabulary/import', { words: words, userId });
+      const response = await apiRequest('POST', '/api/vocabulary/words/import', { words: words, userId });
 
       if (!response.ok) {
         throw new Error('Failed to import word list');
@@ -253,8 +251,6 @@ export default function WordList() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/vocabulary'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/proficiency'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/full-proficiency'] });
       
       // New response format has data.savedWords and data.stats
       const savedWords = data.savedWords || data;
@@ -329,13 +325,11 @@ export default function WordList() {
   // Function to remove a word
   const handleRemoveWord = async (wordId: number) => {
     try {
-      const response = await apiRequest('DELETE', `/api/vocabulary/${wordId}`);
+      const response = await apiRequest('DELETE', `/api/vocabulary/words/${wordId}`);
       if (!response.ok) {
         throw new Error('Failed to remove word');
       }
       queryClient.invalidateQueries({ queryKey: ['/api/vocabulary'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/proficiency'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/full-proficiency'] });
       toast({
         title: 'Word removed',
         description: 'The word has been removed from your vocabulary',
@@ -356,13 +350,11 @@ export default function WordList() {
     }
     
     try {
-      const response = await apiRequest('DELETE', '/api/vocabulary');
+      const response = await apiRequest('DELETE', '/api/vocabulary/words');
       if (!response.ok) {
         throw new Error('Failed to clear vocabulary');
       }
       queryClient.invalidateQueries({ queryKey: ['/api/vocabulary'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/proficiency'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/full-proficiency'] });
       toast({
         title: 'Vocabulary cleared',
         description: 'All words have been removed from your vocabulary',
@@ -379,15 +371,13 @@ export default function WordList() {
   // Function to toggle active status of a word
   const handleToggleActive = async (wordId: number, currentActive: boolean) => {
     try {
-      const response = await apiRequest('PATCH', `/api/vocabulary/${wordId}`, {
+      const response = await apiRequest('PATCH', `/api/vocabulary/words/${wordId}`, {
         active: !currentActive
       });
       if (!response.ok) {
         throw new Error('Failed to update word');
       }
       queryClient.invalidateQueries({ queryKey: ['/api/vocabulary'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/proficiency'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/full-proficiency'] });
     } catch (error) {
       toast({
         title: 'Failed to update word',
