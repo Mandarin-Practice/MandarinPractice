@@ -40,22 +40,22 @@ interface WordList {
 }
 
 const SAMPLE_WORD_LISTS: WordList[] = [
-  // LESSON20_WORDLIST,
-  // LESSON19_WORDLIST,
-  // LESSON18_WORDLIST,
-  // LESSON17_WORDLIST,
-  // LESSON16_WORDLIST,
-  // LESSON15_WORDLIST,
-  // LESSON14_WORDLIST,
-  // LESSON13_WORDLIST,
-  // LESSON12_WORDLIST,
-  // LESSON11_WORDLIST,
-  // LESSON10_WORDLIST,
-  // LESSON9_WORDLIST,
-  // LESSON8_WORDLIST,
-  // LESSON7_WORDLIST,
-  // LESSON6_WORDLIST,
-  // LESSON5_WORDLIST,
+  LESSON20_WORDLIST,
+  LESSON19_WORDLIST,
+  LESSON18_WORDLIST,
+  LESSON17_WORDLIST,
+  LESSON16_WORDLIST,
+  LESSON15_WORDLIST,
+  LESSON14_WORDLIST,
+  LESSON13_WORDLIST,
+  LESSON12_WORDLIST,
+  LESSON11_WORDLIST,
+  LESSON10_WORDLIST,
+  LESSON9_WORDLIST,
+  LESSON8_WORDLIST,
+  LESSON7_WORDLIST,
+  LESSON6_WORDLIST,
+  LESSON5_WORDLIST,
   LESSON4_WORDLIST,
   LESSON3_WORDLIST,
   LESSON2_WORDLIST,
@@ -486,9 +486,6 @@ export default function WordList() {
     const total = list.words.length;
     let imported = 0;
     
-    console.log("List words: " + list.words.map(word => `chinese:${word.chinese}, pinyin:${word.pinyin}, english:${word.english}`).join(', '));
-    console.log("vocabularyWithProficiency: " + vocabularyWithProficiency.map(word => `chinese:${word.chinese}, pinyin:${word.pinyin}, english:${word.english}`).join(', '));
-
     list.words.forEach(word => {
       // Check if this word already exists in the vocabulary
       const exists = vocabularyWithProficiency.some(v => v.chinese === word.chinese && v.pinyin === word.pinyin);
