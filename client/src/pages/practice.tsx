@@ -93,7 +93,7 @@ export default function Practice() {
     queryFn: async () => {
       try {
         // Fetch user data from backend
-        const response = await fetch("/api/vocabulary/full-proficiency");
+        const response = await fetch("/api/full-proficiency");
 
         if (!response.ok) {
           throw new Error("Failed to fetch vocabulary");
