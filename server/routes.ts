@@ -5,7 +5,7 @@ import { wordProficiencySchema, characterSchema, characterDefinitionSchema, lear
 import { ZodError } from "zod";
 import { generateSentence, generateSentenceWithWord, checkSynonyms, validateSentenceWithAI, verifyTranslationQuality } from "./openai";
 import dictionaryAdminRoutes from "./routes/dictionary-admin";
-import authRoutes, { printSmthn } from "./routes/auth";
+import authRoutes from "./routes/auth";
 import { requireAuth } from "./middleware/auth";
 import { verifyFirebaseToken, requireFirebaseUser, authenticateFirebaseUser } from "./routes/auth";
 import authRouter from "./routes/auth";
@@ -1025,7 +1025,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get proficiency for a specific word
-  app.post("/api/vocabulary/proficiency/batch", printSmthn, async (req, res) => {
+  app.post("/api/vocabulary/proficiency/batch", async (req, res) => {
     console.log("\n\nBATCH WORD PROF REQUEST\n\n")
     try {
       const userId = 18;

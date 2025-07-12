@@ -72,7 +72,6 @@ declare global {
 
 // Middleware for Firebase authentication
 export const verifyFirebaseToken = async (req: Request, res: Response, next: Function) => {
-  console.log("Verifying Firebase token...");
   // If Firebase is not initialized, use mock verification for development
   if (!firebaseInitialized) {
     console.log("Firebase not initialized, using mock verification");
@@ -103,32 +102,6 @@ export const verifyFirebaseToken = async (req: Request, res: Response, next: Fun
     return res.status(401).json({ error: "Unauthorized: Invalid token" });
   }
 };
-
-export const printSmthn = async (req: Request, res: Response, next: Function) => {
-  console.log("Middleware printSmthn called");
-  next();
-}
-
-export const requireFirebaseUser = async (req: Request, res: Response, next: Function) => {
-  console.log("Requiring firebase user...");
-  if (!req.user?.firebaseUid) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
-  try {
-    const user = await storage.getUserByFirebaseUid(req.user.firebaseUid);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    
-    req.authenticatedUserId = user.id;
-    next();
-  } catch (error) {
-    return res.status(500).json({ message: "Database error" });
-  }
-};
-
-export const authenticateFirebaseUser = [verifyFirebaseToken, requireFirebaseUser];
 
 // Standard username/password registration
 authRouter.post("/register/local", async (req: Request, res: Response) => {
