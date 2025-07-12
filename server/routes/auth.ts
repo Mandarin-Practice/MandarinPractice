@@ -71,7 +71,7 @@ declare global {
 }
 
 // Middleware for Firebase authentication
-const verifyFirebaseToken = async (req: Request, res: Response, next: Function) => {
+export const verifyFirebaseToken = async (req: Request, res: Response, next: Function) => {
   // If Firebase is not initialized, use mock verification for development
   if (!firebaseInitialized) {
     console.log("Firebase not initialized, using mock verification");
@@ -306,86 +306,6 @@ authRouter.patch("/user/:id", async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error("Error updating user data:", error);
     res.status(500).json({ error: error.message || "Failed to update user data" });
-  }
-});
-
-// Get user's word list
-authRouter.get("/wordlist", async (req: Request, res: Response) => {
-  try {
-    const userId = parseInt(req.query.userId as string);
-
-    if (!userId || isNaN(userId)) {
-      return res.status(400).json({ error: "Valid userId is required" });
-    }
-
-    // Get user's word proficiencies
-    const proficiencies = await storage.getUserWordProficiencies(userId);
-
-    // Filter only saved words
-    const savedWords = proficiencies.filter((prof) => prof.isSaved);
-
-    // Get vocabulary details for each saved word
-    const wordList = await Promise.all(
-      savedWords.map(async (prof) => {
-        const wordId = parseInt(prof.wordId);
-        const word = await storage.getVocabulary(wordId);
-
-        if (!word) {
-          return null;
-        }
-
-        return {
-          ...word,
-          proficiency: prof,
-        };
-      }),
-    );
-
-    // Filter out any null values
-    const filteredWordList = wordList.filter((word) => word !== null);
-
-    res.status(200).json(filteredWordList);
-  } catch (error: any) {
-    console.error("Error getting user word list:", error);
-    res.status(500).json({ error: error.message || "Failed to get user word list" });
-  }
-});
-
-// Add word to user's list
-authRouter.post("/wordlist", async (req: Request, res: Response) => {
-  try {
-    const { userId, wordId } = req.body;
-
-    if (!userId || !wordId) {
-      return res.status(400).json({ error: "userId and wordId are required" });
-    }
-
-    // Save word to user's list
-    const result = await storage.saveWordToUserList(userId, wordId);
-
-    res.status(200).json(result);
-  } catch (error: any) {
-    console.error("Error adding word to list:", error);
-    res.status(500).json({ error: error.message || "Failed to add word to list" });
-  }
-});
-
-// Remove word from user's list
-authRouter.delete("/wordlist", async (req: Request, res: Response) => {
-  try {
-    const { userId, wordId } = req.body;
-
-    if (!userId || !wordId) {
-      return res.status(400).json({ error: "userId and wordId are required" });
-    }
-
-    // Remove word from user's list
-    await storage.removeWordFromUserList(userId, wordId);
-
-    res.status(200).json({ success: true });
-  } catch (error: any) {
-    console.error("Error removing word from list:", error);
-    res.status(500).json({ error: error.message || "Failed to remove word from list" });
   }
 });
 

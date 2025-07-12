@@ -1,0 +1,2 @@
+ALTER TABLE "word_proficiency" ADD COLUMN "percent_correct" double precision GENERATED ALWAYS AS (CASE WHEN attempt_count = 0 THEN 0 ELSE ROUND((correct_count * 100.0) / attempt_count, 2) END) STORED NOT NULL;--> statement-breakpoint
+ALTER TABLE "word_proficiency" ADD COLUMN "active" boolean DEFAULT true NOT NULL;

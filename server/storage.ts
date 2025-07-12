@@ -1,9 +1,6 @@
 import { 
-  vocabulary, 
+  type InsertFullProficiency, 
   type Vocabulary, 
-  type InsertVocabulary, 
-  type WordProficiency, 
-  type InsertWordProficiency,
   type Character,
   type InsertCharacter,
   type CharacterDefinition,
@@ -19,11 +16,17 @@ import {
   learnedDefinitions,
   characterCompounds,
   wordProficiency,
-  users
+  users,
+  Proficiency,
+  FullProficiency
 } from "@shared/schema";
-import { db } from "./db";
+import { db, pool } from "./db";
 import { eq, like, desc, asc, and, or, sql, inArray, not } from "drizzle-orm";
 import { convertNumericPinyinToTonal, isNumericPinyin } from './utils/pinyin-converter';
+
+// setInterval(() => {
+//   console.log(`📊 Pool status: ${pool.totalCount} total, ${pool.idleCount} idle, ${pool.waitingCount} waiting`);
+// }, 5000);
 
 // Interface for CRUD operations on vocabulary
 export interface IStorage {
@@ -36,23 +39,32 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, updates: Partial<InsertUser>): Promise<User>;
   getLeaderboard(limit?: number): Promise<User[]>;
+
+  // Joint Vocab + Proficiency getters
+  getAllVocabularyWithProficiency(userId: number): Promise<FullProficiency[]>;
+  getVocabularyWithProficiency(userId: number, wordId: number): Promise<FullProficiency | undefined>;
+  getVocabularyWithProficiencyBatch(userId: number, wordIds: number[]): Promise<(FullProficiency)[]>;
+  getVocabularyWithProficiencyByChineseAndPinyin(userId: number, chinese: string, pinyin: string): Promise<FullProficiency | undefined>;
   
   // Vocabulary methods
-  getAllVocabulary(): Promise<Vocabulary[]>;
-  getVocabulary(id: number): Promise<Vocabulary | undefined>;
-  getVocabularyByChineseAndPinyin(chinese: string, pinyin: string): Promise<Vocabulary | undefined>;
-  addVocabulary(word: InsertVocabulary): Promise<Vocabulary>;
-  updateVocabulary(id: number, updates: Partial<InsertVocabulary>): Promise<Vocabulary>;
-  deleteVocabulary(id: number): Promise<void>;
-  deleteAllVocabulary(): Promise<void>;
+  getAllVocabulary(userId: number): Promise<Vocabulary[]>;
+  getVocabulary(userId: number, wordId: number): Promise<Vocabulary | undefined>;
+  getVocabularyBatch(userId: number, wordIds: number[]): Promise<Vocabulary[]>;
+  getVocabularyByChineseAndPinyin(userId: number, chinese: string, pinyin: string): Promise<Vocabulary | undefined>;
+  updateVocabulary(userId: number, wordId: number, updates: Partial<Vocabulary>): Promise<Vocabulary>;
+  addVocabulary(userId: number, word: Vocabulary): Promise<Vocabulary>;
+  addVocabularyBatch(userId: number, words: Vocabulary[]): Promise<Vocabulary[]>;
+  deleteVocabulary(userId: number, id: number): Promise<void>;
+  deleteVocabularyByChineseAndPinyin(userId: number, chinese: string, pinyin: string): Promise<void>;
+  deleteAllVocabulary(userId: number): Promise<void>;
   
   // Word proficiency methods
-  getWordProficiency(wordId: number): Promise<WordProficiency | undefined>;
-  getUserWordProficiencies(userId: number): Promise<WordProficiency[]>;
-  updateWordProficiency(wordId: number, isCorrect: boolean, userId?: number): Promise<WordProficiency>;
-  resetWordProficiency(wordId: number): Promise<void>;
-  saveWordToUserList(userId: number, wordId: number): Promise<WordProficiency>;
-  removeWordFromUserList(userId: number, wordId: number): Promise<void>;
+  getWordProficiency(userId: number, wordId: number): Promise<Proficiency | undefined>;
+  getWordProficiencyBatch(userId: number, wordIds: number[]): Promise<Proficiency[]>;
+  updateWordProficiencyBatch(userId: number, proficiencyDiff: {wordId: number, correct: boolean}[]): Promise<Proficiency[]>;
+  getWordProficiencies(userId: number): Promise<Proficiency[]>;
+  updateWordProficiency(userId: number, wordId: number, isCorrect: boolean): Promise<Proficiency>;
+  removeWordProficiency(userId: number, wordId: number): Promise<void>;
   
   // Chinese character dictionary methods
   searchCharacters(query: string): Promise<Character[]>;
@@ -72,190 +84,6 @@ export interface IStorage {
   getLearnedDefinitions(userId: number): Promise<LearnedDefinition[]>;
   toggleLearnedDefinition(userId: number, definitionId: number, isLearned: boolean): Promise<LearnedDefinition>;
   updateLearnedDefinitionNotes(id: number, notes: string): Promise<LearnedDefinition>;
-}
-
-// Don't use MemStorage anymore, this is just a stub to satisfy the interface
-// We're using DatabaseStorage instead
-export class MemStorage implements IStorage {
-  private vocabulary: Map<number, Vocabulary>;
-  private wordProficiency: Map<number, WordProficiency>;
-  private currentVocabularyId: number;
-  private currentProficiencyId: number;
-
-  constructor() {
-    this.vocabulary = new Map();
-    this.wordProficiency = new Map();
-    this.currentVocabularyId = 1;
-    this.currentProficiencyId = 1;
-  }
-  
-  // User authentication methods (stubs)
-  async getAllUsers(): Promise<User[]> {
-    // Return an empty array for MemStorage since it doesn't store users
-    return [];
-  }
-
-  async getUserById(_id: number): Promise<User | undefined> {
-    return undefined;
-  }
-  
-  async getUserByUsername(_username: string): Promise<User | undefined> {
-    return undefined;
-  }
-  
-  async getUserByEmail(_email: string): Promise<User | undefined> {
-    return undefined;
-  }
-  
-  async getUserByFirebaseUid(_firebaseUid: string): Promise<User | undefined> {
-    return undefined;
-  }
-  
-  async createUser(_user: InsertUser): Promise<User> {
-    throw new Error("Method not implemented");
-  }
-  
-  async updateUser(_id: number, _updates: Partial<InsertUser>): Promise<User> {
-    throw new Error("Method not implemented");
-  }
-  
-  async getLeaderboard(limit: number = 10): Promise<User[]> {
-    // MemStorage doesn't store users, so return empty array
-    return [];
-  }
-  
-  // User word proficiency methods (stubs)
-  async getUserWordProficiencies(_userId: number): Promise<WordProficiency[]> {
-    return [];
-  }
-  
-  async saveWordToUserList(_userId: number, _wordId: number): Promise<WordProficiency> {
-    throw new Error("Method not implemented");
-  }
-  
-  async removeWordFromUserList(_userId: number, _wordId: number): Promise<void> {
-    // Do nothing
-  }
-
-  async getAllVocabulary(): Promise<Vocabulary[]> {
-    return Array.from(this.vocabulary.values());
-  }
-
-  async getVocabulary(id: number): Promise<Vocabulary | undefined> {
-    return this.vocabulary.get(id);
-  }
-  
-  async getVocabularyByChineseAndPinyin(chinese: string, pinyin: string): Promise<Vocabulary | undefined> {
-    // Convert entries to an array and find matching word
-    const words = Array.from(this.vocabulary.values());
-    return words.find(word => word.chinese === chinese && word.pinyin === pinyin);
-  }
-
-  async addVocabulary(word: InsertVocabulary): Promise<Vocabulary> {
-    const id = this.currentVocabularyId++;
-    const newWord: Vocabulary = { ...word, id, active: word.active || "true" };
-    this.vocabulary.set(id, newWord);
-    return newWord;
-  }
-
-  async updateVocabulary(id: number, updates: Partial<InsertVocabulary>): Promise<Vocabulary> {
-    const word = this.vocabulary.get(id);
-    if (!word) {
-      throw new Error(`Vocabulary with ID ${id} not found`);
-    }
-    
-    const updatedWord: Vocabulary = { ...word, ...updates };
-    this.vocabulary.set(id, updatedWord);
-    return updatedWord;
-  }
-
-  async deleteVocabulary(id: number): Promise<void> {
-    this.vocabulary.delete(id);
-  }
-
-  async deleteAllVocabulary(): Promise<void> {
-    this.vocabulary.clear();
-  }
-
-  // Word proficiency methods
-  async getWordProficiency(wordId: number): Promise<WordProficiency | undefined> {
-    return undefined;
-  }
-
-  async updateWordProficiency(wordId: number, isCorrect: boolean, userId?: number): Promise<WordProficiency> {
-    const id = this.currentProficiencyId++;
-    const now = Date.now().toString();
-    const proficiency: WordProficiency = {
-      id,
-      wordId: wordId.toString(),
-      userId: userId || null,
-      correctCount: isCorrect ? "1" : "0",
-      attemptCount: "1",
-      lastPracticed: now,
-      isSaved: false,
-      createdAt: new Date()
-    };
-    return proficiency;
-  }
-
-  async resetWordProficiency(wordId: number): Promise<void> {
-    // Do nothing
-  }
-  
-  // Stub implementations for character dictionary
-  async searchCharacters(query: string): Promise<Character[]> {
-    return [];
-  }
-  
-  async getCharacter(id: number): Promise<Character | undefined> {
-    return undefined;
-  }
-  
-  async getCharacterByValue(char: string): Promise<Character | undefined> {
-    return undefined;
-  }
-  
-  async addCharacter(character: InsertCharacter): Promise<Character> {
-    throw new Error("Method not implemented");
-  }
-  
-  async getCharacterDefinitions(characterId: number): Promise<CharacterDefinition[]> {
-    return [];
-  }
-  
-  async addCharacterDefinition(definition: InsertCharacterDefinition): Promise<CharacterDefinition> {
-    throw new Error("Method not implemented");
-  }
-  
-  async updateCharacterDefinition(id: number, updates: Partial<InsertCharacterDefinition>): Promise<CharacterDefinition> {
-    throw new Error("Method not implemented");
-  }
-  
-  async deleteCharacterDefinition(id: number): Promise<void> {
-    // Do nothing
-  }
-  
-  // Stub implementations for learned definitions
-  async getLearnedDefinitions(userId: number): Promise<LearnedDefinition[]> {
-    return [];
-  }
-  
-  async toggleLearnedDefinition(userId: number, definitionId: number, isLearned: boolean): Promise<LearnedDefinition> {
-    throw new Error("Method not implemented");
-  }
-  
-  async updateLearnedDefinitionNotes(id: number, notes: string): Promise<LearnedDefinition> {
-    throw new Error("Method not implemented");
-  }
-  
-  // Character compound relationship methods
-  async getCharacterCompounds(componentId: number): Promise<{ compound: Character, position: number }[]> {
-    return [];
-  }
-  
-  async getCompoundComponents(compoundId: number): Promise<{ component: Character, position: number }[]> {
-    return [];
-  }
 }
 
 // Database storage implementation
@@ -341,214 +169,228 @@ export class DatabaseStorage implements IStorage {
       return [];
     }
   }
-  // Vocabulary methods
-  async getAllVocabulary(): Promise<Vocabulary[]> {
-    return await db.select().from(vocabulary);
+
+  // Joint Vocab + Proficiency getters
+
+  async getAllVocabularyWithProficiency(userId: number): Promise<FullProficiency[]> {
+    return await db.select().from(wordProficiency).where(eq(wordProficiency.userId, userId));
   }
 
-  async getVocabulary(id: number): Promise<Vocabulary | undefined> {
-    const [vocab] = await db.select().from(vocabulary).where(eq(vocabulary.id, id));
+  async getVocabularyWithProficiency(userId: number, wordId: number): Promise<FullProficiency | undefined> {
+    const [result] = await db.select()
+      .from(wordProficiency)
+      .where(and(eq(wordProficiency.userId, userId), eq(wordProficiency.id, wordId)));
+
+    return result;
+  }
+
+  async getVocabularyWithProficiencyBatch(userId: number, wordIds: number[]): Promise<FullProficiency[]> {
+    return await db.select()
+      .from(wordProficiency)
+      .where(and(eq(wordProficiency.userId, userId), inArray(wordProficiency.id, wordIds)));
+  }
+
+  async getVocabularyWithProficiencyByChineseAndPinyin(userId: number, chinese: string, pinyin: string): Promise<FullProficiency | undefined> {
+    const [result] = await db.select()
+      .from(wordProficiency)
+      .where(
+        and(
+          eq(wordProficiency.userId, userId),
+          eq(wordProficiency.chinese, chinese),
+          eq(wordProficiency.pinyin, pinyin)
+        )
+      );
+
+    return result;
+  }
+
+  // Vocabulary methods
+
+  private readonly VOCABULARY_SELECT = {
+    id: wordProficiency.id,
+    chinese: wordProficiency.chinese,
+    pinyin: wordProficiency.pinyin,
+    english: wordProficiency.english,
+    active: wordProficiency.active,
+    category: wordProficiency.category
+  };
+
+  async getAllVocabulary(userId: number): Promise<Vocabulary[]> {
+    return await db.select(this.VOCABULARY_SELECT).from(wordProficiency).where(eq(wordProficiency.userId, userId));
+  }
+
+  async getVocabulary(userId: number, wordId: number): Promise<Vocabulary | undefined> {
+    const [vocab] = await db.select(this.VOCABULARY_SELECT).from(wordProficiency).where(and(eq(wordProficiency.userId, userId), eq(wordProficiency.id, wordId)));
     return vocab;
   }
   
-  async getVocabularyByChineseAndPinyin(chinese: string, pinyin: string): Promise<Vocabulary | undefined> {
-    const [vocab] = await db.select().from(vocabulary).where(
+  async getVocabularyByChineseAndPinyin(userId: number, chinese: string, pinyin: string): Promise<Vocabulary | undefined> {
+    const [vocab] = await db.select(this.VOCABULARY_SELECT).from(wordProficiency).where(
       and(
-        eq(vocabulary.chinese, chinese),
-        eq(vocabulary.pinyin, pinyin)
+        eq(wordProficiency.userId, userId),
+        eq(wordProficiency.chinese, chinese),
+        eq(wordProficiency.pinyin, pinyin)
       )
     );
     return vocab;
   }
 
-  async addVocabulary(word: InsertVocabulary): Promise<Vocabulary> {
-    // Check for exact duplicate
-    const [exactDuplicate] = await db.select().from(vocabulary).where(
-      and(
-        eq(vocabulary.chinese, word.chinese),
-        eq(vocabulary.pinyin, word.pinyin),
-        eq(vocabulary.english, word.english)
-      )
-    );
-    
-    if (exactDuplicate) {
-      return exactDuplicate;
-    }
-    
-    // Check for Chinese character duplicate
-    const [chineseDuplicate] = await db.select().from(vocabulary).where(
-      eq(vocabulary.chinese, word.chinese)
-    );
-    
-    if (chineseDuplicate) {
-      // Merge information if needed
-      const updatedWord = {
-        ...chineseDuplicate,
-        pinyin: chineseDuplicate.pinyin || word.pinyin,
-        english: chineseDuplicate.english || word.english,
-        active: "true"
-      };
-      
-      const [updated] = await db.update(vocabulary)
-        .set(updatedWord)
-        .where(eq(vocabulary.id, chineseDuplicate.id))
-        .returning();
-        
-      return updated;
-    }
-    
+  async getVocabularyBatch(userId: number, wordIds: number[]): Promise<Vocabulary[]> {
+    const vocab = await db.select(this.VOCABULARY_SELECT).from(wordProficiency).where(and(eq(wordProficiency.userId, userId), inArray(wordProficiency.id, wordIds)));
+    return vocab;
+  }
+
+  async addVocabulary(userId: number, word: Vocabulary): Promise<Vocabulary> {
     // Add new word
-    const [newVocab] = await db.insert(vocabulary)
-      .values(word)
+    const [newVocab] = await db.insert(wordProficiency)
+      .values({...word, userId: userId})
+      .onConflictDoNothing() // TODO do an update step if needed
       .returning();
       
     return newVocab;
   }
 
-  async updateVocabulary(id: number, updates: Partial<InsertVocabulary>): Promise<Vocabulary> {
-    const [updated] = await db.update(vocabulary)
-      .set(updates)
-      .where(eq(vocabulary.id, id))
-      .returning();
-      
-    if (!updated) {
-      throw new Error(`Vocabulary with ID ${id} not found`);
-    }
+  async addVocabularyBatch(userId: number, words: Vocabulary[]): Promise<Vocabulary[]> {
+    console.log(`[IMPORT DEBUG] Received batch request for ${words.length} words at time ${new Date().getMinutes()}:${new Date().getSeconds()}`);
     
-    return updated;
+    if (words.length === 0) {
+      return [];
+    }
+      
+    try {
+      const insertStart = Date.now();
+      const insertedWords = await db.insert(wordProficiency)
+        .values(words.map(word => ({...word, userId})))
+        .onConflictDoNothing() // TODO do some form of update step
+        .returning();
+      
+      const insertTime = Date.now() - insertStart;
+      console.log(`[IMPORT DEBUG] Insert operation took ${insertTime}ms for ${insertedWords.length} words`);
+      
+      return insertedWords;
+    } catch (error) {
+      console.error('[IMPORT DEBUG] Database error:', error);
+      throw error;
+    }
   }
 
-  async deleteVocabulary(id: number): Promise<void> {
-    await db.delete(vocabulary).where(eq(vocabulary.id, id));
+  async updateVocabulary(userId: number, wordId: number, updates: Partial<Vocabulary>): Promise<Vocabulary> {
+    return db.transaction(async (tx) => {
+      const [updated] = await tx.update(wordProficiency)
+        .set(updates)
+        .where(and(eq(wordProficiency.userId, userId), eq(wordProficiency.id, wordId)))
+        .returning(this.VOCABULARY_SELECT);
+        
+      if (!updated) {
+        throw new Error(`Vocabulary with ID ${wordId} not found for user ${userId}`);
+      }
+      
+      return updated;
+    });
   }
 
-  async deleteAllVocabulary(): Promise<void> {
-    await db.delete(vocabulary);
+  async deleteVocabulary(userId: number, id: number): Promise<void> {
+    await db.delete(wordProficiency).where(and(eq(wordProficiency.userId, userId), eq(wordProficiency.id, id)));
+  }
+
+  async deleteVocabularyByChineseAndPinyin(userId: number, chinese: string, pinyin: string): Promise<void> {
+    await db.delete(wordProficiency).where(and(
+      eq(wordProficiency.userId, userId),
+      eq(wordProficiency.chinese, chinese),
+      eq(wordProficiency.pinyin, pinyin)
+    ));
+  }
+
+  async deleteAllVocabulary(userId: number): Promise<void> {
+    await db.delete(wordProficiency).where(eq(wordProficiency.userId, userId));
   }
 
   // Word proficiency methods
-  async getWordProficiency(wordId: number): Promise<WordProficiency | undefined> {
-    const [proficiency] = await db.select().from(wordProficiency)
-      .where(eq(wordProficiency.wordId, wordId.toString()));
+
+  private readonly PROFICIENCY_SELECT = {
+    id: wordProficiency.id,
+    correctCount: wordProficiency.correctCount,
+    attemptCount: wordProficiency.attemptCount,
+    percentCorrect: wordProficiency.percentCorrect,
+    lastPracticed: wordProficiency.lastPracticed
+  };
+
+  async getWordProficiency(userId: number, wordId: number): Promise<Proficiency | undefined> {
+    const [proficiency] = await db.select(this.PROFICIENCY_SELECT).from(wordProficiency).where(and(eq(wordProficiency.userId, userId), eq(wordProficiency.id, wordId)));
+
+    return proficiency;
+  }
+
+  async getWordProficiencyBatch(userId: number, wordIds: number[]): Promise<Proficiency[]> {
+    const proficiency = await db.select(this.PROFICIENCY_SELECT).from(wordProficiency)
+      .where(and(eq(wordProficiency.userId, userId), inArray(wordProficiency.id, wordIds)));
+
     return proficiency;
   }
   
-  async getUserWordProficiencies(userId: number): Promise<WordProficiency[]> {
-    return await db.select().from(wordProficiency)
+  async getWordProficiencies(userId: number): Promise<Proficiency[]> {
+    return await db.select(this.PROFICIENCY_SELECT).from(wordProficiency)
       .where(eq(wordProficiency.userId, userId));
   }
 
-  async updateWordProficiency(wordId: number, isCorrect: boolean, userId?: number): Promise<WordProficiency> {
-    // Find existing proficiency or create new one
-    const whereConditions = [eq(wordProficiency.wordId, wordId.toString())];
-    
-    if (userId) {
-      whereConditions.push(eq(wordProficiency.userId, userId));
-    }
-    
-    const [existingProf] = await db.select().from(wordProficiency)
-      .where(and(...whereConditions));
-      
-    const now = Date.now().toString();
-    
-    if (existingProf) {
-      // Update existing
-      const correctCount = isCorrect 
-        ? (parseInt(existingProf.correctCount) + 1).toString()
-        : existingProf.correctCount;
+  async updateWordProficiency(userId: number, wordId: number, isCorrect: boolean): Promise<Proficiency> {
+    const [updated] = await db.update(wordProficiency).set({
+      correctCount: sql`${wordProficiency.correctCount} + ${isCorrect ? 1 : 0}`,
+      attemptCount: sql`${wordProficiency.attemptCount} + 1`,
+      lastPracticed: new Date()}).where(and(eq(wordProficiency.userId, userId), eq(wordProficiency.id, wordId)))
+    .returning(this.PROFICIENCY_SELECT);
         
-      const attemptCount = (parseInt(existingProf.attemptCount) + 1).toString();
-      
-      const [updated] = await db.update(wordProficiency)
-        .set({
-          correctCount,
-          attemptCount,
-          lastPracticed: now
-        })
-        .where(eq(wordProficiency.id, existingProf.id))
-        .returning();
-        
-      return updated;
-    } else {
-      // Create new
-      const [newProf] = await db.insert(wordProficiency)
-        .values({
-          wordId: wordId.toString(),
-          userId: userId || null,
-          correctCount: isCorrect ? "1" : "0",
-          attemptCount: "1",
-          lastPracticed: now,
-          isSaved: false
-        })
-        .returning();
-        
-      return newProf;
-    }
+    return updated;
   }
 
-  async resetWordProficiency(wordId: number): Promise<void> {
-    await db.delete(wordProficiency)
-      .where(eq(wordProficiency.wordId, wordId.toString()));
-  }
-  
-  async saveWordToUserList(userId: number, wordId: number): Promise<WordProficiency> {
-    // Check if the word is already in the user's list
-    const [existingProf] = await db.select().from(wordProficiency)
-      .where(
-        and(
-          eq(wordProficiency.userId, userId),
-          eq(wordProficiency.wordId, wordId.toString())
-        )
-      );
+  async updateWordProficiencyBatch(userId: number, proficiencyDiff: {wordId: number, correct: boolean}[]): Promise<Proficiency[]> {
+    return await db.transaction(async (tx) => {
+      const updated: Proficiency[] = [];
       
-    if (existingProf) {
-      // Update the existing record to mark it as saved
-      const [updated] = await db.update(wordProficiency)
-        .set({ isSaved: true })
-        .where(eq(wordProficiency.id, existingProf.id))
-        .returning();
-        
-      return updated;
-    } else {
-      // Create a new proficiency record with the word marked as saved
-      const now = Date.now().toString();
-      const [newProf] = await db.insert(wordProficiency)
-        .values({
-          userId,
-          wordId: wordId.toString(),
-          correctCount: "0",
-          attemptCount: "0",
-          lastPracticed: now,
-          isSaved: true
-        })
-        .returning();
-        
-      return newProf;
-    }
-  }
-  
-  async removeWordFromUserList(userId: number, wordId: number): Promise<void> {
-    // Find the word proficiency record
-    const [existingProf] = await db.select().from(wordProficiency)
-      .where(
-        and(
-          eq(wordProficiency.userId, userId),
-          eq(wordProficiency.wordId, wordId.toString())
-        )
-      );
+      // Separate correct and incorrect answers
+      const correctWordIds = proficiencyDiff.filter(d => d.correct).map(d => d.wordId);
+      const incorrectWordIds = proficiencyDiff.filter(d => !d.correct).map(d => d.wordId);
       
-    if (existingProf) {
-      // If the word has practice history, just mark it as not saved
-      if (parseInt(existingProf.attemptCount) > 0) {
-        await db.update(wordProficiency)
-          .set({ isSaved: false })
-          .where(eq(wordProficiency.id, existingProf.id));
-      } else {
-        // If no practice history, remove it completely
-        await db.delete(wordProficiency)
-          .where(eq(wordProficiency.id, existingProf.id));
+      // Batch update correct answers
+      if (correctWordIds.length > 0) {
+        const correctUpdates = await tx.update(wordProficiency)
+          .set({
+            correctCount: sql`${wordProficiency.correctCount} + 1`,
+            attemptCount: sql`${wordProficiency.attemptCount} + 1`,
+            lastPracticed: new Date()
+          })
+          .where(and(
+            eq(wordProficiency.userId, userId),
+            inArray(wordProficiency.id, correctWordIds)
+          ))
+          .returning(this.PROFICIENCY_SELECT);
+        
+        updated.push(...correctUpdates);
       }
-    }
+      
+      // Batch update incorrect answers
+      if (incorrectWordIds.length > 0) {
+        const incorrectUpdates = await tx.update(wordProficiency)
+          .set({
+            attemptCount: sql`${wordProficiency.attemptCount} + 1`,
+            lastPracticed: new Date()
+          })
+          .where(and(
+            eq(wordProficiency.userId, userId),
+            inArray(wordProficiency.id, incorrectWordIds)
+          ))
+          .returning(this.PROFICIENCY_SELECT);
+        
+        updated.push(...incorrectUpdates);
+      }
+      
+      return updated;
+    });
+  }
+  
+  async removeWordProficiency(userId: number, wordId: number): Promise<void> {
+      await db.delete(wordProficiency)
+        .where(and(eq(wordProficiency.id, wordId), eq(wordProficiency.userId, userId)));
   }
   
   // Chinese character dictionary methods
@@ -1115,5 +957,4 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-// Use Database storage instead of MemStorage
 export const storage = new DatabaseStorage();
