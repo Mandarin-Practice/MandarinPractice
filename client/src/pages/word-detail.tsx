@@ -326,7 +326,6 @@ export default function WordDetail() {
                   const newActive = "false";
                   const response = apiRequest('PATCH', `/api/vocabulary/words/${wordId}`, { active: newActive });
                   response.then(() => {
-                    queryClient.invalidateQueries({ queryKey: ['/api/vocabulary/words', wordId] });
                     queryClient.invalidateQueries({ queryKey: ['/api/vocabulary'] });
                     toast({
                       title: 'Word deactivated',
@@ -346,7 +345,6 @@ export default function WordDetail() {
                   const newActive = "true";
                   const response = apiRequest('PATCH', `/api/vocabulary/words/${wordId}`, { active: newActive });
                   response.then(() => {
-                    queryClient.invalidateQueries({ queryKey: ['/api/vocabulary/words', wordId] });
                     queryClient.invalidateQueries({ queryKey: ['/api/vocabulary'] });
                     toast({
                       title: 'Word activated',

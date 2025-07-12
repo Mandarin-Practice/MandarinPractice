@@ -18,7 +18,7 @@ let stats = {
 // Function to extract and add missing characters
 async function addMissingCharacters() {
   try {
-    // console.log('Identifying missing characters...');
+    console.log('Identifying missing characters...');
     
     // Find all unique characters in compound words
     const missingCharsQuery = `
@@ -39,7 +39,7 @@ async function addMissingCharacters() {
     const missingCharsResult = await pool.query(missingCharsQuery);
     const missingChars = missingCharsResult.rows;
     
-    // console.log(`Found ${missingChars.length} missing characters to add`);
+    console.log(`Found ${missingChars.length} missing characters to add`);
     
     // Add each missing character to the database
     let added = 0;
@@ -59,7 +59,7 @@ async function addMissingCharacters() {
         
         // Log progress periodically
         if (added % 100 === 0) {
-          // console.log(`Added ${added}/${missingChars.length} characters...`);
+          console.log(`Added ${added}/${missingChars.length} characters...`);
         }
       } catch (err) {
         console.error(`Error adding character ${charObj.char}:`, err);
@@ -68,7 +68,7 @@ async function addMissingCharacters() {
     }
     
     stats.charactersAdded = added;
-    // console.log(`Added ${added} missing characters successfully`);
+    console.log(`Added ${added} missing characters successfully`);
     
     return { charactersAdded: added };
   } catch (err) {
@@ -79,16 +79,16 @@ async function addMissingCharacters() {
 
 // Main execution
 async function main() {
-  // console.log('Starting missing character addition...');
+  console.log('Starting missing character addition...');
   
   try {
     const results = await addMissingCharacters();
     
     // Print summary
-    // console.log('\nProcess completed successfully!');
-    // console.log('Summary:');
-    // console.log(`- Characters added: ${results.charactersAdded}`);
-    // console.log(`- Errors encountered: ${stats.errors}`);
+    console.log('\nProcess completed successfully!');
+    console.log('Summary:');
+    console.log(`- Characters added: ${results.charactersAdded}`);
+    console.log(`- Errors encountered: ${stats.errors}`);
     
     await pool.end();
     process.exit(0);

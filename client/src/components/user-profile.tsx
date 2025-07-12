@@ -11,7 +11,7 @@ export function UserProfile() {
   
   // Debug state for development
   useEffect(() => {
-    // console.log("Auth state:", { user, isLoading });
+    console.log("Auth state:", { user, isLoading });
   }, [user, isLoading]);
 
   // Navigate to profile page

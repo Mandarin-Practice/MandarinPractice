@@ -43,7 +43,7 @@ let stats = {
 
 // Function to download a file
 async function downloadFile(url, destination) {
-  // console.log(`Downloading data from ${url}...`);
+  console.log(`Downloading data from ${url}...`);
   
   return new Promise((resolve, reject) => {
     const file = fs.createWriteStream(destination);
@@ -51,7 +51,7 @@ async function downloadFile(url, destination) {
       response.pipe(file);
       file.on('finish', () => {
         file.close();
-        // console.log(`Download completed to ${destination}`);
+        console.log(`Download completed to ${destination}`);
         resolve();
       });
     }).on('error', (err) => {
@@ -63,7 +63,7 @@ async function downloadFile(url, destination) {
 
 // Function to extract a gzipped file
 async function extractGzipFile(source, destination) {
-  // console.log(`Extracting ${source} to ${destination}...`);
+  console.log(`Extracting ${source} to ${destination}...`);
   
   return new Promise((resolve, reject) => {
     exec(`gunzip -c ${source} > ${destination}`, (error) => {
@@ -71,7 +71,7 @@ async function extractGzipFile(source, destination) {
         reject(error);
         return;
       }
-      // console.log('Extraction completed');
+      console.log('Extraction completed');
       resolve();
     });
   });
@@ -79,7 +79,7 @@ async function extractGzipFile(source, destination) {
 
 // Process Hanzi dictionary file to get character details
 async function processHanziData() {
-  // console.log('Processing Hanzi dictionary data...');
+  console.log('Processing Hanzi dictionary data...');
   
   const hanziMap = new Map(); // Map character to its data
   
@@ -113,7 +113,7 @@ async function processHanziData() {
     
     // When all lines are processed
     rl.on('close', () => {
-      // console.log(`Loaded ${hanziMap.size} characters from Hanzi dictionary`);
+      console.log(`Loaded ${hanziMap.size} characters from Hanzi dictionary`);
       resolve(hanziMap);
     });
     
@@ -127,7 +127,7 @@ async function processHanziData() {
 
 // Function to process CC-CEDICT data
 async function processCedictData(hanziMap) {
-  // console.log('Processing CC-CEDICT data...');
+  console.log('Processing CC-CEDICT data...');
   
   const fileStream = fs.createReadStream(CEDICT_EXTRACTED_PATH);
   const rl = readline.createInterface({
@@ -178,7 +178,7 @@ async function processCedictData(hanziMap) {
       // Update and log progress
       processedEntries++;
       if (processedEntries % 1000 === 0) {
-        // console.log(`Processed ${processedEntries} entries, added ${stats.definitionsAdded} definitions, characters: ${stats.charactersAdded}...`);
+        console.log(`Processed ${processedEntries} entries, added ${stats.definitionsAdded} definitions, characters: ${stats.charactersAdded}...`);
       }
     } catch (err) {
       stats.errors++;
@@ -294,7 +294,7 @@ async function createCharacterRelationships() {
     // Get all characters from the database
     const allCharsResult = await pool.query('SELECT id, character FROM characters ORDER BY id');
     const allChars = allCharsResult.rows;
-    // console.log(`Found ${allChars.length} characters to process for relationships`);
+    console.log(`Found ${allChars.length} characters to process for relationships`);
     
     // Create a map for faster lookups
     const charMap = new Map();
@@ -343,13 +343,13 @@ async function createCharacterRelationships() {
       
       // Log progress periodically
       if (compoundsProcessed % 1000 === 0) {
-        // console.log(`Processed ${compoundsProcessed} compounds, created ${relationshipsCreated} relationships...`);
+        console.log(`Processed ${compoundsProcessed} compounds, created ${relationshipsCreated} relationships...`);
       }
     }
     
-    // console.log(`\nCompound relationship processing complete!`);
-    // console.log(`- Compounds processed: ${compoundsProcessed}`);
-    // console.log(`- Relationships created: ${relationshipsCreated}`);
+    console.log(`\nCompound relationship processing complete!`);
+    console.log(`- Compounds processed: ${compoundsProcessed}`);
+    console.log(`- Relationships created: ${relationshipsCreated}`);
     
     return true;
   } catch (err) {
@@ -364,7 +364,7 @@ function cleanup() {
     if (fs.existsSync(CEDICT_TEMP_PATH)) fs.unlinkSync(CEDICT_TEMP_PATH);
     if (fs.existsSync(CEDICT_EXTRACTED_PATH)) fs.unlinkSync(CEDICT_EXTRACTED_PATH);
     if (fs.existsSync(HANZIDB_TEMP_PATH)) fs.unlinkSync(HANZIDB_TEMP_PATH);
-    // console.log('Temporary files cleaned up');
+    console.log('Temporary files cleaned up');
   } catch (err) {
     console.error('Error cleaning up temporary files:', err);
   }
@@ -372,7 +372,7 @@ function cleanup() {
 
 // Main execution
 async function main() {
-  // console.log('Starting comprehensive Chinese dictionary import...');
+  console.log('Starting comprehensive Chinese dictionary import...');
   
   try {
     // Download HanziDB data
@@ -387,19 +387,19 @@ async function main() {
     await processCedictData(hanziMap);
     
     // Create relationships between characters and multi-character compounds
-    // console.log('Creating relationships between characters and compound words...');
+    console.log('Creating relationships between characters and compound words...');
     await createCharacterRelationships();
     
     // Clean up temporary files
     cleanup();
     
     // Print summary
-    // console.log('\nImport completed successfully!');
-    // console.log('Summary:');
-    // console.log(`- Characters added: ${stats.charactersAdded}`);
-    // console.log(`- Characters updated: ${stats.charactersUpdated}`);
-    // console.log(`- Definitions added: ${stats.definitionsAdded}`);
-    // console.log(`- Errors encountered: ${stats.errors}`);
+    console.log('\nImport completed successfully!');
+    console.log('Summary:');
+    console.log(`- Characters added: ${stats.charactersAdded}`);
+    console.log(`- Characters updated: ${stats.charactersUpdated}`);
+    console.log(`- Definitions added: ${stats.definitionsAdded}`);
+    console.log(`- Errors encountered: ${stats.errors}`);
     
     process.exit(0);
   } catch (err) {

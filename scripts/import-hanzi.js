@@ -20,7 +20,7 @@ const TEMP_FILE_PATH = './hanzi_data.csv';
 
 // Function to download the file
 async function downloadFile(url, destination) {
-  // console.log(`Downloading data from ${url}...`);
+  console.log(`Downloading data from ${url}...`);
   
   return new Promise((resolve, reject) => {
     const file = fs.createWriteStream(destination);
@@ -28,7 +28,7 @@ async function downloadFile(url, destination) {
       response.pipe(file);
       file.on('finish', () => {
         file.close();
-        // console.log('Download completed');
+        console.log('Download completed');
         resolve();
       });
     }).on('error', (err) => {
@@ -40,7 +40,7 @@ async function downloadFile(url, destination) {
 
 // Function to process the HanziDB CSV file
 async function processHanziFile() {
-  // console.log('Processing HanziDB data...');
+  console.log('Processing HanziDB data...');
   
   return new Promise((resolve, reject) => {
     const results = [];
@@ -48,7 +48,7 @@ async function processHanziFile() {
       .pipe(csv())
       .on('data', (data) => results.push(data))
       .on('end', () => {
-        // console.log(`Loaded ${results.length} characters from HanziDB`);
+        console.log(`Loaded ${results.length} characters from HanziDB`);
         resolve(results);
       })
       .on('error', (err) => {
@@ -94,14 +94,14 @@ async function updateCharacterDetails(characterData) {
       }
       
       if ((updated + added) % 500 === 0) {
-        // console.log(`Processed ${updated + added} characters (${updated} updated, ${added} added)...`);
+        console.log(`Processed ${updated + added} characters (${updated} updated, ${added} added)...`);
       }
     } catch (err) {
       console.error(`Error processing character ${data.character}:`, err);
     }
   }
   
-  // console.log(`HanziDB import completed: ${updated} characters updated, ${added} characters added.`);
+  console.log(`HanziDB import completed: ${updated} characters updated, ${added} characters added.`);
 }
 
 // Main execution
@@ -114,7 +114,7 @@ async function main() {
     // Clean up temp file
     fs.unlinkSync(TEMP_FILE_PATH);
     
-    // console.log('All processing completed successfully.');
+    console.log('All processing completed successfully.');
     process.exit(0);
   } catch (err) {
     console.error('Error in main process:', err);

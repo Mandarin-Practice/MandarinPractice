@@ -113,7 +113,7 @@ async function addCharacter(characterData) {
         [pinyin, strokes, radical, hskLevel, frequency, characterId]
       );
       stats.charactersUpdated++;
-      // console.log(`Updated character: ${character}`);
+      console.log(`Updated character: ${character}`);
     } else {
       // Add new character
       const result = await client.query(
@@ -122,7 +122,7 @@ async function addCharacter(characterData) {
       );
       characterId = result.rows[0].id;
       stats.charactersAdded++;
-      // console.log(`Added character: ${character}`);
+      console.log(`Added character: ${character}`);
     }
     
     // Add definitions
@@ -150,7 +150,7 @@ async function addCharacter(characterData) {
 
 // Main function
 async function main() {
-  // console.log('Starting sample Chinese character import...');
+  console.log('Starting sample Chinese character import...');
   
   try {
     // Add each sample character
@@ -159,12 +159,12 @@ async function main() {
     }
     
     // Print summary
-    // console.log('\nImport completed successfully!');
-    // console.log('Summary:');
-    // console.log(`- Characters added: ${stats.charactersAdded}`);
-    // console.log(`- Characters updated: ${stats.charactersUpdated}`);
-    // console.log(`- Definitions added: ${stats.definitionsAdded}`);
-    // console.log(`- Errors encountered: ${stats.errors}`);
+    console.log('\nImport completed successfully!');
+    console.log('Summary:');
+    console.log(`- Characters added: ${stats.charactersAdded}`);
+    console.log(`- Characters updated: ${stats.charactersUpdated}`);
+    console.log(`- Definitions added: ${stats.definitionsAdded}`);
+    console.log(`- Errors encountered: ${stats.errors}`);
     
     await pool.end();
     process.exit(0);

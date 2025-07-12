@@ -322,7 +322,7 @@ async function findTraditionalCharacters(limit = 200) {
   const client = await pool.connect();
   
   try {
-    // console.log('Scanning for traditional Chinese characters...');
+    console.log('Scanning for traditional Chinese characters...');
     
     // Search in the characters table
     const result = await client.query('SELECT id, character, pinyin FROM characters');
@@ -341,7 +341,7 @@ async function findTraditionalCharacters(limit = 200) {
         
         // Apply limit to avoid timeout
         if (traditionalCharacters.length >= limit) {
-          // console.log(`Reached limit of ${limit} traditional characters. Stopping scan.`);
+          console.log(`Reached limit of ${limit} traditional characters. Stopping scan.`);
           break;
         }
       } else {
@@ -349,17 +349,17 @@ async function findTraditionalCharacters(limit = 200) {
       }
     }
     
-    // console.log(`Found ${traditionalCount} characters with traditional characters (limited to ${limit})`);
-    // console.log(`Found ${simplifiedCount} simplified characters`);
+    console.log(`Found ${traditionalCount} characters with traditional characters (limited to ${limit})`);
+    console.log(`Found ${simplifiedCount} simplified characters`);
     
     if (traditionalCharacters.length > 0) {
-      // console.log('\nTraditional characters found:');
+      console.log('\nTraditional characters found:');
       traditionalCharacters.slice(0, 20).forEach(char => {
-        // console.log(`ID: ${char.id}, Character: ${char.character}, Pinyin: ${char.pinyin}`);
+        console.log(`ID: ${char.id}, Character: ${char.character}, Pinyin: ${char.pinyin}`);
       });
       
       if (traditionalCharacters.length > 20) {
-        // console.log(`... and ${traditionalCharacters.length - 20} more`);
+        console.log(`... and ${traditionalCharacters.length - 20} more`);
       }
     }
     
@@ -377,14 +377,14 @@ async function removeTraditionalCharacters() {
   const traditionalChars = await findTraditionalCharacters();
   
   if (traditionalChars.length === 0) {
-    // console.log('No traditional characters found to remove.');
+    console.log('No traditional characters found to remove.');
     return;
   }
   
   const client = await pool.connect();
   
   try {
-    // console.log('\nRemoving traditional characters...');
+    console.log('\nRemoving traditional characters...');
     
     // Start a transaction
     await client.query('BEGIN');
@@ -413,17 +413,17 @@ async function removeTraditionalCharacters() {
         
         if (result.rowCount > 0) {
           removedCount++;
-          // console.log(`Removed: ${char.character} (ID: ${char.id})`);
+          console.log(`Removed: ${char.character} (ID: ${char.id})`);
         }
       } catch (err) {
-        // console.log(`Skipping character ${char.character} (ID: ${char.id}) due to: ${err.message}`);
+        console.log(`Skipping character ${char.character} (ID: ${char.id}) due to: ${err.message}`);
       }
     }
     
     // Commit the transaction
     await client.query('COMMIT');
     
-    // console.log(`\nRemoved ${removedCount} traditional characters from the database.`);
+    console.log(`\nRemoved ${removedCount} traditional characters from the database.`);
   } catch (error) {
     // Rollback on error
     await client.query('ROLLBACK');
@@ -437,7 +437,7 @@ async function removeTraditionalCharacters() {
 async function main() {
   try {
     await removeTraditionalCharacters();
-    // console.log('Traditional character cleanup completed successfully.');
+    console.log('Traditional character cleanup completed successfully.');
   } catch (error) {
     console.error('An error occurred during traditional character cleanup:', error);
   } finally {

@@ -24,9 +24,9 @@ import { db, pool } from "./db";
 import { eq, like, desc, asc, and, or, sql, inArray, not } from "drizzle-orm";
 import { convertNumericPinyinToTonal, isNumericPinyin } from './utils/pinyin-converter';
 
-setInterval(() => {
-  console.log(`📊 Pool status: ${pool.totalCount} total, ${pool.idleCount} idle, ${pool.waitingCount} waiting`);
-}, 5000);
+// setInterval(() => {
+//   console.log(`📊 Pool status: ${pool.totalCount} total, ${pool.idleCount} idle, ${pool.waitingCount} waiting`);
+// }, 5000);
 
 // Interface for CRUD operations on vocabulary
 export interface IStorage {

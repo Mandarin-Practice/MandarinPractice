@@ -82,7 +82,7 @@ async function addOrUpdateCharacter(character: string, pinyin: string, hskLevel:
         await db.update(characters)
           .set({ hskLevel: hskLevel })
           .where(eq(characters.id, existingChar.id));
-        // console.log(`Updated HSK level for ${character} to ${hskLevel}`);
+        console.log(`Updated HSK level for ${character} to ${hskLevel}`);
       }
       return existingChar.id;
     } else {
@@ -94,7 +94,7 @@ async function addOrUpdateCharacter(character: string, pinyin: string, hskLevel:
           hskLevel: hskLevel,
         })
         .returning();
-      // console.log(`Added new character: ${character} (HSK ${hskLevel})`);
+      console.log(`Added new character: ${character} (HSK ${hskLevel})`);
       return newChar.id;
     }
   } catch (error) {
@@ -136,10 +136,10 @@ async function addDefinitionIfNeeded(characterId: number, definition: string) {
 // Process each word list
 async function importHSKAndICVocabulary() {
   try {
-    // console.log('Starting import of HSK and Integrated Chinese vocabulary...');
+    console.log('Starting import of HSK and Integrated Chinese vocabulary...');
     
     // Import HSK Level 1 vocabulary
-    // console.log(`Processing HSK Level 1 vocabulary (${hskLevel1Words.length} words)...`);
+    console.log(`Processing HSK Level 1 vocabulary (${hskLevel1Words.length} words)...`);
     for (const wordData of hskLevel1Words) {
       const { word, pinyin, definition } = wordData;
       const charId = await addOrUpdateCharacter(word, pinyin, 1);
@@ -149,7 +149,7 @@ async function importHSKAndICVocabulary() {
     }
     
     // Import HSK Level 2 vocabulary
-    // console.log(`Processing HSK Level 2 vocabulary (${hskLevel2Words.length} words)...`);
+    console.log(`Processing HSK Level 2 vocabulary (${hskLevel2Words.length} words)...`);
     for (const wordData of hskLevel2Words) {
       const { word, pinyin, definition } = wordData;
       const charId = await addOrUpdateCharacter(word, pinyin, 2);
@@ -159,7 +159,7 @@ async function importHSKAndICVocabulary() {
     }
     
     // Import Integrated Chinese vocabulary
-    // console.log(`Processing Integrated Chinese vocabulary (${integratedChineseWords.length} words)...`);
+    console.log(`Processing Integrated Chinese vocabulary (${integratedChineseWords.length} words)...`);
     for (const wordData of integratedChineseWords) {
       const { word, pinyin, definition } = wordData;
       const charId = await addOrUpdateCharacter(word, pinyin, null);
@@ -168,7 +168,7 @@ async function importHSKAndICVocabulary() {
       }
     }
     
-    // console.log('Finished importing HSK and Integrated Chinese vocabulary!');
+    console.log('Finished importing HSK and Integrated Chinese vocabulary!');
     
     return true;
   } catch (error) {
@@ -182,7 +182,7 @@ async function importHSKAndICVocabulary() {
 // Run the import
 importHSKAndICVocabulary().then(success => {
   if (success) {
-    // console.log('HSK and Integrated Chinese vocabulary import completed successfully');
+    console.log('HSK and Integrated Chinese vocabulary import completed successfully');
     process.exit(0);
   } else {
     console.error('HSK and Integrated Chinese vocabulary import failed');

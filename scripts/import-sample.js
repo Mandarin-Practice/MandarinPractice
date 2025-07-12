@@ -118,7 +118,7 @@ async function addCharacter(characterData) {
       
       stats.charactersUpdated++;
       characterId = existingChar.id;
-      // console.log(`Updated character: ${character}`);
+      console.log(`Updated character: ${character}`);
     } else {
       // Add new character
       const newChars = await db.insert(characters)
@@ -134,7 +134,7 @@ async function addCharacter(characterData) {
       
       stats.charactersAdded++;
       characterId = newChars[0].id;
-      // console.log(`Added character: ${character}`);
+      console.log(`Added character: ${character}`);
     }
     
     // Add definitions
@@ -161,7 +161,7 @@ async function addCharacter(characterData) {
 
 // Main function
 async function main() {
-  // console.log('Starting sample Chinese character import...');
+  console.log('Starting sample Chinese character import...');
   
   try {
     // Add each sample character
@@ -170,12 +170,12 @@ async function main() {
     }
     
     // Print summary
-    // console.log('\nImport completed successfully!');
-    // console.log('Summary:');
-    // console.log(`- Characters added: ${stats.charactersAdded}`);
-    // console.log(`- Characters updated: ${stats.charactersUpdated}`);
-    // console.log(`- Definitions added: ${stats.definitionsAdded}`);
-    // console.log(`- Errors encountered: ${stats.errors}`);
+    console.log('\nImport completed successfully!');
+    console.log('Summary:');
+    console.log(`- Characters added: ${stats.charactersAdded}`);
+    console.log(`- Characters updated: ${stats.charactersUpdated}`);
+    console.log(`- Definitions added: ${stats.definitionsAdded}`);
+    console.log(`- Errors encountered: ${stats.errors}`);
     
     process.exit(0);
   } catch (err) {

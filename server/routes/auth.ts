@@ -48,9 +48,9 @@ try {
       }),
     });
     firebaseInitialized = true;
-    // console.log("Firebase Admin SDK initialized successfully");
+    console.log("Firebase Admin SDK initialized successfully");
   } else {
-    // console.log("Firebase Admin SDK not initialized - missing credentials");
+    console.log("Firebase Admin SDK not initialized - missing credentials");
   }
 } catch (error) {
   console.error("Error initializing Firebase Admin SDK:", error);
@@ -71,10 +71,11 @@ declare global {
 }
 
 // Middleware for Firebase authentication
-const verifyFirebaseToken = async (req: Request, res: Response, next: Function) => {
+export const verifyFirebaseToken = async (req: Request, res: Response, next: Function) => {
+  console.log("Verifying Firebase token...");
   // If Firebase is not initialized, use mock verification for development
   if (!firebaseInitialized) {
-    // console.log("Firebase not initialized, using mock verification");
+    console.log("Firebase not initialized, using mock verification");
     req.user = {
       firebaseUid: "mock-uid",
       email: "mock@example.com",
@@ -103,7 +104,13 @@ const verifyFirebaseToken = async (req: Request, res: Response, next: Function) 
   }
 };
 
+export const printSmthn = async (req: Request, res: Response, next: Function) => {
+  console.log("Middleware printSmthn called");
+  next();
+}
+
 export const requireFirebaseUser = async (req: Request, res: Response, next: Function) => {
+  console.log("Requiring firebase user...");
   if (!req.user?.firebaseUid) {
     return res.status(401).json({ message: "Unauthorized" });
   }

@@ -20,9 +20,7 @@ export default function WordChip({
   onRemove, 
   onToggleActive,
   saved = false 
-}: WordChipProps) {
-  const isActive = word.active;
-  
+}: WordChipProps) {  
   // Determine proficiency color
   const getProficiencyColor = (percent: number) => {
     if (percent >= 70) return "text-green-600 dark:text-green-500";

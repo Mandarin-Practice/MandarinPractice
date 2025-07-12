@@ -190,7 +190,7 @@ export default function CharacterHoverView({
   const [charactersData, setCharactersData] = useState<CharacterDetails[]>([]);
 
   // Debug
-  // console.log("CharacterHoverView rendering with:", {chinese, isInteractive, feedbackStatus});
+  console.log("CharacterHoverView rendering with:", {chinese, isInteractive, feedbackStatus});
 
   // Function to find phrases in the text
   function findPhrasesInText(text: string): {
@@ -251,13 +251,13 @@ export default function CharacterHoverView({
     // Only process if we have Chinese text
     if (!chinese) return;
     
-    // console.log("Processing characters from:", chinese);
+    console.log("Processing characters from:", chinese);
     
     // Find multi-character phrases first
     const phrases = findPhrasesInText(chinese);
-    // console.log("Looking for phrases in text:", chinese);
-    // console.log("Available phrases:", Object.keys(commonPhrases));
-    // console.log("Found phrases:", phrases);
+    console.log("Looking for phrases in text:", chinese);
+    console.log("Available phrases:", Object.keys(commonPhrases));
+    console.log("Found phrases:", phrases);
     
     // Create character data array
     const newCharactersData = chinese.split('').map((char, index) => {
@@ -300,7 +300,7 @@ export default function CharacterHoverView({
           charData.definition = commonCharacters[char].definition;
         } else if (!charData.definition) {
           // If character not found in our dictionary, provide a placeholder definition
-          // console.log("Character not found in dictionary:", char);
+          console.log("Character not found in dictionary:", char);
           
           // Save this character to the dictionary with proper definition
           const savedCharacterMutation = async () => {
@@ -312,7 +312,7 @@ export default function CharacterHoverView({
                 simplified: true
               });
               
-              // console.log("Added new character to dictionary:", char, characterResponse);
+              console.log("Added new character to dictionary:", char, characterResponse);
               
               // If character was added successfully, add a default definition
               if (characterResponse.ok && characterResponse.status === 201) {
@@ -329,7 +329,7 @@ export default function CharacterHoverView({
                   
                   // Get the definition with accurate info from the server
                   const definitionData = await definitionResponse.json();
-                  // console.log("Added definition for character:", char, definitionData);
+                  console.log("Added definition for character:", char, definitionData);
                   
                   // Also add to common characters collection for immediate use
                   if (!commonCharacters[char]) {
@@ -368,7 +368,7 @@ export default function CharacterHoverView({
       return charData;
     });
     
-    // console.log("Character data prepared:", newCharactersData);
+    console.log("Character data prepared:", newCharactersData);
     setCharactersData(newCharactersData);
   }, [chinese, vocabularyWords]);
 
@@ -384,7 +384,7 @@ export default function CharacterHoverView({
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/vocabulary'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/vocabulary'] });
     }
   });
 

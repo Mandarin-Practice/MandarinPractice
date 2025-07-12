@@ -126,7 +126,7 @@ export default function Practice() {
     const difficulty = localStorage.getItem('difficulty') || 'beginner';
     const typedDifficulty = difficulty as 'beginner' | 'intermediate' | 'advanced';
     
-    // console.log(`Generating sentence with difficulty: ${difficulty}`);
+    console.log(`Generating sentence with difficulty: ${difficulty}`);
     
     // Try to use a pre-fetched sentence first (much faster)
     if (preloadedSentences[typedDifficulty] && preloadedSentences[typedDifficulty].length > 0) {
@@ -146,7 +146,7 @@ export default function Practice() {
       
       // If the sentence is a duplicate, try again, otherwise return it
       if (preloadedSentence.chinese && recentSentences.includes(preloadedSentence.chinese)) {
-        // console.log(`Preloaded sentence was recently used, trying again...`);
+        console.log(`Preloaded sentence was recently used, trying again...`);
       } else {
         return preloadedSentence;
       }
@@ -159,7 +159,7 @@ export default function Practice() {
       
       // Check if this sentence has been seen recently
       if (data.chinese && recentSentences.includes(data.chinese)) {
-        // console.log(`Sentence "${data.chinese}" was recently used, trying again... (attempt ${attempt + 1}/${maxAttempts})`);
+        console.log(`Sentence "${data.chinese}" was recently used, trying again... (attempt ${attempt + 1}/${maxAttempts})`);
       } else {
         // New sentence found, return it
         return data;
@@ -167,7 +167,7 @@ export default function Practice() {
     }
     
     // If we've tried max attempts and still got duplicates, just use the last generated sentence
-    // console.log("Max attempts reached, accepting any sentence");
+    console.log("Max attempts reached, accepting any sentence");
     const response = await apiRequest('POST', '/api/sentence/generate', { difficulty });
     return response.json();
   };
@@ -251,11 +251,11 @@ export default function Practice() {
       const accuracy = `${Math.round((completed > 0 ? 100 * prev.correctAnswers / completed : 0))}%`;
       
       // Debug accuracy calculation
-      // console.log('Incorrect answer tracking:', {
-      //   correctAnswers: prev.correctAnswers,
-      //   completed,
-      //   accuracyPercentage: Math.round((completed > 0 ? 100 * prev.correctAnswers / completed : 0))
-      // });
+      console.log('Incorrect answer tracking:', {
+        correctAnswers: prev.correctAnswers,
+        completed,
+        accuracyPercentage: Math.round((completed > 0 ? 100 * prev.correctAnswers / completed : 0))
+      });
       
       // Update average time
       const prevAvgTime = parseFloat(prev.avgTime) || 0;
@@ -279,7 +279,7 @@ export default function Practice() {
     const checkDifficultyInterval = setInterval(() => {
       const storedDifficulty = localStorage.getItem('difficulty') || 'beginner';
       if (storedDifficulty !== currentDifficulty) {
-        // console.log(`Difficulty changed from ${currentDifficulty} to ${storedDifficulty}`);
+        console.log(`Difficulty changed from ${currentDifficulty} to ${storedDifficulty}`);
         setCurrentDifficulty(storedDifficulty);
         // Generate a new sentence with the updated difficulty
         generateSentenceMutation.mutate();
@@ -309,7 +309,7 @@ export default function Practice() {
       // Setup periodic checks with exponential backoff
       const checkInterval = setInterval(() => {
         checkCount++;
-        // console.log(`Checking redirect result (attempt ${checkCount})...`);
+        console.log(`Checking redirect result (attempt ${checkCount})...`);
         
         // Only redirect if vocabulary is definitely not loading AND is empty
         if (!isLoadingVocabulary) {
@@ -318,12 +318,12 @@ export default function Practice() {
           
           if (hasAnyWords) {
             // Words exist, mark as fully loaded and clear interval
-            // console.log(`Vocabulary loaded successfully: ${vocabularyWords?.length || 0} words available`);
+            console.log(`Vocabulary loaded successfully: ${vocabularyWords?.length || 0} words available`);
             setFullyLoaded(true);
             clearInterval(checkInterval);
           } else if (checkCount >= maxChecks) {
             // Max attempts reached, must be empty - redirect and clean up
-            // console.log("Max redirect checks reached, giving up");
+            console.log("Max redirect checks reached, giving up");
             if (!isVocabularyError) {
               // Only redirect if there's no error - could just be a temporary network issue
               navigate("/word-list");
@@ -480,11 +480,11 @@ export default function Practice() {
       const accuracy = `${Math.round((completed > 0 ? 100 * correctAnswers / completed : 0))}%`;
       
       // Debug accuracy calculation
-      // console.log('Accuracy calculation:', {
-      //   correctAnswers,
-      //   completed,
-      //   accuracyPercentage: Math.round((completed > 0 ? 100 * correctAnswers / completed : 0)) 
-      // });
+      console.log('Accuracy calculation:', {
+        correctAnswers,
+        completed,
+        accuracyPercentage: Math.round((completed > 0 ? 100 * correctAnswers / completed : 0)) 
+      });
       
       // Handle first completion
       const prevAvgTime = parseFloat(prev.avgTime) || 0;
@@ -520,12 +520,12 @@ export default function Practice() {
     const similarity = checkSimilarity(input, correctAnswer, matchStrictness as 'lenient' | 'moderate' | 'strict');
 
     // Console log for debugging
-    // console.log('Answer comparison:', { 
-    //   user: input,
-    //   correct: correctAnswer,
-    //   similarity,
-    //   matchStrictness
-    // });
+    console.log('Answer comparison:', { 
+      user: input,
+      correct: correctAnswer,
+      similarity,
+      matchStrictness
+    });
     
     // Additional checks for critical words that can't be mixed up
     const userLower = input.toLowerCase().trim();
@@ -534,14 +534,14 @@ export default function Practice() {
     // Extra debug info for imperative phrases
     if (correctAnswer.toLowerCase().includes("come in") || 
         correctAnswer.toLowerCase().includes("please")) {
-      // console.log('Imperative check - extra details:', {
-      //   userStartsWithI: userLower.startsWith("i "),
-      //   userIncludes: userLower.includes("please"),
-      //   correctStartsWithPlease: correctLower.startsWith("please"),
-      //   hasComeInConflict: userLower.includes("i come") && 
-      //                     (correctLower.includes("come in") || 
-      //                      correctLower.includes("please come"))
-      // });
+      console.log('Imperative check - extra details:', {
+        userStartsWithI: userLower.startsWith("i "),
+        userIncludes: userLower.includes("please"),
+        correctStartsWithPlease: correctLower.startsWith("please"),
+        hasComeInConflict: userLower.includes("i come") && 
+                          (correctLower.includes("come in") || 
+                           correctLower.includes("please come"))
+      });
     }
     
     // Special checks for temporal words that shouldn't be confused
@@ -644,20 +644,20 @@ export default function Practice() {
       (userLower.includes(" will ") && !correctLower.includes(" will ") && !correctLower.includes("'ll "));
       
     // Debug log for conflict detection - just log the original conflicts for now
-    // console.log('Conflict detection:', {
-    //   temporalWordsConflict,
-    //   beverageConflict,
-    //   foodConflict,
-    //   verbTenseConflict,
-    //   imperativeConflict
-    // });
+    console.log('Conflict detection:', {
+      temporalWordsConflict,
+      beverageConflict,
+      foodConflict,
+      verbTenseConflict,
+      imperativeConflict
+    });
     
     // Log new conflict types separately
-    // console.log('Additional conflict checks:', {
-    //   locationConflict,
-    //   reciprocalConflict,
-    //   futureMarkerConflict
-    // });
+    console.log('Additional conflict checks:', {
+      locationConflict,
+      reciprocalConflict,
+      futureMarkerConflict
+    });
 
     // Threshold adjustments with enhanced special case handling:
     // Increase required similarity to 0.8 for "correct" answers
@@ -676,7 +676,7 @@ export default function Practice() {
       // Update streak for correct answer
       updateStreak.mutate({ isCorrect: true }, {
         onSuccess: (streakData) => {
-          // console.log('Streak updated:', streakData);
+          console.log('Streak updated:', streakData);
         },
         onError: (error) => {
           console.error('Failed to update streak:', error);
@@ -724,7 +724,7 @@ export default function Practice() {
       // Update streak for incorrect answer (resets streak)
       updateStreak.mutate({ isCorrect: false }, {
         onSuccess: (streakData) => {
-          // console.log('Streak reset:', streakData);
+          console.log('Streak reset:', streakData);
         },
         onError: (error) => {
           console.error('Failed to update streak:', error);

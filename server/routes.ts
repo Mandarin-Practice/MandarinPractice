@@ -5,9 +5,9 @@ import { wordProficiencySchema, characterSchema, characterDefinitionSchema, lear
 import { ZodError } from "zod";
 import { generateSentence, generateSentenceWithWord, checkSynonyms, validateSentenceWithAI, verifyTranslationQuality } from "./openai";
 import dictionaryAdminRoutes from "./routes/dictionary-admin";
-import authRoutes from "./routes/auth";
+import authRoutes, { printSmthn } from "./routes/auth";
 import { requireAuth } from "./middleware/auth";
-import  authenticateFirebaseUser from "./routes/auth";
+import { verifyFirebaseToken, requireFirebaseUser, authenticateFirebaseUser } from "./routes/auth";
 import authRouter from "./routes/auth";
 import { auth } from "firebase-admin";
 
@@ -51,7 +51,7 @@ function validateSentence(chinese: string): { isValid: boolean; reason?: string 
   // Check against known unnatural patterns
   for (const { pattern, reason } of unnaturalPatterns) {
     if (chinese.includes(pattern)) {
-      // console.log(`Rejecting sentence "${chinese}" because it contains unnatural pattern "${pattern}": ${reason}`);
+      console.log(`Rejecting sentence "${chinese}" because it contains unnatural pattern "${pattern}": ${reason}`);
       return { isValid: false, reason };
     }
   }
@@ -407,7 +407,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Filter out undefined entries and inactive words
           userVocabulary = allUserWords.filter(word => word.active);
           
-          // console.log(`Found ${userVocabulary.length} words in sample user's vocabulary for cache fill`);
+          console.log(`Found ${userVocabulary.length} words in sample user's vocabulary for cache fill`);
         } catch (error) {
           console.error("Error fetching sample user vocabulary:", error);
         }
@@ -433,7 +433,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const minAdvancedWords = Math.max(1, Math.floor(count * 0.5)); // At least 50% of words from newer lessons
           const maxAdvancedWords = Math.min(advancedLessonWords.length, Math.ceil(count * 0.8)); // At most 80% of words
           
-          // console.log(`Including ${minAdvancedWords}-${maxAdvancedWords} words from lessons 11-20`);
+          console.log(`Including ${minAdvancedWords}-${maxAdvancedWords} words from lessons 11-20`);
           
           // Randomly select advanced lesson words
           const shuffledAdvanced = [...advancedLessonWords].sort(() => 0.5 - Math.random());
@@ -504,9 +504,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         // Log the selected words with their lesson IDs
-        // console.log("Selected vocabulary:", selectedWords.map(w => 
-        //   `${w.chinese}${w.lessonId ? ` (Lesson ${w.lessonId})` : ''}`
-        // ).join(', '));
+        console.log("Selected vocabulary:", selectedWords.map(w => 
+          `${w.chinese}${w.lessonId ? ` (Lesson ${w.lessonId})` : ''}`
+        ).join(', '));
         
         return selectedWords;
       };
@@ -529,8 +529,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               wordCounts[difficulty]
             );
             
-            // console.log(`Generating ${difficulty} sentence with words:`, 
-              // selectedWords.map(w => w.chinese).join(', '));
+            console.log(`Generating ${difficulty} sentence with words:`, 
+              selectedWords.map(w => w.chinese).join(', '));
             
             // Add common grammatical particles if they aren't already in the vocabulary
             // This helps create more natural sentences while still focusing on the target vocabulary
@@ -553,14 +553,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
               
               // Add common words as supplementary vocabulary
               const enhancedVocabulary = [...selectedWords, ...additionalWords];
-              // console.log(`Enhanced vocabulary with ${additionalWords.length} common particles for more natural sentences`);
+              console.log(`Enhanced vocabulary with ${additionalWords.length} common particles for more natural sentences`);
               
               try {
                 // Try generating with enhanced vocabulary first
                 sentence = await generateSentence(enhancedVocabulary, difficulty, true);
               } catch (err) {
                 const error = err as Error;
-                // console.log("Couldn't generate with enhanced vocabulary, falling back to strict mode:", error.message);
+                console.log("Couldn't generate with enhanced vocabulary, falling back to strict mode:", error.message);
                 // Fall back to strict mode with only the original vocabulary
                 sentence = await generateSentence(selectedWords, difficulty);
               }
@@ -592,13 +592,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   createdAt: Date.now(),
                   usedWords: selectedWords.map(w => w.id) // Track which words were used
                 });
-                // console.log(`Added sentence to ${difficulty} cache: ${sentence.chinese}`);
+                console.log(`Added sentence to ${difficulty} cache: ${sentence.chinese}`);
               }
             } else {
-              // console.log(`Rejected unnatural sentence: "${sentence.chinese}" - Reason: ${validationResult.reason}`);
+              console.log(`Rejected unnatural sentence: "${sentence.chinese}" - Reason: ${validationResult.reason}`);
             }
           } catch (error) {
-            // console.error(`Error filling cache for ${difficulty}:`, error);
+            console.error(`Error filling cache for ${difficulty}:`, error);
           }
         }
       }
@@ -692,7 +692,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userVocabulary = allUserWords
           .filter(word => word && word.active);
         
-        // console.log(`Found ${userVocabulary.length} words in user's personal vocabulary`);
+        console.log(`Found ${userVocabulary.length} words in user's personal vocabulary`);
       } catch (error) {
         console.error("Error fetching user vocabulary:", error);
         // Continue with default vocabulary if user-specific fetch fails
@@ -718,8 +718,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           wordCounts[typedDifficulty]
         );
         
-        // console.log(`Generating on-demand ${typedDifficulty} sentence with words:`, 
-          // selectedWords.map(w => w.chinese).join(', '));
+        console.log(`Generating on-demand ${typedDifficulty} sentence with words:`, 
+          selectedWords.map(w => w.chinese).join(', '));
         
         // Add common grammatical particles for more natural sentences
         const commonWords = [
@@ -740,14 +740,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Add common words as supplementary vocabulary
           const enhancedVocabulary = [...selectedWords, ...additionalWords];
-          // console.log(`Enhanced vocabulary with ${additionalWords.length} common particles for more natural sentences`);
+          console.log(`Enhanced vocabulary with ${additionalWords.length} common particles for more natural sentences`);
           
           try {
             // Try generating with enhanced vocabulary first
             sentence = await generateSentence(enhancedVocabulary, typedDifficulty, true);
           } catch (err) {
             const error = err as Error;
-            // console.log("Couldn't generate with enhanced vocabulary, falling back to strict mode:", error.message);
+            console.log("Couldn't generate with enhanced vocabulary, falling back to strict mode:", error.message);
             // Fall back to strict mode with only the original vocabulary
             sentence = await generateSentence(selectedWords, typedDifficulty);
           }
@@ -769,31 +769,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const patternValidationResult = validateSentence(sentence.chinese);
         
         if (!patternValidationResult.isValid) {
-          // console.log(`Rejected unnatural on-demand sentence: "${sentence.chinese}" - Reason: ${patternValidationResult.reason}`);
+          console.log(`Rejected unnatural on-demand sentence: "${sentence.chinese}" - Reason: ${patternValidationResult.reason}`);
           // Pattern validation failed, don't even try AI validation
         } else {
           // Step 2: Always validate with AI for semantic correctness
           try {
-            // console.log("Running AI validation for sentence:", sentence.chinese);
+            console.log("Running AI validation for sentence:", sentence.chinese);
             const aiValidationResult = await validateSentenceWithAI(sentence.chinese, typedDifficulty);
             
             // Log AI validation results
-            // console.log(`AI validation results: Score=${aiValidationResult.score}, Valid=${aiValidationResult.isValid}`);
-            // console.log(`AI feedback: ${aiValidationResult.feedback}`);
+            console.log(`AI validation results: Score=${aiValidationResult.score}, Valid=${aiValidationResult.isValid}`);
+            console.log(`AI feedback: ${aiValidationResult.feedback}`);
             
             // If score is below 7, the sentence is not good enough
             if (aiValidationResult.score < 7) {
               if (aiValidationResult.corrections) {
-                // console.log(`Suggested corrections: ${aiValidationResult.corrections}`);
+                console.log(`Suggested corrections: ${aiValidationResult.corrections}`);
                 
                 // Apply corrections if AI suggested them and score is at least 5
                 if (aiValidationResult.score >= 5) {
-                  // console.log("Applying AI-suggested corrections to improve sentence quality");
+                  console.log("Applying AI-suggested corrections to improve sentence quality");
                   sentence.chinese = aiValidationResult.corrections;
                   // Now we need to re-validate the corrected sentence
                   const correctionValidation = validateSentence(sentence.chinese);
                   if (!correctionValidation.isValid) {
-                    // console.log(`Rejected corrected sentence: "${sentence.chinese}" - Reason: ${correctionValidation.reason}`);
+                    console.log(`Rejected corrected sentence: "${sentence.chinese}" - Reason: ${correctionValidation.reason}`);
                     patternValidationResult.isValid = false;
                     patternValidationResult.reason = correctionValidation.reason;
                   } else {
@@ -814,7 +814,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             // If AI explicitly says it's invalid, always reject
             if (!aiValidationResult.isValid) {
-              // console.log(`AI rejected sentence: "${sentence.chinese}" - Feedback: ${aiValidationResult.feedback}`);
+              console.log(`AI rejected sentence: "${sentence.chinese}" - Feedback: ${aiValidationResult.feedback}`);
               patternValidationResult.isValid = false;
               patternValidationResult.reason = `AI validation: ${aiValidationResult.feedback}`;
             }
@@ -822,24 +822,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // If AI validation errors, we're more cautious - only accept very simple sentences
             console.error("AI validation error:", aiError);
             if (sentence.chinese.length > 8) {
-              // console.log("Rejecting longer sentence due to failed AI validation");
+              console.log("Rejecting longer sentence due to failed AI validation");
               patternValidationResult.isValid = false;
               patternValidationResult.reason = "AI validation error - cannot verify semantic correctness";
             } else {
-              // console.log("Continuing with very simple pattern-validated sentence despite AI validation error");
+              console.log("Continuing with very simple pattern-validated sentence despite AI validation error");
             }
           }
           
           // Additional step: Even if validation passed, double-check the translation quality
           if (patternValidationResult.isValid) {
             try {
-              // console.log("Verifying translation quality for:", sentence.chinese);
+              console.log("Verifying translation quality for:", sentence.chinese);
               const translationCheck = await verifyTranslationQuality(sentence.chinese);
               
               if (!translationCheck.isNaturalTranslation) {
-                // console.log(`Translation quality check failed: "${sentence.chinese}"`);
-                // console.log(`Feedback: ${translationCheck.feedback}`);
-                // console.log(`Better translation would be: ${translationCheck.naturalEnglishTranslation}`);
+                console.log(`Translation quality check failed: "${sentence.chinese}"`);
+                console.log(`Feedback: ${translationCheck.feedback}`);
+                console.log(`Better translation would be: ${translationCheck.naturalEnglishTranslation}`);
                 
                 // If there's a translation issue, reject the sentence
                 patternValidationResult.isValid = false;
@@ -850,7 +850,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   sentence.english = translationCheck.naturalEnglishTranslation;
                 }
               } else {
-                // console.log("Translation quality check passed");
+                console.log("Translation quality check passed");
                 // If there's a better translation available, use it
                 if (translationCheck.naturalEnglishTranslation) {
                   sentence.english = translationCheck.naturalEnglishTranslation;
@@ -877,7 +877,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Send the validated sentence to the client
           res.json(sentence);
         } else {
-          // console.log(`Rejected sentence: "${sentence.chinese}" - Reason: ${patternValidationResult.reason}`);
+          console.log(`Rejected sentence: "${sentence.chinese}" - Reason: ${patternValidationResult.reason}`);
           
           // Generate a simple fallback sentence using the same vocabulary
           const fallbackTemplate = "我们学习{word}。";
@@ -896,7 +896,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           res.json(fallbackSentence);
         }
       } catch (generateError) {
-        // console.log("Error generating sentence with OpenAI, using fallback sentences. Error: " + generateError);
+        console.log("Error generating sentence with OpenAI, using fallback sentences. Error: " + generateError);
         
         // Select a random fallback sentence based on difficulty
         const fallbackOptions = fallbackSentences[typedDifficulty] || fallbackSentences.beginner;
@@ -932,7 +932,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (validationResult.isValid) {
           res.json(sentence);
         } else {
-          // console.log(`Rejected unnatural word-specific sentence: "${sentence.chinese}" - Reason: ${validationResult.reason}`);
+          console.log(`Rejected unnatural word-specific sentence: "${sentence.chinese}" - Reason: ${validationResult.reason}`);
           
           // Use a simple template fallback
           const fallbackSentence = {
@@ -948,7 +948,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           res.json(fallbackSentence);
         }
       } catch (generateError) {
-        // console.log(`Error generating sentence with word "${word}", using fallback`);
+        console.log(`Error generating sentence with word "${word}", using fallback`);
         
         // Create fallback sentences with proper grammar using the word
         const fallbackSentences = [
@@ -1025,7 +1025,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get proficiency for a specific word
-  app.post("/api/vocabulary/proficiency/batch", async (req, res) => {
+  app.post("/api/vocabulary/proficiency/batch", printSmthn, async (req, res) => {
     console.log("\n\nBATCH WORD PROF REQUEST\n\n")
     try {
       const userId = 18;
@@ -1167,7 +1167,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Use OpenAI to check if words are synonyms
       const result = await checkSynonyms(word1, word2);
       
-      // console.log(`Synonym check result: ${JSON.stringify(result)}`);
+      console.log(`Synonym check result: ${JSON.stringify(result)}`);
       
       res.json(result);
     } catch (error) {
@@ -1285,7 +1285,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ? query 
         : (typeof q === 'string' ? q : '');
       
-      // console.log(`Searching characters with term: "${searchTerm}"`);
+      console.log(`Searching characters with term: "${searchTerm}"`);
       const characters = await storage.searchCharacters(searchTerm);
       res.json(characters);
     } catch (error) {
@@ -1357,7 +1357,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           validatedCharacter.pinyin = charDetails.pinyin;
           
           // We'll add the definition separately after creating the character
-          // console.log(`Enhanced character ${validatedCharacter.character} with AI: ${JSON.stringify(charDetails)}`);
+          console.log(`Enhanced character ${validatedCharacter.character} with AI: ${JSON.stringify(charDetails)}`);
         } catch (aiError) {
           console.error("Failed to get AI definition:", aiError);
           // Continue with original values if AI definition fails
@@ -1453,7 +1453,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Update with AI-generated definition
           definition.definition = charDetails.definition;
-          // console.log(`Enhanced definition for ${character.character} with AI: ${charDetails.definition}`);
+          console.log(`Enhanced definition for ${character.character} with AI: ${charDetails.definition}`);
         } catch (aiError) {
           console.error("Failed to get AI definition:", aiError);
           // Continue with original definition if AI definition fails

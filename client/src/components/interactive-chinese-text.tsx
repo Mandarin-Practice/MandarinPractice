@@ -33,7 +33,7 @@ export default function InteractiveChineseText({
   const queryClient = useQueryClient();
   
   // Debug the vocabularyWords data
-  // console.log("InteractiveChineseText received vocabularyWords:", vocabularyWords);
+  console.log("InteractiveChineseText received vocabularyWords:", vocabularyWords);
   
   // Process the Chinese text to identify words from vocabulary
   const processedText: CharacterInfo[] = [];
@@ -149,7 +149,7 @@ export default function InteractiveChineseText({
   });
   
   // Make sure we have valid processedText with at least basic fallback definitions
-  // console.log("ProcessedText after processing:", processedText);
+  console.log("ProcessedText after processing:", processedText);
   
   return (
     <div className="text-3xl font-['Noto_Sans_SC',sans-serif] leading-relaxed font-bold">

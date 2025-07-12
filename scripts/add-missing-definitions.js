@@ -61,7 +61,7 @@ async function generateDefinitionWithAI(character) {
 // Function to add missing definitions
 async function addMissingDefinitions() {
   try {
-    // console.log('Finding characters without definitions...');
+    console.log('Finding characters without definitions...');
     
     // Get characters without definitions
     const missingDefsQuery = `
@@ -79,12 +79,12 @@ async function addMissingDefinitions() {
     const missingDefsResult = await pool.query(missingDefsQuery);
     const charactersWithoutDefs = missingDefsResult.rows;
     
-    // console.log(`Found ${charactersWithoutDefs.length} characters without definitions`);
+    console.log(`Found ${charactersWithoutDefs.length} characters without definitions`);
     
     // Process characters in batches
     for (let i = 0; i < charactersWithoutDefs.length; i += BATCH_SIZE) {
       const batch = charactersWithoutDefs.slice(i, i + BATCH_SIZE);
-      // console.log(`Processing batch ${Math.floor(i/BATCH_SIZE) + 1}/${Math.ceil(charactersWithoutDefs.length/BATCH_SIZE)}`);
+      console.log(`Processing batch ${Math.floor(i/BATCH_SIZE) + 1}/${Math.ceil(charactersWithoutDefs.length/BATCH_SIZE)}`);
       
       // Process characters in parallel within each batch
       const batchPromises = batch.map(async (char) => {
@@ -101,7 +101,7 @@ async function addMissingDefinitions() {
               [char.id, definition]
             );
             
-            // console.log(`Added definition for ${char.character}: "${definition}"`);
+            console.log(`Added definition for ${char.character}: "${definition}"`);
             stats.definitionsAdded++;
           }
           
@@ -115,7 +115,7 @@ async function addMissingDefinitions() {
       // Wait for all characters in this batch to be processed
       await Promise.all(batchPromises);
       
-      // console.log(`Completed batch ${Math.floor(i/BATCH_SIZE) + 1}, added ${stats.definitionsAdded} definitions so far`);
+      console.log(`Completed batch ${Math.floor(i/BATCH_SIZE) + 1}, added ${stats.definitionsAdded} definitions so far`);
     }
     
     return { 
@@ -130,17 +130,17 @@ async function addMissingDefinitions() {
 
 // Main execution
 async function main() {
-  // console.log('Starting missing definitions addition...');
+  console.log('Starting missing definitions addition...');
   
   try {
     const results = await addMissingDefinitions();
     
     // Print summary
-    // console.log('\nProcess completed successfully!');
-    // console.log('Summary:');
-    // console.log(`- Characters processed: ${results.charactersProcessed}`);
-    // console.log(`- Definitions added: ${results.definitionsAdded}`);
-    // console.log(`- Errors encountered: ${stats.errors}`);
+    console.log('\nProcess completed successfully!');
+    console.log('Summary:');
+    console.log(`- Characters processed: ${results.charactersProcessed}`);
+    console.log(`- Definitions added: ${results.definitionsAdded}`);
+    console.log(`- Errors encountered: ${stats.errors}`);
     
     await pool.end();
     process.exit(0);
