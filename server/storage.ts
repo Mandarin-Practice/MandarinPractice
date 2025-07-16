@@ -244,7 +244,14 @@ export class DatabaseStorage implements IStorage {
     // Add new word
     const [newVocab] = await db.insert(wordProficiency)
       .values({...word, userId: userId})
-      .onConflictDoNothing() // TODO do an update step if needed
+      .onConflictDoUpdate({
+        target: [wordProficiency.userId, wordProficiency.chinese, wordProficiency.pinyin],
+        set: {
+          english: sql`excluded.english`,
+          active: sql`excluded.active`,
+          category: sql`excluded.category`
+        }
+      })
       .returning();
       
     return newVocab;
@@ -261,7 +268,14 @@ export class DatabaseStorage implements IStorage {
       const insertStart = Date.now();
       const insertedWords = await db.insert(wordProficiency)
         .values(words.map(word => ({...word, userId})))
-        .onConflictDoNothing() // TODO do some form of update step
+        .onConflictDoUpdate({
+          target: [wordProficiency.userId, wordProficiency.chinese, wordProficiency.pinyin],
+          set: {
+            english: sql`excluded.english`,
+            active: sql`excluded.active`,
+            category: sql`excluded.category`
+          }
+        })
         .returning();
       
       const insertTime = Date.now() - insertStart;
