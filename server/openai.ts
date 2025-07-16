@@ -240,22 +240,6 @@ export async function generateSentence(
     throw new Error("No vocabulary provided");
   }
 
-  const chineseWords = vocabulary.map((word) => word.chinese).join(", ");
-  const pinyinMap = vocabulary.reduce(
-    (map, word) => {
-      map[word.chinese] = word.pinyin;
-      return map;
-    },
-    {} as Record<string, string>
-  );
-  const englishMap = vocabulary.reduce(
-    (map, word) => {
-      map[word.chinese] = word.english;
-      return map;
-    },
-    {} as Record<string, string>
-  );
-
   // Get current date and time for context in sentences
   const now = new Date();
   const hour = now.getHours();
@@ -406,6 +390,8 @@ export async function generateSentence(
     
     // For beginner difficulty, allow all chars in vocabulary list plus common connecting words
     if (difficulty === "beginner") {
+      console.log("Vocabulary characters:", Array.from(vocabularyChars).join(', '));
+      console.log("Common Chinese characters:", commonChineseChars.join(', '));
       // For each character in the sentence, check if it's allowed
       const unknownChars = uniqueSentenceWords.filter(char => 
         !vocabularyChars.has(char) &&                 // Not in vocabulary

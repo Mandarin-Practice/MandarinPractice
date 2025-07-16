@@ -7,7 +7,7 @@ import { generateSentence, generateSentenceWithWord, checkSynonyms, validateSent
 import dictionaryAdminRoutes from "./routes/dictionary-admin";
 import authRoutes from "./routes/auth";
 import { requireAuth } from "./middleware/auth";
-import { verifyFirebaseToken, requireFirebaseUser, authenticateFirebaseUser } from "./routes/auth";
+import { verifyFirebaseToken } from "./routes/auth";
 import authRouter from "./routes/auth";
 import { auth } from "firebase-admin";
 
@@ -695,12 +695,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Found ${userVocabulary.length} words in user's personal vocabulary`);
       } catch (error) {
         console.error("Error fetching user vocabulary:", error);
-        // Continue with default vocabulary if user-specific fetch fails
       }
       
       // Final check if we have any vocabulary
       if (userVocabulary.length === 0) {
-        return res.status(400).json({ message: "No active vocabulary words available. Please add or activate some words first." });
+        console.log("No active vocabulary words available. Please add or activate some words first.");
       }
       
       // Generate new sentence using OpenAI with retries and fallback
@@ -880,7 +879,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`Rejected sentence: "${sentence.chinese}" - Reason: ${patternValidationResult.reason}`);
           
           // Generate a simple fallback sentence using the same vocabulary
-          const fallbackTemplate = "我们学习{word}。";
           const randomWord = selectedWords[Math.floor(Math.random() * selectedWords.length)];
           
           const fallbackSentence = {
