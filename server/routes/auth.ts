@@ -3,6 +3,7 @@ import { storage } from "../storage";
 import admin from "firebase-admin";
 import { insertUserSchema } from "@shared/schema";
 import { createHash, randomBytes, timingSafeEqual } from "crypto";
+import { verifyFirebaseToken } from "../middleware/auth";
 
 // Password hashing functions
 async function hashPassword(password: string): Promise<string> {
@@ -69,39 +70,6 @@ declare global {
     }
   }
 }
-
-// Middleware for Firebase authentication
-export const verifyFirebaseToken = async (req: Request, res: Response, next: Function) => {
-  // If Firebase is not initialized, use mock verification for development
-  if (!firebaseInitialized) {
-    console.log("Firebase not initialized, using mock verification");
-    req.user = {
-      firebaseUid: "mock-uid",
-      email: "mock@example.com",
-    };
-    return next();
-  }
-
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ error: "Unauthorized: No token provided" });
-  }
-
-  const token = authHeader.split("Bearer ")[1];
-
-  try {
-    const decodedToken = await admin.auth().verifyIdToken(token);
-    req.user = {
-      firebaseUid: decodedToken.uid,
-      email: decodedToken.email,
-    };
-    next();
-  } catch (error) {
-    console.error("Error verifying Firebase token:", error);
-    return res.status(401).json({ error: "Unauthorized: Invalid token" });
-  }
-};
 
 // Standard username/password registration
 authRouter.post("/register/local", async (req: Request, res: Response) => {

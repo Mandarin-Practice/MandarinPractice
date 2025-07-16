@@ -6,8 +6,8 @@ import { ZodError } from "zod";
 import { generateSentence, generateSentenceWithWord, checkSynonyms, validateSentenceWithAI, verifyTranslationQuality } from "./openai";
 import dictionaryAdminRoutes from "./routes/dictionary-admin";
 import authRoutes from "./routes/auth";
-import { requireAuth } from "./middleware/auth";
-import { verifyFirebaseToken } from "./routes/auth";
+import { firebaseAuth } from "./middleware/auth";
+import { verifyFirebaseToken } from "./middleware/auth";
 import authRouter from "./routes/auth";
 import { auth } from "firebase-admin";
 
@@ -131,10 +131,10 @@ function validateSentence(chinese: string): { isValid: boolean; reason?: string 
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Get user's vocabulary words (requires authentication)
-  app.get("/api/vocabulary/words", async (req, res) => {
+  app.get("/api/vocabulary/words", verifyFirebaseToken, firebaseAuth, async (req, res) => {
     console.log("\n\nALL VOCAB WORDS GET\n\n")
     try {
-      const userId = 18;
+      const userId = req.authenticatedUserId;
 
       if (!userId) {
         return res.status(400).json({ message: "Unauthorized" });
@@ -154,10 +154,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Add vocabulary words
-  app.post("/api/vocabulary/words", async (req, res) => {
+  app.post("/api/vocabulary/words", verifyFirebaseToken, firebaseAuth, async (req, res) => {
     console.log("\n\nALL VOCAB WORDS POST\n\n")
     try {
-      const userId = 18;
+      const userId = req.authenticatedUserId;
 
       if (!userId) {
         return res.status(400).json({ message: "Unauthorized" });
@@ -177,10 +177,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/vocabulary/words/import", async (req, res) => {
+  app.post("/api/vocabulary/words/import", verifyFirebaseToken, firebaseAuth, async (req, res) => {
     console.log("\n\nIMPORTING ACTUAL VOCAB WORDS\n\n")
     try {
-      const userId = 18;
+      const userId = req.authenticatedUserId;
 
       if (!userId) {
         return res.status(400).json({ message: "Unauthorized" });
@@ -202,10 +202,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update a vocabulary word
-  app.patch("/api/vocabulary/words/:id", async (req, res) => {
+  app.patch("/api/vocabulary/words/:id", verifyFirebaseToken, firebaseAuth, async (req, res) => {
     console.log("\n\nUPDATING EXACTLY ONE VOCAB WORD\n\n")
     try {
-      const userId = 18;
+      const userId = req.authenticatedUserId;
 
       if (!userId) {
         return res.status(400).json({ message: "Unauthorized" });
@@ -226,10 +226,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete a vocabulary word
-  app.delete("/api/vocabulary/words/by-chinese", async (req, res) => {
+  app.delete("/api/vocabulary/words/by-chinese", verifyFirebaseToken, firebaseAuth, async (req, res) => {
     console.log("\n\nDELETING EXACTLY ONE VOCAB WORD\n\n")
     try {
-      const userId = 18;
+      const userId = req.authenticatedUserId;
 
       if (!userId) {
         return res.status(400).json({ message: "Unauthorized" });
@@ -249,10 +249,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete a vocabulary word using chinese and pinyin
-  app.delete("/api/vocabulary/words/:id", async (req, res) => {
+  app.delete("/api/vocabulary/words/:id", verifyFirebaseToken, firebaseAuth, async (req, res) => {
     console.log("\n\nDELETING EXACTLY ONE VOCAB WORD\n\n")
     try {
-      const userId = 18;
+      const userId = req.authenticatedUserId;
 
       if (!userId) {
         return res.status(400).json({ message: "Unauthorized" });
@@ -272,10 +272,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete all vocabulary words
-  app.delete("/api/vocabulary/words", async (req, res) => {
+  app.delete("/api/vocabulary/words", verifyFirebaseToken, firebaseAuth, async (req, res) => {
     console.log("\n\nDELETING ALL VOCAB WORDS\n\n")
     try {
-      const userId = 18;
+      const userId = req.authenticatedUserId;
 
       if (!userId) {
         return res.status(400).json({ message: "Unauthorized" });
@@ -289,10 +289,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get a specific vocabulary word by ID
-  app.get("/api/vocabulary/words/:id", async (req, res) => {
+  app.get("/api/vocabulary/words/:id", verifyFirebaseToken, firebaseAuth, async (req, res) => {
     console.log("\n\nGETTING SPECIFIC VOCAB WORD\n\n")
     try {
-      const userId = 18;
+      const userId = req.authenticatedUserId;
 
       if (!userId) {
         return res.status(400).json({ message: "Unauthorized" });
@@ -619,7 +619,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }, 5000);
 
   // Generate a sentence using the user's vocabulary
-  app.post("/api/sentence/generate", async (req, res) => {
+  app.post("/api/sentence/generate", verifyFirebaseToken, firebaseAuth, async (req, res) => {
     try {
       const { difficulty = "beginner" } = req.body;
       const typedDifficulty = difficulty as 'beginner' | 'intermediate' | 'advanced';
@@ -677,7 +677,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // If we reach here, there's no cache or we need a new sentence
       
-      const userId = 18;
+      const userId = req.authenticatedUserId;
 
       if (!userId) {
         return res.status(400).json({ message: "Unauthorized" });
@@ -993,9 +993,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get proficiency for a specific word
-  app.get("/api/vocabulary/proficiency/:wordId", async (req, res) => {
+  app.get("/api/vocabulary/proficiency/:wordId", verifyFirebaseToken, firebaseAuth, async (req, res) => {
     try {
-      const userId = 18;
+      const userId = req.authenticatedUserId;
 
       if (!userId) {
         return res.status(400).json({ message: "Unauthorized" });
@@ -1023,10 +1023,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get proficiency for a specific word
-  app.post("/api/vocabulary/proficiency/batch", async (req, res) => {
+  app.post("/api/vocabulary/proficiency/batch", verifyFirebaseToken, firebaseAuth, async (req, res) => {
     console.log("\n\nBATCH WORD PROF REQUEST\n\n")
     try {
-      const userId = 18;
+      const userId = req.authenticatedUserId;
       
       if (!userId) {
         return res.status(400).json({ message: "Unauthorized" });
@@ -1047,9 +1047,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update proficiency for a word (after practice)
-  app.patch("/api/vocabulary/proficiency/:wordId", async (req, res) => {
+  app.patch("/api/vocabulary/proficiency/:wordId", verifyFirebaseToken, firebaseAuth, async (req, res) => {
     try {
-      const userId = 18;
+      const userId = req.authenticatedUserId;
       if (!userId) {
         return res.status(400).json({ message: "Unauthorized" });
       }
@@ -1075,10 +1075,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Reset proficiency for a word
-  app.delete("/api/vocabulary/proficiency/:wordId", async (req, res) => {
+  app.delete("/api/vocabulary/proficiency/:wordId", verifyFirebaseToken, firebaseAuth, async (req, res) => {
     console.log("\n\nDELETE SPECIFIC WORD PROF\n\n")
     try {
-      const userId = 18;
+      const userId = req.authenticatedUserId;
       
       if (!userId) {
         return res.status(400).json({ message: "Unauthorized" });
@@ -1098,9 +1098,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get proficiency for a specific word
-  app.get("/api/vocabulary/full-proficiency/:wordId", async (req, res) => {
+  app.get("/api/vocabulary/full-proficiency/:wordId", verifyFirebaseToken, firebaseAuth, async (req, res) => {
     try {
-      const userId = 18;
+      const userId = req.authenticatedUserId;
 
       if (!userId) {
         return res.status(400).json({ message: "Unauthorized" });
@@ -1127,10 +1127,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/vocabulary/full-proficiency", async (req, res) => {
+  app.get("/api/vocabulary/full-proficiency", verifyFirebaseToken, firebaseAuth, async (req, res) => {
     console.log("\n\nBATCH WORD PROF REQUEST\n\n")
     try {
-      const userId = 18;
+      const userId = req.authenticatedUserId;
       
       if (!userId) {
         console.log("UNAUTHORIZED")
@@ -1191,9 +1191,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Update user streak and score 
-  app.post("/api/user/streak", requireAuth, async (req, res) => {
+  app.post("/api/user/streak", verifyFirebaseToken, firebaseAuth, async (req, res) => {
     try {
-      const userId = 18;
+      const userId = req.authenticatedUserId;
 
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });

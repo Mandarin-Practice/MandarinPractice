@@ -102,7 +102,7 @@ export default function CharacterDictionary() {
   const vocabularyQuery = useQuery({
     queryKey: ['/api/vocabulary/words'],
     queryFn: async () => {
-      const response = await fetch('/api/vocabulary/words');
+      const response = await apiRequest('GET', '/api/vocabulary/words');
       if (!response.ok) throw new Error('Failed to fetch vocabulary');
       return response.json() as Promise<Vocabulary[]>;
     },

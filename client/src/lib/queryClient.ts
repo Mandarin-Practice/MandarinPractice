@@ -1,4 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import {getAuth, getIdToken } from "firebase/auth";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -12,9 +13,19 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
+  const user = getAuth().currentUser; // Ensure you have access to the current user
+  if (!user) {
+    throw new Error("User is not authenticated");
+  }
+  const idToken = await getIdToken(user);
   const res = await fetch(url, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers: data ? { 
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${idToken}`
+    } : {
+      Authorization: `Bearer ${idToken}`
+    },
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
     // Add cache control headers to prevent caching and race conditions
