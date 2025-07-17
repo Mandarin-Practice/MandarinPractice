@@ -15,6 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import { Vocabulary } from "@shared/schema";
 
 interface HighlightedComparisonProps {
   correctSentence: string;
@@ -101,13 +102,7 @@ interface SentenceCardProps {
   feedbackStatus: "correct" | "partial" | "incorrect" | null;
   isLoading: boolean;
   isPlaying: boolean;
-  vocabularyWords?: Array<{
-    id: number;
-    chinese: string;
-    pinyin: string;
-    english: string;
-    active: string;
-  }>;
+  vocabularyWords?: Array<Vocabulary>;
   onUpdateTranslation: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onPlayAudio: () => void;
   onNextSentence: () => void;

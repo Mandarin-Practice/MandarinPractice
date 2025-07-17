@@ -100,9 +100,9 @@ export default function CharacterDictionary() {
   
   // Query for vocabulary words
   const vocabularyQuery = useQuery({
-    queryKey: ['/api/vocabulary'],
+    queryKey: ['/api/vocabulary/words'],
     queryFn: async () => {
-      const response = await fetch('/api/vocabulary');
+      const response = await apiRequest('GET', '/api/vocabulary/words');
       if (!response.ok) throw new Error('Failed to fetch vocabulary');
       return response.json() as Promise<Vocabulary[]>;
     },
@@ -187,7 +187,7 @@ export default function CharacterDictionary() {
   // Add word mutation
   const addVocabularyMutation = useMutation({
     mutationFn: async (word: { chinese: string, pinyin: string, english: string }) => {
-      const response = await apiRequest('POST', '/api/vocabulary', { words: [word] });
+      const response = await apiRequest('POST', '/api/vocabulary/words', { words: [word] });
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to add word');
@@ -209,7 +209,7 @@ export default function CharacterDictionary() {
   // Delete word mutation
   const deleteVocabularyMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await apiRequest('DELETE', `/api/vocabulary/${id}`);
+      const response = await apiRequest('DELETE', `/api/vocabulary/words/${id}`);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to delete word');
@@ -278,7 +278,7 @@ export default function CharacterDictionary() {
   // Function to clear all vocabulary words
   const handleClearAllWords = async () => {
     try {
-      const response = await apiRequest('DELETE', '/api/vocabulary');
+      const response = await apiRequest('DELETE', '/api/vocabulary/words');
       if (!response.ok) {
         throw new Error('Failed to clear vocabulary');
       }
