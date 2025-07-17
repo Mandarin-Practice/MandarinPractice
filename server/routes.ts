@@ -785,26 +785,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
               if (aiValidationResult.corrections) {
                 console.log(`Suggested corrections: ${aiValidationResult.corrections}`);
                 
-                // Apply corrections if AI suggested them and score is at least 5
-                if (aiValidationResult.score >= 5) {
-                  console.log("Applying AI-suggested corrections to improve sentence quality");
-                  sentence.chinese = aiValidationResult.corrections;
-                  // Now we need to re-validate the corrected sentence
-                  const correctionValidation = validateSentence(sentence.chinese);
-                  if (!correctionValidation.isValid) {
-                    console.log(`Rejected corrected sentence: "${sentence.chinese}" - Reason: ${correctionValidation.reason}`);
-                    patternValidationResult.isValid = false;
-                    patternValidationResult.reason = correctionValidation.reason;
-                  } else {
-                    // Corrections seem valid, mark as valid
-                    patternValidationResult.isValid = true;
-                  }
-                } else {
-                  // Score too low, reject the sentence
+                console.log("Applying AI-suggested corrections to improve sentence quality");
+                sentence.chinese = aiValidationResult.corrections;
+                // Now we need to re-validate the corrected sentence
+                const correctionValidation = validateSentence(sentence.chinese);
+                if (!correctionValidation.isValid) {
+                  console.log(`Rejected corrected sentence: "${sentence.chinese}" - Reason: ${correctionValidation.reason}`);
                   patternValidationResult.isValid = false;
-                  patternValidationResult.reason = `AI validation score too low (${aiValidationResult.score}): ${aiValidationResult.feedback}`;
+                  patternValidationResult.reason = correctionValidation.reason;
+                } else {
+                  // Corrections seem valid, mark as valid
+                  patternValidationResult.isValid = true;
                 }
               } else {
+                console.log("No corrections suggested by AI, but score is below 7");
                 // No corrections available and score below 7, reject
                 patternValidationResult.isValid = false;
                 patternValidationResult.reason = `AI validation score too low (${aiValidationResult.score}): ${aiValidationResult.feedback}`;
@@ -881,6 +875,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Generate a simple fallback sentence using the same vocabulary
           const randomWord = selectedWords[Math.floor(Math.random() * selectedWords.length)];
           
+          console.log("\n\nUSING BUM SENTENCE FALLBACK\n\n");
+
           const fallbackSentence = {
             chinese: `我们学习${randomWord.chinese}。`,
             pinyin: `Wǒmen xuéxí ${randomWord.pinyin}.`,
@@ -932,6 +928,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } else {
           console.log(`Rejected unnatural word-specific sentence: "${sentence.chinese}" - Reason: ${validationResult.reason}`);
           
+          console.log("\n\nUSING BUM SENTENCE FALLBACK\n\n");
+
           // Use a simple template fallback
           const fallbackSentence = {
             chinese: `我们学习${word}。`,

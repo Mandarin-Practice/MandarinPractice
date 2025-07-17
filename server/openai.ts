@@ -56,7 +56,7 @@ export async function validateSentenceWithAI(chinese: string, difficulty: string
           - "吃水" (eating water) or "喝饭" (drinking rice) - incorrect verb-object pairing
           - "我们学习明天" (we study tomorrow) - illogical time reference
           
-          A good sentence should be natural in both Chinese AND English translation.`
+          If the sentence is incorrect, please remember to put your corrections in the corrections field of the JSON output`
         },
         {
           role: "user",
