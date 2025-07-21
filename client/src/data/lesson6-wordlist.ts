@@ -226,8 +226,8 @@ export const LESSON6_WORDLIST = {
     },
     {
       chinese: "得",
-      pinyin: "děi",
-      english: "must, to have to"
+      pinyin: "de; děi",
+      english: "(a structural particle); must, to have to"
     },
     {
       chinese: "跟",
