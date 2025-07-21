@@ -418,67 +418,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     expiryTimeMs: 60 * 60 * 1000 // Cache expires after 1 hour
   };
 
-  // Define fallback sentences here so they're only defined once
-  const fallbackSentences = {
-    beginner: [
-      // Present tense sentences
-      { chinese: "我很高兴。", pinyin: "Wǒ hěn gāoxìng.", english: "I am very happy." },
-      { chinese: "今天天气很好。", pinyin: "Jīntiān tiānqì hěn hǎo.", english: "The weather is good today." },
-      { chinese: "你好吗？", pinyin: "Nǐ hǎo ma?", english: "How are you?" },
-      { chinese: "我喜欢学中文。", pinyin: "Wǒ xǐhuān xué Zhōngwén.", english: "I like learning Chinese." },
-      { chinese: "谢谢你的帮助。", pinyin: "Xièxiè nǐ de bāngzhù.", english: "Thank you for your help." },
-      { chinese: "我想喝水。", pinyin: "Wǒ xiǎng hē shuǐ.", english: "I want to drink water." },
-      { chinese: "这个很有意思。", pinyin: "Zhège hěn yǒuyìsi.", english: "This is very interesting." },
-      { chinese: "你叫什么名字？", pinyin: "Nǐ jiào shénme míngzi?", english: "What is your name?" },
-      
-      // Past tense sentences with 了
-      { chinese: "我买了一本书。", pinyin: "Wǒ mǎi le yī běn shū.", english: "I bought a book." },
-      { chinese: "他去了图书馆。", pinyin: "Tā qù le túshūguǎn.", english: "He went to the library." },
-      { chinese: "我们吃了晚饭。", pinyin: "Wǒmen chī le wǎnfàn.", english: "We ate dinner." },
-      { chinese: "我看了这部电影。", pinyin: "Wǒ kàn le zhè bù diànyǐng.", english: "I watched this movie." },
-      { chinese: "我学了新的汉字。", pinyin: "Wǒ xué le xīn de hànzì.", english: "I learned new Chinese characters." },
-      { chinese: "昨天下了雨。", pinyin: "Zuótiān xià le yǔ.", english: "It rained yesterday." },
-      { chinese: "他写了一封信。", pinyin: "Tā xiě le yī fēng xìn.", english: "He wrote a letter." },
-      { chinese: "我吃了早饭。", pinyin: "Wǒ chī le zǎofàn.", english: "I ate breakfast." },
-      
-      // Future tense or modal sentences
-      { chinese: "明天我要去学校。", pinyin: "Míngtiān wǒ yào qù xuéxiào.", english: "Tomorrow I will go to school." },
-      { chinese: "下周我们会见面。", pinyin: "Xià zhōu wǒmen huì jiànmiàn.", english: "We will meet next week." },
-      { chinese: "我可以帮你吗？", pinyin: "Wǒ kěyǐ bāng nǐ ma?", english: "Can I help you?" },
-      { chinese: "他会说中文。", pinyin: "Tā huì shuō Zhōngwén.", english: "He can speak Chinese." }
-    ],
-    intermediate: [
-      // Present tense sentences
-      { chinese: "这本书很有意思。", pinyin: "Zhè běn shū hěn yǒuyìsi.", english: "This book is very interesting." },
-      { chinese: "中国菜很好吃。", pinyin: "Zhōngguó cài hěn hǎochī.", english: "Chinese food is delicious." },
-      { chinese: "你能帮我一下吗？", pinyin: "Nǐ néng bāng wǒ yīxià ma?", english: "Can you help me?" },
-      { chinese: "我在北京工作。", pinyin: "Wǒ zài Běijīng gōngzuò.", english: "I work in Beijing." },
-      
-      // Past tense with 了
-      { chinese: "我昨天去了图书馆。", pinyin: "Wǒ zuótiān qù le túshūguǎn.", english: "I went to the library yesterday." },
-      { chinese: "他已经看完了这本书。", pinyin: "Tā yǐjīng kàn wán le zhè běn shū.", english: "He has finished reading this book." },
-      { chinese: "我们参观了故宫。", pinyin: "Wǒmen cānguān le Gùgōng.", english: "We visited the Forbidden City." },
-      { chinese: "他学了三年中文了。", pinyin: "Tā xué le sān nián Zhōngwén le.", english: "He has been learning Chinese for three years." },
-      { chinese: "我们认识了很多新朋友。", pinyin: "Wǒmen rènshí le hěn duō xīn péngyǒu.", english: "We met many new friends." },
-      
-      // Future tense
-      { chinese: "我明天要去北京。", pinyin: "Wǒ míngtiān yào qù Běijīng.", english: "I will go to Beijing tomorrow." },
-      { chinese: "下个月我会回国。", pinyin: "Xià gè yuè wǒ huì huí guó.", english: "I will return to my country next month." },
-      { chinese: "我打算学习中文。", pinyin: "Wǒ dǎsuàn xuéxí Zhōngwén.", english: "I plan to study Chinese." }
-    ],
-    advanced: [
-      // Complex sentences with 了 and other grammar patterns
-      { chinese: "我 已经 学 了 三 年 中文 了，但是 还是 说 得 不 太 流利。", pinyin: "Wǒ yǐjīng xué le sān nián Zhōngwén le, dànshì háishì shuō de bú tài liúlì.", english: "I have been learning Chinese for three years, but I still don't speak very fluently." },
-      { chinese: "虽然 学习 中文 很 难，但是 很 有意思。", pinyin: "Suīrán xuéxí Zhōngwén hěn nán, dànshì hěn yǒuyìsi.", english: "Although learning Chinese is difficult, it is very interesting." },
-      { chinese: "如果 明天 天气 好 的话，我们 可以 去 公园。", pinyin: "Rúguǒ míngtiān tiānqì hǎo dehuà, wǒmen kěyǐ qù gōngyuán.", english: "If the weather is good tomorrow, we can go to the park." },
-      { chinese: "我 认为 学习 语言 的 最 好 方法 是 每天 练习。", pinyin: "Wǒ rènwéi xuéxí yǔyán de zuì hǎo fāngfǎ shì měitiān liànxí.", english: "I think the best way to learn a language is to practice every day." },
-      { chinese: "昨天 我 看 了 一 部 电影，这 部 电影 讲 的 是 中国 历史。", pinyin: "Zuótiān wǒ kàn le yī bù diànyǐng, zhè bù diànyǐng jiǎng de shì Zhōngguó lìshǐ.", english: "Yesterday I watched a movie that was about Chinese history." },
-      { chinese: "我们 吃 完 了 饭，就 去 看 电影 了。", pinyin: "Wǒmen chī wán le fàn, jiù qù kàn diànyǐng le.", english: "After we finished eating, we went to see a movie." },
-      { chinese: "他 告诉 我 他 已经 去过 北京 了。", pinyin: "Tā gàosù wǒ tā yǐjīng qùguò Běijīng le.", english: "He told me he had already been to Beijing." },
-      { chinese: "学习 汉语 不仅 要 学习 语法，还 要 了解 中国 文化。", pinyin: "Xuéxí Hànyǔ bùjǐn yào xuéxí yǔfǎ, hái yào liǎojiě Zhōngguó wénhuà.", english: "Learning Chinese requires not only learning grammar, but also understanding Chinese culture." }
-    ]
-  };
-
   // Track word usage to ensure all words get used in practice
   const wordUsageStats: Record<number, { uses: number, lastUsed: number }> = {};
   
@@ -715,9 +654,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { difficulty = "beginner" } = req.body;
       const typedDifficulty = difficulty as 'beginner' | 'intermediate' | 'advanced';
-
-      res.json(fallbackSentences[typedDifficulty][0]);
-      return;
       
       // Helper function to select words, prioritizing less frequently used words
       const selectWords = (wordsList: Array<{ id: number, lessonId?: number | null, chinese: string, pinyin: string, english: string}>, count: number) => {
@@ -797,7 +733,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log("No active vocabulary words available. Please add or activate some words first.");
       }
       
-      // Generate new sentence using OpenAI with retries and fallback
+      // Generate new sentence using OpenAI with retries
       try {
         // Word count per difficulty level
         const wordCounts = {
@@ -858,100 +794,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
           wordUsageStats[word.id].uses += 1;
           wordUsageStats[word.id].lastUsed = Date.now();
         });
-        
-        // Step 1: First validate using pattern matching (quick check for obvious issues)
-        const patternValidationResult = validateSentence(sentence.chinese);
-        
-        if (!patternValidationResult.isValid) {
-          console.log(`Rejected unnatural on-demand sentence: "${sentence.chinese}" - Reason: ${patternValidationResult.reason}`);
-          // Pattern validation failed, don't even try AI validation
-        } else {
-          // Step 2: Always validate with AI for semantic correctness
-          try {
-            console.log("Running AI validation for sentence:", sentence.chinese);
-            const aiValidationResult = await validateSentenceWithAI(sentence.chinese, typedDifficulty);
-            
-            // Log AI validation results
-            console.log(`AI validation results: Score=${aiValidationResult.score}, Valid=${aiValidationResult.isValid}`);
-            console.log(`AI feedback: ${aiValidationResult.feedback}`);
-            
-            // If score is below 7, the sentence is not good enough
-            if (aiValidationResult.score < 7) {
-              if (aiValidationResult.corrections) {
-                console.log(`Suggested corrections: ${aiValidationResult.corrections}`);
+
+        let aiValidationResult: {
+          isValid: boolean;
+          score: number;
+          feedback: string;
+          corrections?: string;
+          translationPreview?: string;
+        } = {
+          isValid: false,
+          score: 0,
+          feedback: "NO VALIDATION PERFORMED",
+          corrections: "",
+          translationPreview: ""
+        }
                 
-                console.log("Applying AI-suggested corrections to improve sentence quality");
-                sentence.chinese = aiValidationResult.corrections;
-                // Now we need to re-validate the corrected sentence
-                const correctionValidation = validateSentence(sentence.chinese);
-                if (!correctionValidation.isValid) {
-                  console.log(`Rejected corrected sentence: "${sentence.chinese}" - Reason: ${correctionValidation.reason}`);
-                  patternValidationResult.isValid = false;
-                  patternValidationResult.reason = correctionValidation.reason;
-                } else {
-                  // Corrections seem valid, mark as valid
-                  patternValidationResult.isValid = true;
-                }
-              } else {
-                console.log("No corrections suggested by AI, but score is below 7");
-                // No corrections available and score below 7, reject
-                patternValidationResult.isValid = false;
-                patternValidationResult.reason = `AI validation score too low (${aiValidationResult.score}): ${aiValidationResult.feedback}`;
-              }
-            }
-            
-            // If AI explicitly says it's invalid, always reject
-            if (!aiValidationResult.isValid) {
-              console.log(`AI rejected sentence: "${sentence.chinese}" - Feedback: ${aiValidationResult.feedback}`);
-              patternValidationResult.isValid = false;
-              patternValidationResult.reason = `AI validation: ${aiValidationResult.feedback}`;
-            }
-          } catch (aiError) {
-            // If AI validation errors, we're more cautious - only accept very simple sentences
-            console.error("AI validation error:", aiError);
-            if (sentence.chinese.length > 8) {
-              console.log("Rejecting longer sentence due to failed AI validation");
-              patternValidationResult.isValid = false;
-              patternValidationResult.reason = "AI validation error - cannot verify semantic correctness";
+        try {
+          console.log("Running AI validation for sentence:", sentence.chinese);
+          aiValidationResult = await validateSentenceWithAI(sentence.chinese, typedDifficulty);
+          
+          // Log AI validation results
+          console.log(`AI validation results: Score=${aiValidationResult.score}, Valid=${aiValidationResult.isValid}`);
+          console.log(`AI feedback: ${aiValidationResult.feedback}`);
+          
+          // If score is below 7, the sentence is not good enough
+          if (aiValidationResult.score < 7) {
+            if (aiValidationResult.corrections) {
+              console.log(`Suggested corrections: ${aiValidationResult.corrections}. Original sentence: ${sentence.chinese}`);
+              
+              console.log("Applying AI-suggested corrections to improve sentence quality");
+              sentence.chinese = aiValidationResult.corrections;
+
+              aiValidationResult.isValid = true;
             } else {
-              console.log("Continuing with very simple pattern-validated sentence despite AI validation error");
+              console.log("No corrections suggested by AI, but score is below 7");
+              // No corrections available and score below 7, reject
+              aiValidationResult.isValid = false;
             }
           }
-          
-          // Additional step: Even if validation passed, double-check the translation quality
-          if (patternValidationResult.isValid) {
-            try {
-              console.log("Verifying translation quality for:", sentence.chinese);
-              const translationCheck = await verifyTranslationQuality(sentence.chinese);
-              
-              if (!translationCheck.isNaturalTranslation) {
-                console.log(`Translation quality check failed: "${sentence.chinese}"`);
-                console.log(`Feedback: ${translationCheck.feedback}`);
-                console.log(`Better translation would be: ${translationCheck.naturalEnglishTranslation}`);
-                
-                // If there's a translation issue, reject the sentence
-                patternValidationResult.isValid = false;
-                patternValidationResult.reason = `Poor translation quality: ${translationCheck.feedback}`;
-                
-                // Update the English translation with the improved version for future use
-                if (translationCheck.naturalEnglishTranslation) {
-                  sentence.english = translationCheck.naturalEnglishTranslation;
-                }
-              } else {
-                console.log("Translation quality check passed");
-                // If there's a better translation available, use it
-                if (translationCheck.naturalEnglishTranslation) {
-                  sentence.english = translationCheck.naturalEnglishTranslation;
-                }
-              }
-            } catch (translationError) {
-              console.error("Translation quality check error:", translationError);
-              // Continue with the sentence - don't block if this additional check fails
-            }
+        } catch (aiError) {
+          // If AI validation errors, we're more cautious - only accept very simple sentences
+          console.error("AI validation error:", aiError);
+          if (sentence.chinese.length > 8) {
+            console.log("Rejecting longer sentence due to failed AI validation");
+            aiValidationResult.isValid = false;
+            aiValidationResult.feedback = "AI validation error - cannot verify semantic correctness";
+          } else {
+            console.log("Continuing with very simple pattern-validated sentence despite AI validation error");
           }
         }
         
-        if (patternValidationResult.isValid) {
+        // Additional step: Even if validation passed, double-check the translation quality
+        if (aiValidationResult.isValid) {
+          try {
+            console.log("Verifying translation quality for:", sentence.chinese);
+            const translationCheck = await verifyTranslationQuality(sentence.chinese);
+            
+            if (!translationCheck.isNaturalTranslation) {
+              console.log(`Translation quality check failed: "${sentence.chinese}"`);
+              console.log(`Feedback: ${translationCheck.feedback}`);
+              console.log(`Better translation would be: ${translationCheck.naturalEnglishTranslation}`);
+              
+              // If there's a translation issue, reject the sentence
+              // aiValidationResult.isValid = false;
+              // aiValidationResult.feedback = `Poor translation quality: ${translationCheck.feedback}`;
+              
+              // Update the English translation with the improved version for future use
+              if (translationCheck.naturalEnglishTranslation) {
+                sentence.english = translationCheck.naturalEnglishTranslation;
+              }
+            } else {
+              console.log("Translation quality check passed");
+              // If there's a better translation available, use it
+              if (translationCheck.naturalEnglishTranslation) {
+                sentence.english = translationCheck.naturalEnglishTranslation;
+              }
+            }
+          } catch (translationError) {
+            console.error("Translation quality check error:", translationError);
+            // Continue with the sentence - don't block if this additional check fails
+          }
+        }
+        
+        if (aiValidationResult.isValid) {
           // Add to cache for future use - only if it passed both validations
           if (sentenceCache[typedDifficulty].length < sentenceCache.maxSize) {
             sentenceCache[typedDifficulty].push({
@@ -965,37 +890,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Send the validated sentence to the client
           res.json(sentence);
         } else {
-          console.log(`Rejected sentence: "${sentence.chinese}" - Reason: ${patternValidationResult.reason}`);
-          
-          // Generate a simple fallback sentence using the same vocabulary
-          const randomWord = selectedWords[Math.floor(Math.random() * selectedWords.length)];
-          
-          console.log("\n\nUSING BUM SENTENCE FALLBACK\n\n");
-
-          const fallbackSentence = {
-            chinese: `我们学习${randomWord.chinese}。`,
-            pinyin: `Wǒmen xuéxí ${randomWord.pinyin}.`,
-            english: `We are studying ${randomWord.english}.`,
-            difficulty: typedDifficulty,
-            fromFallback: true,
-            rejectedOriginal: sentence.chinese,
-            rejectionReason: patternValidationResult.reason
-          };
-          
-          res.json(fallbackSentence);
+          console.log(`Rejected sentence: "${sentence.chinese}" - Reason: ${aiValidationResult.feedback}`);
         }
       } catch (generateError) {
-        console.log("Error generating sentence with OpenAI, using fallback sentences. Error: " + generateError);
-        
-        // Select a random fallback sentence based on difficulty
-        const fallbackOptions = fallbackSentences[typedDifficulty] || fallbackSentences.beginner;
-        const randomFallback = fallbackOptions[Math.floor(Math.random() * fallbackOptions.length)];
-        
-        res.json({
-          ...randomFallback,
-          difficulty: typedDifficulty,
-          fromFallback: true // Mark that this is a fallback sentence
-        });
+        console.log("Error generating sentence with OpenAI. Error: " + generateError);
+        throw new Error("Sentence generation failed with error: " + generateError);
       }
     } catch (error) {
       res.status(500).json({ message: error instanceof Error ? error.message : "Failed to generate sentence" });
@@ -1011,7 +910,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Word is required" });
       }
       
-      // Generate sentence using OpenAI with specific word, with fallback
+      // Generate sentence using OpenAI with specific word
       try {
         const sentence = await generateSentenceWithWord(word, difficulty);
         
@@ -1022,63 +921,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           res.json(sentence);
         } else {
           console.log(`Rejected unnatural word-specific sentence: "${sentence.chinese}" - Reason: ${validationResult.reason}`);
-          
-          console.log("\n\nUSING BUM SENTENCE FALLBACK\n\n");
-
-          // Use a simple template fallback
-          const fallbackSentence = {
-            chinese: `我们学习${word}。`,
-            pinyin: `Wǒmen xuéxí ${word}.`,
-            english: `We are studying ${word}.`,
-            difficulty,
-            fromFallback: true,
-            rejectedOriginal: sentence.chinese,
-            rejectionReason: validationResult.reason
-          };
-          
-          res.json(fallbackSentence);
         }
       } catch (generateError) {
-        console.log(`Error generating sentence with word "${word}", using fallback`);
-        
-        // Create fallback sentences with proper grammar using the word
-        const fallbackSentences = [
-          // Present tense templates
-          { template: "我喜欢{word}。", english: "I like {word}.", pinyin: "Wǒ xǐhuān {word}." },
-          { template: "这是{word}。", english: "This is {word}.", pinyin: "Zhè shì {word}." },
-          { template: "我有{word}。", english: "I have {word}.", pinyin: "Wǒ yǒu {word}." },
-          { template: "我想要{word}。", english: "I want {word}.", pinyin: "Wǒ xiǎng yào {word}." },
-          { template: "{word}很好。", english: "{word} is good.", pinyin: "{word} hěn hǎo." },
-          { template: "我们学习{word}。", english: "We learn {word}.", pinyin: "Wǒmen xuéxí {word}." },
-          
-          // Past tense templates with 了
-          { template: "我买了{word}。", english: "I bought {word}.", pinyin: "Wǒ mǎi le {word}." },
-          { template: "我看了{word}。", english: "I saw {word}.", pinyin: "Wǒ kàn le {word}." },
-          { template: "我们用了{word}。", english: "We used {word}.", pinyin: "Wǒmen yòng le {word}." },
-          { template: "我学了{word}。", english: "I learned {word}.", pinyin: "Wǒ xué le {word}." },
-          { template: "我昨天去了{word}。", english: "I went to {word} yesterday.", pinyin: "Wǒ zuótiān qù le {word}." },
-          
-          // Future tense templates
-          { template: "明天我要去{word}。", english: "Tomorrow I will go to {word}.", pinyin: "Míngtiān wǒ yào qù {word}." },
-          { template: "我会学习{word}。", english: "I will study {word}.", pinyin: "Wǒ huì xuéxí {word}." },
-          { template: "我想看{word}。", english: "I want to see {word}.", pinyin: "Wǒ xiǎng kàn {word}." }
-        ];
-        
-        // Select a random template
-        const randomTemplate = fallbackSentences[Math.floor(Math.random() * fallbackSentences.length)];
-        
-        // Replace the placeholder with the actual word in all fields
-        const chinese = randomTemplate.template.replace('{word}', word);
-        const english = randomTemplate.english.replace('{word}', word);
-        const pinyin = randomTemplate.pinyin.replace('{word}', word);
-        
-        res.json({
-          chinese,
-          pinyin,
-          english,
-          difficulty,
-          fromFallback: true
-        });
+        console.log(`Error generating sentence with word "${word}"`);
+        throw new Error(`Error generating sentence with word "${word}"`)
       }
     } catch (error) {
       res.status(500).json({ message: error instanceof Error ? error.message : "Failed to generate sentence" });
