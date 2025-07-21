@@ -23,6 +23,7 @@ import {
 import { db, pool } from "./db";
 import { eq, like, desc, asc, and, or, sql, inArray, not } from "drizzle-orm";
 import { convertNumericPinyinToTonal, isNumericPinyin } from './utils/pinyin-converter';
+import { check } from "drizzle-orm/mysql-core";
 
 // setInterval(() => {
 //   console.log(`📊 Pool status: ${pool.totalCount} total, ${pool.idleCount} idle, ${pool.waitingCount} waiting`);
@@ -51,6 +52,7 @@ export interface IStorage {
   getVocabulary(userId: number, wordId: number): Promise<Vocabulary | undefined>;
   getVocabularyBatch(userId: number, wordIds: number[]): Promise<Vocabulary[]>;
   getVocabularyByChineseAndPinyin(userId: number, chinese: string, pinyin: string): Promise<Vocabulary | undefined>;
+  getVocabularyBatchByChineseAndPinyin(userId: number, words: { chinese: string, pinyin: string }[]): Promise<Vocabulary[]>;
   updateVocabulary(userId: number, wordId: number, updates: Partial<Vocabulary>): Promise<Vocabulary>;
   addVocabulary(userId: number, word: Vocabulary): Promise<Vocabulary>;
   addVocabularyBatch(userId: number, words: Vocabulary[]): Promise<Vocabulary[]>;
@@ -61,7 +63,8 @@ export interface IStorage {
   // Word proficiency methods
   getWordProficiency(userId: number, wordId: number): Promise<Proficiency | undefined>;
   getWordProficiencyBatch(userId: number, wordIds: number[]): Promise<Proficiency[]>;
-  updateWordProficiencyBatch(userId: number, proficiencyDiff: {wordId: number, correct: boolean}[]): Promise<Proficiency[]>;
+  updateWordProficiencyBatch(userId: number, proficiencyDiff: {wordId: number, isCorrect: boolean}[]): Promise<Proficiency[]>;
+  updateWordProficiencyBatchByChineseAndPinyin(userId: number, chinesePinyinDiff: {chinese: string, pinyin: string, isCorrect: boolean}[]): Promise<Proficiency[]>;
   getWordProficiencies(userId: number): Promise<Proficiency[]>;
   updateWordProficiency(userId: number, wordId: number, isCorrect: boolean): Promise<Proficiency>;
   removeWordProficiency(userId: number, wordId: number): Promise<void>;
@@ -235,6 +238,19 @@ export class DatabaseStorage implements IStorage {
     return vocab;
   }
 
+  async getVocabularyBatchByChineseAndPinyin(userId: number, words: { chinese: string, pinyin: string }[]): Promise<Vocabulary[]> {
+    const chinese = words.map(word => word.chinese);
+    const pinyin = words.map(word => word.pinyin);
+    const vocab = await db.select(this.VOCABULARY_SELECT).from(wordProficiency).where(
+      and(
+        eq(wordProficiency.userId, userId),
+        inArray(wordProficiency.chinese, chinese),
+        inArray(wordProficiency.pinyin, pinyin)
+      )
+    );
+    return vocab;
+  }
+
   async getVocabularyBatch(userId: number, wordIds: number[]): Promise<Vocabulary[]> {
     const vocab = await db.select(this.VOCABULARY_SELECT).from(wordProficiency).where(and(eq(wordProficiency.userId, userId), inArray(wordProficiency.id, wordIds)));
     return vocab;
@@ -357,13 +373,13 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  async updateWordProficiencyBatch(userId: number, proficiencyDiff: {wordId: number, correct: boolean}[]): Promise<Proficiency[]> {
+  async updateWordProficiencyBatch(userId: number, proficiencyDiff: {wordId: number, isCorrect: boolean}[]): Promise<Proficiency[]> {
     return await db.transaction(async (tx) => {
       const updated: Proficiency[] = [];
       
       // Separate correct and incorrect answers
-      const correctWordIds = proficiencyDiff.filter(d => d.correct).map(d => d.wordId);
-      const incorrectWordIds = proficiencyDiff.filter(d => !d.correct).map(d => d.wordId);
+      const correctWordIds = proficiencyDiff.filter(d => d.isCorrect).map(d => d.wordId);
+      const incorrectWordIds = proficiencyDiff.filter(d => !d.isCorrect).map(d => d.wordId);
       
       // Batch update correct answers
       if (correctWordIds.length > 0) {
@@ -400,6 +416,88 @@ export class DatabaseStorage implements IStorage {
       
       return updated;
     });
+  }
+
+  private checkPoolStatus = () => {
+    console.log(`📊 Pool status: ${pool.totalCount} total, ${pool.idleCount} idle, ${pool.waitingCount} waiting`);
+  }
+
+  private poolMonitorInterval: NodeJS.Timeout | null = null;
+
+  startPoolMonitoring() {
+    // Clear any existing interval
+    if (this.poolMonitorInterval) {
+      clearInterval(this.poolMonitorInterval);
+    }
+    
+    // Start new monitoring interval
+    this.poolMonitorInterval = setInterval(() => {
+      this.checkPoolStatus();
+    }, 5000);
+  }
+
+  stopPoolMonitoring() {
+    if (this.poolMonitorInterval) {
+      clearInterval(this.poolMonitorInterval);
+      this.poolMonitorInterval = null;
+    }
+  }
+
+  async updateWordProficiencyBatchByChineseAndPinyin(userId: number, proficiencyDiff: {chinese: string, pinyin: string, isCorrect: boolean}[]): Promise<Proficiency[]> {
+    const updated: Proficiency[] = [];
+    
+    // Separate correct and incorrect answers
+    const correctWords = proficiencyDiff.filter(d => d.isCorrect).map(d => { return { chinese: d.chinese, pinyin: d.pinyin }; });
+    const incorrectWords = proficiencyDiff.filter(d => !d.isCorrect).map(d => { return { chinese: d.chinese, pinyin: d.pinyin }; });
+
+    const correctMatchConditions = correctWords.map(({ chinese, pinyin }) =>
+      and(
+        eq(wordProficiency.chinese, chinese),
+        sql`LOWER(${wordProficiency.pinyin}) = ${pinyin.toLowerCase()}`
+      )
+    );
+
+    const incorrectMatchConditions = incorrectWords.map(({ chinese, pinyin }) =>
+      and(
+        eq(wordProficiency.chinese, chinese),
+        sql`LOWER(${wordProficiency.pinyin}) = ${pinyin.toLowerCase()}`
+      )
+    );
+    
+    // Batch update correct answers
+    if (correctWords.length > 0) {
+      const correctUpdates = await db.update(wordProficiency)
+        .set({
+          correctCount: sql`${wordProficiency.correctCount} + 1`,
+          attemptCount: sql`${wordProficiency.attemptCount} + 1`,
+          lastPracticed: new Date()
+        })
+        .where(and(
+          eq(wordProficiency.userId, userId),
+          or(...correctMatchConditions)
+        ))
+        .returning(this.PROFICIENCY_SELECT);
+      
+      updated.push(...correctUpdates);
+    }
+    
+    // Batch update incorrect answers
+    if (incorrectWords.length > 0) {
+      const incorrectUpdates = await db.update(wordProficiency)
+        .set({
+          attemptCount: sql`${wordProficiency.attemptCount} + 1`,
+          lastPracticed: new Date()
+        })
+        .where(and(
+          eq(wordProficiency.userId, userId),
+          or(...incorrectMatchConditions)
+        ))
+        .returning(this.PROFICIENCY_SELECT);
+      
+      updated.push(...incorrectUpdates);
+    }
+    
+    return updated;
   }
   
   async removeWordProficiency(userId: number, wordId: number): Promise<void> {

@@ -335,7 +335,8 @@ export async function generateSentence(
           5. Preserves the meaning of proper names and vocabulary words
           
           Provide the sentence in Chinese characters, pinyin (with proper tone marks), and an English translation.
-          Format your response as a valid JSON object with 'chinese', 'pinyin', and 'english' fields.`
+          Format your response as a valid JSON object with 'chinese', 'pinyin', and 'english' fields.
+          IMPORTANT Even though it is not standard practice to use spaces in a chinese sentence, please include spaces between words in the chinese character field of your JSON`
         },
         {
           role: "user",

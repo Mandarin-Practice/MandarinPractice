@@ -43,7 +43,6 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction) => 
 
 // Middleware for Firebase authentication
 export const verifyFirebaseToken = async (req: Request, res: Response, next: Function) => {
-  console.log("\nVERIFY FIREBASE TOKEN CALL\n");
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -67,7 +66,6 @@ export const verifyFirebaseToken = async (req: Request, res: Response, next: Fun
 };
 
 export const firebaseAuth = async (req: Request, res: Response, next: NextFunction) => {
-  console.log("\n\nFIREBASE AUTH CALL\n\n");
   if (!req.user) {
     return res.status(401).json({ error: "User authentication required" });
   }
