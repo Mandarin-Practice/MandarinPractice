@@ -13,8 +13,11 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTextToSpeech } from "@/hooks/use-text-to-speech";
 import { useToast } from "@/hooks/use-toast";
 import { useSoundEffects } from "@/hooks/use-sound-effects";
-import { useUserWordList } from "@/hooks/use-user-word-list";
 import { checkSimilarity } from "@/lib/string-similarity";
+import { FullProficiency } from "@shared/schema";
+import { useAuth } from "@/hooks/use-auth";
+import { useQueryClient } from "@tanstack/react-query";
+import { pool } from "../../../server/db"; // Adjust the import based on your project structure
 
 interface Sentence {
   id: string;
@@ -35,6 +38,9 @@ interface Stats {
 }
 
 export default function Practice() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
   const [, navigate] = useLocation();
   const [userTranslation, setUserTranslation] = useState("");
   const [feedbackStatus, setFeedbackStatus] = useState<"correct" | "partial" | "incorrect" | null>(null);
@@ -83,13 +89,29 @@ export default function Practice() {
   const { speak, isPlaying } = useTextToSpeech();
   const { playCorrectSound, playIncorrectSound } = useSoundEffects();
 
-  // Fetch vocabulary words from user's word list with additional stability flags
-  const { 
-    wordList: vocabularyWords, 
+  const {
+    data: vocabularyWords,
     isLoading: isLoadingVocabulary,
-    isError: isVocabularyError,
-    hasWords 
-  } = useUserWordList();
+    error: isVocabularyError,
+    refetch: refetchBackendUser,
+  } = useQuery<FullProficiency[]>({
+    queryKey: ["/api/vocabulary/words/full-proficiency"],
+    queryFn: async () => {
+      try {
+        // Fetch user data from backend
+        const response = await apiRequest('GET', "/api/vocabulary/full-proficiency");
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch vocabulary");
+        }
+
+        return response.json();
+      } catch (error) {
+        console.error("Error fetching backend user:", error);
+        return null;
+      }
+    },
+  });
   
   // Set a local flag to prevent showing "no vocabulary" message too early
   const [fullyLoaded, setFullyLoaded] = useState(false);
@@ -298,7 +320,7 @@ export default function Practice() {
         // Only redirect if vocabulary is definitely not loading AND is empty
         if (!isLoadingVocabulary) {
           // Use the hasWords helper from useUserWordList to reliably check
-          const hasAnyWords = hasWords();
+          const hasAnyWords = vocabularyWords && vocabularyWords.length > 0;
           
           if (hasAnyWords) {
             // Words exist, mark as fully loaded and clear interval
@@ -325,11 +347,11 @@ export default function Practice() {
       return () => clearInterval(checkInterval);
     } else {
       // Not first visit, we can set fully loaded immediately if we have data
-      if (hasWords()) {
+      if (vocabularyWords && vocabularyWords.length > 0) {
         setFullyLoaded(true);
       }
     }
-  }, [vocabularyWords, isLoadingVocabulary, isVocabularyError, navigate, hasWords]);
+  }, [vocabularyWords, isLoadingVocabulary, isVocabularyError, navigate]);
 
   // Generate first sentence when component mounts and update totalWords count
   // Also start prefetching sentences for each difficulty level
@@ -408,12 +430,24 @@ export default function Practice() {
   };
 
   // Update word proficiency in the backend
-  const updateWordProficiency = useMutation<any, unknown, { wordId: number, isCorrect: boolean }>({
-    mutationFn: async (params: { wordId: number, isCorrect: boolean }) => {
-      const response = await apiRequest('POST', `/api/word-proficiency/${params.wordId}`, {
-        isCorrect: params.isCorrect
+  const updateWordProficiencyBatch = useMutation<any, unknown, { wordsWithCorrectness: { chinese: string, isCorrect: boolean }[] }>({
+    mutationFn: async (params: { wordsWithCorrectness: { chinese: string, isCorrect: boolean }[] }) => {
+      const response = await apiRequest('POST', `/api/vocabulary/proficiency/batch`, {
+        wordsWithCorrectness: params.wordsWithCorrectness
       });
       return response.json();
+    },
+    onSuccess: (updatedProficiencies) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/vocabulary/proficiency']});
+      console.log('Updated proficiencies:', updatedProficiencies);
+    },
+    onError: (error) => {
+      console.error('Failed to update proficiencies:', error);
+      toast({
+        title: "Proficiency update failed",
+        description: "There was an error updating your word proficiencies. Please try again later.",
+        variant: "destructive",
+      });
     }
   });
   
@@ -433,6 +467,18 @@ export default function Practice() {
       }
       
       return response.json();
+    },
+    onSuccess: (streakData) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user', user?.firebaseUser?.uid]});
+      console.log('Streak updated:', streakData);
+    },
+    onError: (error) => {
+      console.error('Failed to update streak:', error);
+      toast({
+        title: "Streak update failed",
+        description: "There was an error updating your streak. Please try again later.",
+        variant: "destructive",
+      });
     }
   });
 
@@ -681,19 +727,10 @@ export default function Practice() {
       // If we have vocabulary data and this is a correct answer,
       // update proficiency for each word in the sentence
       if (vocabularyWords && Array.isArray(vocabularyWords)) {
-        // Extract all Chinese characters from the sentence
-        const sentence = generateSentenceMutation.data.chinese;
-        
-        // For each word in our vocabulary, check if it's in the sentence
-        vocabularyWords.forEach(word => {
-          if (sentence.includes(word.chinese)) {
-            // Update proficiency for this word (it was correct)
-            updateWordProficiency.mutate({ 
-              wordId: word.id, 
-              isCorrect: true 
-            });
-          }
-        });
+        updateWordProficiencyBatch.mutate({
+          wordsWithCorrectness: generateSentenceMutation.data.chinese.split(' ').map((word: string) => {
+            return { chinese: word, isCorrect: true };
+        })});
       }
     // Make the partial correct threshold between 0.4 and 0.8 (was 0.25 to 0.7)
     } else if (similarity >= 0.4) {
@@ -722,17 +759,10 @@ export default function Practice() {
       
       // If answer is incorrect, update proficiency for words in the sentence
       if (vocabularyWords && Array.isArray(vocabularyWords)) {
-        const sentence = generateSentenceMutation.data.chinese;
-        
-        vocabularyWords.forEach(word => {
-          if (sentence.includes(word.chinese)) {
-            // Update proficiency for this word (it was incorrect)
-            updateWordProficiency.mutate({ 
-              wordId: word.id, 
-              isCorrect: false 
-            });
-          }
-        });
+        updateWordProficiencyBatch.mutate({
+          wordsWithCorrectness: generateSentenceMutation.data.chinese.split(' ').map((word: string) => {
+            return { chinese: word, isCorrect: true };
+        })});
       }
     }
   };
@@ -767,7 +797,7 @@ export default function Practice() {
 
   // No vocabulary state: Only show if we've completely finished loading AND verified there are no words
   // We use both vocabulary list checks and the explicit hasWords() helper to verify
-  if (fullyLoaded && !hasWords()) {
+  if (fullyLoaded && !vocabularyWords) {
     return (
       <div className="text-center py-12 px-6 bg-white dark:bg-gray-800 rounded-lg shadow-md mb-6">
         <div className="text-5xl mb-4 text-gray-400 dark:text-gray-500">
