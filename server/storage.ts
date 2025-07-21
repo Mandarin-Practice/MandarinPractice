@@ -418,31 +418,6 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
-  private checkPoolStatus = () => {
-    console.log(`📊 Pool status: ${pool.totalCount} total, ${pool.idleCount} idle, ${pool.waitingCount} waiting`);
-  }
-
-  private poolMonitorInterval: NodeJS.Timeout | null = null;
-
-  startPoolMonitoring() {
-    // Clear any existing interval
-    if (this.poolMonitorInterval) {
-      clearInterval(this.poolMonitorInterval);
-    }
-    
-    // Start new monitoring interval
-    this.poolMonitorInterval = setInterval(() => {
-      this.checkPoolStatus();
-    }, 5000);
-  }
-
-  stopPoolMonitoring() {
-    if (this.poolMonitorInterval) {
-      clearInterval(this.poolMonitorInterval);
-      this.poolMonitorInterval = null;
-    }
-  }
-
   async updateWordProficiencyBatchByChineseAndPinyin(userId: number, proficiencyDiff: {chinese: string, pinyin: string, isCorrect: boolean}[]): Promise<Proficiency[]> {
     const updated: Proficiency[] = [];
     
