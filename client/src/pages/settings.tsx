@@ -169,7 +169,7 @@ export default function Settings() {
       setTimeWeight(3);
       
       // Clear vocabulary from the server
-      apiRequest('DELETE', '/api/vocabulary')
+      apiRequest('DELETE', '/api/vocabulary/words')
         .then(() => {
           toast({
             title: "Data reset",
