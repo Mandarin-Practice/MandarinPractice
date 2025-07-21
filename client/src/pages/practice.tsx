@@ -17,6 +17,7 @@ import { checkSimilarity } from "@/lib/string-similarity";
 import { FullProficiency } from "@shared/schema";
 import { useAuth } from "@/hooks/use-auth";
 import { useQueryClient } from "@tanstack/react-query";
+import { pool } from "../../../server/db"; // Adjust the import based on your project structure
 
 interface Sentence {
   id: string;
@@ -429,12 +430,24 @@ export default function Practice() {
   };
 
   // Update word proficiency in the backend
-  const updateWordProficiency = useMutation<any, unknown, { wordId: number, isCorrect: boolean }>({
-    mutationFn: async (params: { wordId: number, isCorrect: boolean }) => {
-      const response = await apiRequest('POST', `/api/vocabulary/proficiency/${params.wordId}`, {
-        isCorrect: params.isCorrect
+  const updateWordProficiencyBatch = useMutation<any, unknown, { wordsWithCorrectness: { chinese: string, isCorrect: boolean }[] }>({
+    mutationFn: async (params: { wordsWithCorrectness: { chinese: string, isCorrect: boolean }[] }) => {
+      const response = await apiRequest('POST', `/api/vocabulary/proficiency/batch`, {
+        wordsWithCorrectness: params.wordsWithCorrectness
       });
       return response.json();
+    },
+    onSuccess: (updatedProficiencies) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/vocabulary/proficiency']});
+      console.log('Updated proficiencies:', updatedProficiencies);
+    },
+    onError: (error) => {
+      console.error('Failed to update proficiencies:', error);
+      toast({
+        title: "Proficiency update failed",
+        description: "There was an error updating your word proficiencies. Please try again later.",
+        variant: "destructive",
+      });
     }
   });
   
@@ -714,19 +727,10 @@ export default function Practice() {
       // If we have vocabulary data and this is a correct answer,
       // update proficiency for each word in the sentence
       if (vocabularyWords && Array.isArray(vocabularyWords)) {
-        // Extract all Chinese characters from the sentence
-        const sentence = generateSentenceMutation.data.chinese;
-        
-        // For each word in our vocabulary, check if it's in the sentence
-        vocabularyWords.forEach(word => {
-          if (sentence.includes(word.chinese)) {
-            // Update proficiency for this word (it was correct)
-            updateWordProficiency.mutate({ 
-              wordId: word.id, 
-              isCorrect: true 
-            });
-          }
-        });
+        updateWordProficiencyBatch.mutate({
+          wordsWithCorrectness: generateSentenceMutation.data.chinese.split(' ').map((word: string) => {
+            return { chinese: word, isCorrect: true };
+        })});
       }
     // Make the partial correct threshold between 0.4 and 0.8 (was 0.25 to 0.7)
     } else if (similarity >= 0.4) {
@@ -755,17 +759,10 @@ export default function Practice() {
       
       // If answer is incorrect, update proficiency for words in the sentence
       if (vocabularyWords && Array.isArray(vocabularyWords)) {
-        const sentence = generateSentenceMutation.data.chinese;
-        
-        vocabularyWords.forEach(word => {
-          if (sentence.includes(word.chinese)) {
-            // Update proficiency for this word (it was incorrect)
-            updateWordProficiency.mutate({ 
-              wordId: word.id, 
-              isCorrect: false 
-            });
-          }
-        });
+        updateWordProficiencyBatch.mutate({
+          wordsWithCorrectness: generateSentenceMutation.data.chinese.split(' ').map((word: string) => {
+            return { chinese: word, isCorrect: true };
+        })});
       }
     }
   };

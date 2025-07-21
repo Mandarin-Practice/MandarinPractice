@@ -190,7 +190,10 @@ export default function WordList() {
   const handleShowPreview = async (listId: string) => {
     const list = SAMPLE_WORD_LISTS.find(l => l.id === listId);
     if (list) {
-      const listVocab = await apiRequest('GET', `/api/vocabulary/words`, { wordIds: list.words})
+      const listWords = list.words.map(word => ({ chinese: word.chinese }));
+      const listVocab = await apiRequest('POST', `/api/vocabulary/words/get-chinese-batch`, {
+        words: listWords
+      });
       const listVocabData = await listVocab.json();
       setPreviewList({id: list.id, name: list.name, description: list.description, category: list.category, words: listVocabData});
       // Initialize all words as selected

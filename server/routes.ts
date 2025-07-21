@@ -1,15 +1,13 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { wordProficiencySchema, characterSchema, characterDefinitionSchema, learnedDefinitionSchema, type Vocabulary, FullProficiency } from "@shared/schema";
+import { characterSchema, characterDefinitionSchema, FullProficiency, Proficiency } from "@shared/schema";
 import { ZodError } from "zod";
 import { generateSentence, generateSentenceWithWord, checkSynonyms, validateSentenceWithAI, verifyTranslationQuality } from "./openai";
 import dictionaryAdminRoutes from "./routes/dictionary-admin";
 import authRoutes from "./routes/auth";
 import { firebaseAuth } from "./middleware/auth";
 import { verifyFirebaseToken } from "./middleware/auth";
-import authRouter from "./routes/auth";
-import { auth } from "firebase-admin";
 
 // List of unnatural or grammatically incorrect sentence patterns to filter out
 const unnaturalPatterns = [
@@ -241,7 +239,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid word format" });
       }
       
-      await storage.deleteVocabularyByChineseAndPinyin(userId, word.chinese, word.pinyin);
+      await storage.deleteVocabularyByChinese(userId, word.chinese);
       res.status(200).json({ message: "Vocabulary deleted" });
     } catch (error) {
       res.status(404).json({ message: "Vocabulary not found" });
@@ -316,6 +314,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get a specific vocabulary word by ID
+  app.get("/api/vocabulary/words/:id", verifyFirebaseToken, firebaseAuth, async (req, res) => {
+    console.log("\n\nGETTING SPECIFIC VOCAB WORD\n\n")
+    try {
+      const userId = req.authenticatedUserId;
+
+      if (!userId) {
+        return res.status(400).json({ message: "Unauthorized" });
+      }
+
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      const word = await storage.getVocabulary(userId, id);
+      
+      if (!word) {
+        return res.status(404).json({ message: "Vocabulary not found" });
+      }
+      
+      res.json(word);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch vocabulary" });
+    }
+  });
+
+  app.get("/api/vocabulary/words/id-batch", verifyFirebaseToken, firebaseAuth, async (req, res) => {
+    console.log("\n\nGETTING VOCAB WORDS BY ID BATCH\n\n")
+    try {
+      const userId = req.authenticatedUserId;
+      if (!userId) {
+        return res.status(400).json({ message: "Unauthorized" });
+      }
+
+      const paramIds = req.query.wordIds;
+
+      if (!paramIds || !Array.isArray(paramIds)) {
+        return res.status(400).json({ message: "Invalid or missing IDs" });
+      }
+
+      let ids: string[];
+      if (Array.isArray(paramIds)) {
+        ids = paramIds.map(id => String(id));
+      } else {
+        // Handle comma-separated string case
+        ids = String(paramIds).split(',');
+      }
+
+      const wordIds = ids.map(id => parseInt(id, 10)).filter(id => !isNaN(id));
+      if (wordIds.length === 0) {
+        return res.status(400).json({ message: "No valid IDs provided" });
+      }
+      const words = await storage.getVocabularyBatch(userId, wordIds);
+      if (!words || words.length === 0) {
+        return res.status(404).json({ message: "No vocabulary found for the provided IDs" });
+      }
+      res.json(words);
+    } catch (error) {
+      console.error("Error fetching vocabulary by ID batch:", error);
+      res.status(500).json({ message: "Failed to fetch vocabulary by ID batch" });
+    }
+  });
+
+  app.post("/api/vocabulary/words/get-chinese-batch", verifyFirebaseToken, firebaseAuth, async (req, res) => {
+    console.log("\n\nGETTING VOCAB WORDS BY CHINESE BATCH\n\n")
+    try {
+      const userId = req.authenticatedUserId;
+      if (!userId) {
+        return res.status(400).json({ message: "Unauthorized" });
+      }
+  
+      const wordRequest = req.body.words as string[];
+  
+      if (!wordRequest || !Array.isArray(wordRequest)) {
+        return res.status(400).json({ message: "Invalid or missing entries" });
+      }
+  
+      if (wordRequest.length === 0) {
+        return res.status(400).json({ message: "No valid entries provided" });
+      }
+      
+      const words = await storage.getVocabularyBatchByChinese(userId, wordRequest);
+      if (!words || words.length === 0) {
+        return res.status(404).json({ message: "No vocabulary found for the provided entries" });
+      }
+      res.json(words);
+    } catch (error) {
+      console.error("Error retrieving vocabulary batch:", error);
+      res.status(500).json({ message: "Failed to retrieve vocabulary" });
+    }
+  });
+
   // Create a sentence cache to speed up responses
   const sentenceCache = {
     beginner: [] as any[],
@@ -376,14 +468,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     ],
     advanced: [
       // Complex sentences with 了 and other grammar patterns
-      { chinese: "我已经学了三年中文了，但是还是说得不太流利。", pinyin: "Wǒ yǐjīng xué le sān nián Zhōngwén le, dànshì háishì shuō de bú tài liúlì.", english: "I have been learning Chinese for three years, but I still don't speak very fluently." },
-      { chinese: "虽然学习中文很难，但是很有意思。", pinyin: "Suīrán xuéxí Zhōngwén hěn nán, dànshì hěn yǒuyìsi.", english: "Although learning Chinese is difficult, it is very interesting." },
-      { chinese: "如果明天天气好的话，我们可以去公园。", pinyin: "Rúguǒ míngtiān tiānqì hǎo dehuà, wǒmen kěyǐ qù gōngyuán.", english: "If the weather is good tomorrow, we can go to the park." },
-      { chinese: "我认为学习语言的最好方法是每天练习。", pinyin: "Wǒ rènwéi xuéxí yǔyán de zuì hǎo fāngfǎ shì měitiān liànxí.", english: "I think the best way to learn a language is to practice every day." },
-      { chinese: "昨天我看了一部电影，这部电影讲的是中国历史。", pinyin: "Zuótiān wǒ kàn le yī bù diànyǐng, zhè bù diànyǐng jiǎng de shì Zhōngguó lìshǐ.", english: "Yesterday I watched a movie that was about Chinese history." },
-      { chinese: "我们吃完了饭，就去看电影了。", pinyin: "Wǒmen chī wán le fàn, jiù qù kàn diànyǐng le.", english: "After we finished eating, we went to see a movie." },
-      { chinese: "他告诉我他已经去过北京了。", pinyin: "Tā gàosù wǒ tā yǐjīng qùguò Běijīng le.", english: "He told me he had already been to Beijing." },
-      { chinese: "学习汉语不仅要学习语法，还要了解中国文化。", pinyin: "Xuéxí Hànyǔ bùjǐn yào xuéxí yǔfǎ, hái yào liǎojiě Zhōngguó wénhuà.", english: "Learning Chinese requires not only learning grammar, but also understanding Chinese culture." }
+      { chinese: "我 已经 学 了 三 年 中文 了，但是 还是 说 得 不 太 流利。", pinyin: "Wǒ yǐjīng xué le sān nián Zhōngwén le, dànshì háishì shuō de bú tài liúlì.", english: "I have been learning Chinese for three years, but I still don't speak very fluently." },
+      { chinese: "虽然 学习 中文 很 难，但是 很 有意思。", pinyin: "Suīrán xuéxí Zhōngwén hěn nán, dànshì hěn yǒuyìsi.", english: "Although learning Chinese is difficult, it is very interesting." },
+      { chinese: "如果 明天 天气 好 的话，我们 可以 去 公园。", pinyin: "Rúguǒ míngtiān tiānqì hǎo dehuà, wǒmen kěyǐ qù gōngyuán.", english: "If the weather is good tomorrow, we can go to the park." },
+      { chinese: "我 认为 学习 语言 的 最 好 方法 是 每天 练习。", pinyin: "Wǒ rènwéi xuéxí yǔyán de zuì hǎo fāngfǎ shì měitiān liànxí.", english: "I think the best way to learn a language is to practice every day." },
+      { chinese: "昨天 我 看 了 一 部 电影，这 部 电影 讲 的 是 中国 历史。", pinyin: "Zuótiān wǒ kàn le yī bù diànyǐng, zhè bù diànyǐng jiǎng de shì Zhōngguó lìshǐ.", english: "Yesterday I watched a movie that was about Chinese history." },
+      { chinese: "我们 吃 完 了 饭，就 去 看 电影 了。", pinyin: "Wǒmen chī wán le fàn, jiù qù kàn diànyǐng le.", english: "After we finished eating, we went to see a movie." },
+      { chinese: "他 告诉 我 他 已经 去过 北京 了。", pinyin: "Tā gàosù wǒ tā yǐjīng qùguò Běijīng le.", english: "He told me he had already been to Beijing." },
+      { chinese: "学习 汉语 不仅 要 学习 语法，还 要 了解 中国 文化。", pinyin: "Xuéxí Hànyǔ bùjǐn yào xuéxí yǔfǎ, hái yào liǎojiě Zhōngguó wénhuà.", english: "Learning Chinese requires not only learning grammar, but also understanding Chinese culture." }
     ]
   };
 
@@ -623,6 +715,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { difficulty = "beginner" } = req.body;
       const typedDifficulty = difficulty as 'beginner' | 'intermediate' | 'advanced';
+
+      res.json(fallbackSentences[typedDifficulty][0]);
+      return;
       
       // Helper function to select words, prioritizing less frequently used words
       const selectWords = (wordsList: Array<{ id: number, lessonId?: number | null, chinese: string, pinyin: string, english: string}>, count: number) => {
@@ -1020,7 +1115,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get proficiency for a specific word
+  // Update word proficiency batch
   app.post("/api/vocabulary/proficiency/batch", verifyFirebaseToken, firebaseAuth, async (req, res) => {
     console.log("\n\nBATCH WORD PROF REQUEST\n\n")
     try {
@@ -1030,17 +1125,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Unauthorized" });
       }
 
-      const { wordIds } = req.body;
+      const wordsWithCorrectness = req.body.wordsWithCorrectness; // { wordId: number, isCorrect: boolean }[]
       
-      if (!Array.isArray(wordIds)) {
+      if (!Array.isArray(wordsWithCorrectness)) {
         return res.status(400).json({ message: "Invalid word ID format" });
       }
-      
-      const proficiencies = await storage.getWordProficiencyBatch(userId, wordIds);
+
+      if (wordsWithCorrectness.length === 0) {
+        return res.status(400).json({ message: "No words provided for proficiency update" });
+      }
+
+      let proficiencies: Proficiency[] = [];
+
+      if (wordsWithCorrectness.every(w => "wordId" in w && "isCorrect" in w)) {
+        proficiencies = await storage.updateWordProficiencyBatch(userId, wordsWithCorrectness);
+      }
+      else if (wordsWithCorrectness.every(w => "chinese" in w && "isCorrect" in w)) {
+        proficiencies = await storage.updateWordProficiencyBatchByChinese(userId, wordsWithCorrectness)
+      }
+      else {
+        return res.status(400).json({ message: "Invalid word format. Each word must have either wordId or chinese." });
+      }
       
       res.json({proficiencies});
     } catch (error) {
-      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to get word proficiencies" });
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to update word proficiencies" });
     }
   });
 

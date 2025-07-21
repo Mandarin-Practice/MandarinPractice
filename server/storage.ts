@@ -44,24 +44,26 @@ export interface IStorage {
   getAllVocabularyWithProficiency(userId: number): Promise<FullProficiency[]>;
   getVocabularyWithProficiency(userId: number, wordId: number): Promise<FullProficiency | undefined>;
   getVocabularyWithProficiencyBatch(userId: number, wordIds: number[]): Promise<(FullProficiency)[]>;
-  getVocabularyWithProficiencyByChineseAndPinyin(userId: number, chinese: string, pinyin: string): Promise<FullProficiency | undefined>;
+  getVocabularyWithProficiencyByChinese(userId: number, chinese: string): Promise<FullProficiency | undefined>;
   
   // Vocabulary methods
   getAllVocabulary(userId: number): Promise<Vocabulary[]>;
   getVocabulary(userId: number, wordId: number): Promise<Vocabulary | undefined>;
   getVocabularyBatch(userId: number, wordIds: number[]): Promise<Vocabulary[]>;
-  getVocabularyByChineseAndPinyin(userId: number, chinese: string, pinyin: string): Promise<Vocabulary | undefined>;
+  getVocabularyByChinese(userId: number, chinese: string): Promise<Vocabulary | undefined>;
+  getVocabularyBatchByChinese(userId: number, words: string[]): Promise<Vocabulary[]>;
   updateVocabulary(userId: number, wordId: number, updates: Partial<Vocabulary>): Promise<Vocabulary>;
   addVocabulary(userId: number, word: Vocabulary): Promise<Vocabulary>;
   addVocabularyBatch(userId: number, words: Vocabulary[]): Promise<Vocabulary[]>;
   deleteVocabulary(userId: number, id: number): Promise<void>;
-  deleteVocabularyByChineseAndPinyin(userId: number, chinese: string, pinyin: string): Promise<void>;
+  deleteVocabularyByChinese(userId: number, chinese: string): Promise<void>;
   deleteAllVocabulary(userId: number): Promise<void>;
   
   // Word proficiency methods
   getWordProficiency(userId: number, wordId: number): Promise<Proficiency | undefined>;
   getWordProficiencyBatch(userId: number, wordIds: number[]): Promise<Proficiency[]>;
-  updateWordProficiencyBatch(userId: number, proficiencyDiff: {wordId: number, correct: boolean}[]): Promise<Proficiency[]>;
+  updateWordProficiencyBatch(userId: number, proficiencyDiff: {wordId: number, isCorrect: boolean}[]): Promise<Proficiency[]>;
+  updateWordProficiencyBatchByChinese(userId: number, chinesePinyinDiff: {chinese: string, isCorrect: boolean}[]): Promise<Proficiency[]>;
   getWordProficiencies(userId: number): Promise<Proficiency[]>;
   updateWordProficiency(userId: number, wordId: number, isCorrect: boolean): Promise<Proficiency>;
   removeWordProficiency(userId: number, wordId: number): Promise<void>;
@@ -190,14 +192,13 @@ export class DatabaseStorage implements IStorage {
       .where(and(eq(wordProficiency.userId, userId), inArray(wordProficiency.id, wordIds)));
   }
 
-  async getVocabularyWithProficiencyByChineseAndPinyin(userId: number, chinese: string, pinyin: string): Promise<FullProficiency | undefined> {
+  async getVocabularyWithProficiencyByChinese(userId: number, chinese: string): Promise<FullProficiency | undefined> {
     const [result] = await db.select()
       .from(wordProficiency)
       .where(
         and(
           eq(wordProficiency.userId, userId),
-          eq(wordProficiency.chinese, chinese),
-          eq(wordProficiency.pinyin, pinyin)
+          eq(wordProficiency.chinese, chinese)
         )
       );
 
@@ -224,12 +225,21 @@ export class DatabaseStorage implements IStorage {
     return vocab;
   }
   
-  async getVocabularyByChineseAndPinyin(userId: number, chinese: string, pinyin: string): Promise<Vocabulary | undefined> {
+  async getVocabularyByChinese(userId: number, chinese: string): Promise<Vocabulary | undefined> {
     const [vocab] = await db.select(this.VOCABULARY_SELECT).from(wordProficiency).where(
       and(
         eq(wordProficiency.userId, userId),
-        eq(wordProficiency.chinese, chinese),
-        eq(wordProficiency.pinyin, pinyin)
+        eq(wordProficiency.chinese, chinese)
+      )
+    );
+    return vocab;
+  }
+
+  async getVocabularyBatchByChinese(userId: number, words: string[]): Promise<Vocabulary[]> {
+    const vocab = await db.select(this.VOCABULARY_SELECT).from(wordProficiency).where(
+      and(
+        eq(wordProficiency.userId, userId),
+        inArray(wordProficiency.chinese, words)
       )
     );
     return vocab;
@@ -307,11 +317,10 @@ export class DatabaseStorage implements IStorage {
     await db.delete(wordProficiency).where(and(eq(wordProficiency.userId, userId), eq(wordProficiency.id, id)));
   }
 
-  async deleteVocabularyByChineseAndPinyin(userId: number, chinese: string, pinyin: string): Promise<void> {
+  async deleteVocabularyByChinese(userId: number, chinese: string): Promise<void> {
     await db.delete(wordProficiency).where(and(
       eq(wordProficiency.userId, userId),
-      eq(wordProficiency.chinese, chinese),
-      eq(wordProficiency.pinyin, pinyin)
+      eq(wordProficiency.chinese, chinese)
     ));
   }
 
@@ -357,13 +366,13 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  async updateWordProficiencyBatch(userId: number, proficiencyDiff: {wordId: number, correct: boolean}[]): Promise<Proficiency[]> {
+  async updateWordProficiencyBatch(userId: number, proficiencyDiff: {wordId: number, isCorrect: boolean}[]): Promise<Proficiency[]> {
     return await db.transaction(async (tx) => {
       const updated: Proficiency[] = [];
       
       // Separate correct and incorrect answers
-      const correctWordIds = proficiencyDiff.filter(d => d.correct).map(d => d.wordId);
-      const incorrectWordIds = proficiencyDiff.filter(d => !d.correct).map(d => d.wordId);
+      const correctWordIds = proficiencyDiff.filter(d => d.isCorrect).map(d => d.wordId);
+      const incorrectWordIds = proficiencyDiff.filter(d => !d.isCorrect).map(d => d.wordId);
       
       // Batch update correct answers
       if (correctWordIds.length > 0) {
@@ -400,6 +409,49 @@ export class DatabaseStorage implements IStorage {
       
       return updated;
     });
+  }
+
+  async updateWordProficiencyBatchByChinese(userId: number, proficiencyDiff: {chinese: string, isCorrect: boolean}[]): Promise<Proficiency[]> {
+    const updated: Proficiency[] = [];
+    
+    // Separate correct and incorrect answers
+    const correctWords = proficiencyDiff.filter(d => d.isCorrect).map(d => { return d.chinese });
+    const incorrectWords = proficiencyDiff.filter(d => !d.isCorrect).map(d => { return d.chinese });
+    
+    // Batch update correct answers
+    if (correctWords.length > 0) {
+      const correctUpdates = await db.update(wordProficiency)
+        .set({
+          correctCount: sql`${wordProficiency.correctCount} + 1`,
+          attemptCount: sql`${wordProficiency.attemptCount} + 1`,
+          lastPracticed: new Date()
+        })
+        .where(and(
+          eq(wordProficiency.userId, userId),
+          inArray(wordProficiency.chinese, correctWords)
+        ))
+        .returning(this.PROFICIENCY_SELECT);
+      
+      updated.push(...correctUpdates);
+    }
+    
+    // Batch update incorrect answers
+    if (incorrectWords.length > 0) {
+      const incorrectUpdates = await db.update(wordProficiency)
+        .set({
+          attemptCount: sql`${wordProficiency.attemptCount} + 1`,
+          lastPracticed: new Date()
+        })
+        .where(and(
+          eq(wordProficiency.userId, userId),
+          inArray(wordProficiency.chinese, incorrectWords)
+        ))
+        .returning(this.PROFICIENCY_SELECT);
+      
+      updated.push(...incorrectUpdates);
+    }
+    
+    return updated;
   }
   
   async removeWordProficiency(userId: number, wordId: number): Promise<void> {
