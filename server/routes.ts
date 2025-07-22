@@ -728,8 +728,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const typedDifficulty = difficulty as 'beginner' | 'intermediate' | 'advanced';
 
       res.json(fallbackSentences[typedDifficulty][0]);
-      return;
-      
       // Helper function to select words, prioritizing less frequently used words
       const selectWords = (wordsList: Array<{ id: number, lessonId?: number | null, chinese: string, pinyin: string, english: string}>, count: number) => {
         // Ensure we don't try to select more words than available

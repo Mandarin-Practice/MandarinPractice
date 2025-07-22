@@ -3,6 +3,8 @@ import { Vocabulary } from "@shared/schema";
 import OpenAI from "openai";
 import { storage } from "./storage";
 
+import dotenv from 'dotenv';
+dotenv.config({ path: '.env.local' });
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "your-api-key" });
 
@@ -380,7 +382,7 @@ export async function generateSentence(
     const commonChineseChars = ['的', '了', '和', '是', '在', '有', '我', '你', '他', '她', '它', '们', '这', '那', '不', '很', '都', '也', '个', '吗', '吧', '呢', '啊', '就', '说', '能', '要', '会', '对', '给', '到', '得', '着', '过', '被', '上', '下', '前', '后', '里', '外', '左', '右', '中', '大', '小', '多', '少', '好', '与', '为', '因', '什么', '谢谢', '再见', '请', '问'];
     
     // Create a vocabulary set of all characters in the vocabulary list
-    const allUserVocabulary = await storage.getAllVocabulary(18);
+    const allUserVocabulary = vocabulary;
     const vocabularyChars: Set<string> = new Set();
     allUserVocabulary.forEach(word => {
       // Split each Chinese word into characters
