@@ -280,11 +280,8 @@ export async function generateSentence(
 
   // Extract all individual characters from the vocabulary words
   const allChars = vocabulary.map(word => word.chinese.split('')).flat();
-  console.log(`Available characters from vocabulary: ${allChars.join(', ')}`);
-  
   // Get the original words to provide context
   const originalWords = vocabulary.map(word => word.chinese);
-  console.log(`Original vocabulary words: ${originalWords.join(', ')}`);
   
   try {
     const response = await openai.chat.completions.create({
@@ -368,6 +365,7 @@ export async function generateSentence(
     
     // Validate that the sentence uses mostly words from the vocabulary
     const sentenceWords = parsedContent.chinese.replace(/[，。！？]/g, '').split('');
+    console.log("sentenceWords: ", sentenceWords.join(""));
     
     // Create a unique array of characters in a simpler way
     const uniqueSentenceWords: string[] = [];
@@ -393,9 +391,6 @@ export async function generateSentence(
     
     // For beginner difficulty, allow all chars in vocabulary list plus common connecting words
     if (difficulty === "beginner") {
-      console.log("Vocabulary characters:", Array.from(vocabularyChars).join(', '));
-      console.log("Common Chinese characters:", commonChineseChars.join(', '));
-      // For each character in the sentence, check if it's allowed
       const unknownChars = uniqueSentenceWords.filter(char => 
         !vocabularyChars.has(char) &&                 // Not in vocabulary
         !commonChineseChars.includes(char) &&         // Not a common particle
@@ -405,8 +400,7 @@ export async function generateSentence(
       );
       
       if (unknownChars.length > 0) {
-        console.log(`Beginner sentence has unknown characters: ${unknownChars.join(', ')}`);
-        // Only throw error if there are actually unknown characters
+        console.log("unknownChars: ", unknownChars);
         throw new Error("Beginner level sentences must only use vocabulary from the list");
       }
     } 
@@ -424,12 +418,6 @@ export async function generateSentence(
       // Allow more unknown characters for higher difficulties
       const maxUnknownRatio = difficulty === "intermediate" ? 0.1 : 0.2; // 10% for intermediate, 20% for advanced
       const unknownRatio = unknownChars.length / uniqueSentenceWords.length;
-      
-      // Log detailed information for debugging
-      console.log(`${difficulty} sentence check: ${unknownChars.length} unknown chars out of ${uniqueSentenceWords.length} total (ratio: ${unknownRatio.toFixed(2)})`);
-      if (unknownChars.length > 0) {
-        console.log(`Unknown chars: ${unknownChars.join(', ')}`);
-      }
       
       // Reject sentences with too many unknown characters
       if (unknownRatio > maxUnknownRatio) {

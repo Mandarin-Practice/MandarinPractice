@@ -5,8 +5,6 @@ import { FullProficiency } from '@shared/schema';
 import { pool } from '../../server/db'; // Import the database pool
 
 async function runSentenceGenerationTest() {
-  console.log("Starting sentence generation test...");
-
   // Mock user ID - in a real scenario, this would come from authentication
   const mockUserId = 1; // Using a number as per storage.ts
 
@@ -56,6 +54,12 @@ async function runSentenceGenerationTest() {
 
     const mockRes = {
       json: (data: any) => {
+        if (data.rejectionReason) {
+          console.log(`Rejected sentence: "${data.rejectedOriginal}" - Reason: ${data.rejectionReason}`);
+        }
+        if (data.fromFallback) {
+          console.log("USING BUM SENTENCE FALLBACK");
+        }
         console.log("\n--- Generated Sentence ---");
         console.log("Chinese:", data.chinese);
         console.log("Pinyin:", data.pinyin);
@@ -95,7 +99,7 @@ async function runSentenceGenerationTest() {
         console.error("Error closing database pool:", err);
       });
     });
-    console.log("Sentence generation test finished.");
+    process.exit()
   }
 }
 
