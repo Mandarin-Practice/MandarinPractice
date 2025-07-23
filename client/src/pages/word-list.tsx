@@ -190,7 +190,7 @@ export default function WordList() {
   const handleShowPreview = async (listId: string) => {
     const list = SAMPLE_WORD_LISTS.find(l => l.id === listId);
     if (list) {
-      const listWords = list.words.map(word => ({ chinese: word.chinese, pinyin: word.pinyin }));
+      const listWords = list.words.map(word => ({ chinese: word.chinese }));
       const listVocab = await apiRequest('POST', `/api/vocabulary/words/get-chinese-batch`, {
         words: listWords
       });

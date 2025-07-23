@@ -22,11 +22,6 @@ export const LESSON7_WORDLIST: WordList = {
       english: "the previous one"
     },
     {
-      chinese: "得",
-      pinyin: "de",
-      english: "(a structural particle)"
-    },
-    {
       chinese: "复习",
       pinyin: "fùxí",
       english: "to review"
@@ -87,7 +82,7 @@ export const LESSON7_WORDLIST: WordList = {
       english: "really"
     },
     {
-      chinese: "那里",
+      chinese: "哪里",
       pinyin: "nǎli",
       english: "where"
     },

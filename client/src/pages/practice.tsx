@@ -430,8 +430,8 @@ export default function Practice() {
   };
 
   // Update word proficiency in the backend
-  const updateWordProficiencyBatch = useMutation<any, unknown, { wordsWithCorrectness: { chinese: string, pinyin: string, isCorrect: boolean }[] }>({
-    mutationFn: async (params: { wordsWithCorrectness: { chinese: string, pinyin: string, isCorrect: boolean }[] }) => {
+  const updateWordProficiencyBatch = useMutation<any, unknown, { wordsWithCorrectness: { chinese: string, isCorrect: boolean }[] }>({
+    mutationFn: async (params: { wordsWithCorrectness: { chinese: string, isCorrect: boolean }[] }) => {
       const response = await apiRequest('POST', `/api/vocabulary/proficiency/batch`, {
         wordsWithCorrectness: params.wordsWithCorrectness
       });
@@ -745,12 +745,9 @@ export default function Practice() {
       // update proficiency for each word in the sentence
       if (vocabularyWords && Array.isArray(vocabularyWords)) {
         updateWordProficiencyBatch.mutate({
-          wordsWithCorrectness: getSplitSentence().map((word: { chinese: string, pinyin: string }) => ({
-            chinese: word.chinese,
-            pinyin: word.pinyin,
-            isCorrect: true
-          }))
-        })
+          wordsWithCorrectness: generateSentenceMutation.data.chinese.split(' ').map((word: string) => {
+            return { chinese: word, isCorrect: true };
+        })});
       }
     // Make the partial correct threshold between 0.4 and 0.8 (was 0.25 to 0.7)
     } else if (similarity >= 0.4) {
@@ -780,12 +777,9 @@ export default function Practice() {
       // If answer is incorrect, update proficiency for words in the sentence
       if (vocabularyWords && Array.isArray(vocabularyWords)) {
         updateWordProficiencyBatch.mutate({
-          wordsWithCorrectness: getSplitSentence().map((word: { chinese: string, pinyin: string }) => ({
-            chinese: word.chinese,
-            pinyin: word.pinyin,
-            isCorrect: false
-          }))
-        })
+          wordsWithCorrectness: generateSentenceMutation.data.chinese.split(' ').map((word: string) => {
+            return { chinese: word, isCorrect: true };
+        })});
       }
     }
   };

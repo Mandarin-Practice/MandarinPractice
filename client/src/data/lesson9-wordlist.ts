@@ -98,8 +98,8 @@ export const LESSON9_WORDLIST: WordList = {
     },
     {
       chinese: "长",
-      pinyin: "cháng",
-      english: "long"
+      pinyin: "cháng; zhǎng",
+      english: "long; to grow, to appear"
     },
     {
       chinese: "短",

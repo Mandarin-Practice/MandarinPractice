@@ -187,11 +187,6 @@ export const LESSON17_WORDLIST: WordList = {
       "english": "to serve as, to be"
     },
     {
-      "chinese": "还",
-      "pinyin": "huán",
-      "english": "to return (something)"
-    },
-    {
       "chinese": "另外",
       "pinyin": "lìngwài",
       "english": "furthermore, in addition"
