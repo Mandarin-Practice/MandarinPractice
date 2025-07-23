@@ -1,7 +1,4 @@
-import { apiRequest } from "@/lib/queryClient";
-import { Vocabulary } from "@shared/schema";
 import OpenAI from "openai";
-import { storage } from "./storage";
 
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
