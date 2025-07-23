@@ -1,5 +1,7 @@
 import OpenAI from "openai";
 
+import dotenv from 'dotenv';
+dotenv.config({ path: '.env.local' });
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "your-api-key" });
 
@@ -53,7 +55,8 @@ export async function validateSentenceWithAI(chinese: string, difficulty: string
           - "吃水" (eating water) or "喝饭" (drinking rice) - incorrect verb-object pairing
           - "我们学习明天" (we study tomorrow) - illogical time reference
           
-          A good sentence should be natural in both Chinese AND English translation.`
+          If the sentence is incorrect, please remember to put your corrections in the corrections field of the JSON output.
+          IMPORTANT in your corrections, remember to put spaces in between separate phrases like "我 今天 去了" (even though this is not standard practice in Chinese writing)`
         },
         {
           role: "user",
@@ -237,22 +240,6 @@ export async function generateSentence(
     throw new Error("No vocabulary provided");
   }
 
-  const chineseWords = vocabulary.map((word) => word.chinese).join(", ");
-  const pinyinMap = vocabulary.reduce(
-    (map, word) => {
-      map[word.chinese] = word.pinyin;
-      return map;
-    },
-    {} as Record<string, string>
-  );
-  const englishMap = vocabulary.reduce(
-    (map, word) => {
-      map[word.chinese] = word.english;
-      return map;
-    },
-    {} as Record<string, string>
-  );
-
   // Get current date and time for context in sentences
   const now = new Date();
   const hour = now.getHours();
@@ -291,11 +278,8 @@ export async function generateSentence(
 
   // Extract all individual characters from the vocabulary words
   const allChars = vocabulary.map(word => word.chinese.split('')).flat();
-  console.log(`Available characters from vocabulary: ${allChars.join(', ')}`);
-  
   // Get the original words to provide context
   const originalWords = vocabulary.map(word => word.chinese);
-  console.log(`Original vocabulary words: ${originalWords.join(', ')}`);
   
   try {
     const response = await openai.chat.completions.create({
@@ -348,7 +332,8 @@ export async function generateSentence(
           5. Preserves the meaning of proper names and vocabulary words
           
           Provide the sentence in Chinese characters, pinyin (with proper tone marks), and an English translation.
-          Format your response as a valid JSON object with 'chinese', 'pinyin', and 'english' fields.`
+          Format your response as a valid JSON object with 'chinese', 'pinyin', and 'english' fields.
+          IMPORTANT Even though it is not standard practice to use spaces in a chinese sentence, please include spaces between words in the chinese character field of your JSON`
         },
         {
           role: "user",
@@ -378,6 +363,7 @@ export async function generateSentence(
     
     // Validate that the sentence uses mostly words from the vocabulary
     const sentenceWords = parsedContent.chinese.replace(/[，。！？]/g, '').split('');
+    console.log("sentenceWords: ", sentenceWords.join(""));
     
     // Create a unique array of characters in a simpler way
     const uniqueSentenceWords: string[] = [];
@@ -392,8 +378,9 @@ export async function generateSentence(
     const commonChineseChars = ['的', '了', '和', '是', '在', '有', '我', '你', '他', '她', '它', '们', '这', '那', '不', '很', '都', '也', '个', '吗', '吧', '呢', '啊', '就', '说', '能', '要', '会', '对', '给', '到', '得', '着', '过', '被', '上', '下', '前', '后', '里', '外', '左', '右', '中', '大', '小', '多', '少', '好', '与', '为', '因', '什么', '谢谢', '再见', '请', '问'];
     
     // Create a vocabulary set of all characters in the vocabulary list
+    const allUserVocabulary = vocabulary;
     const vocabularyChars: Set<string> = new Set();
-    vocabulary.forEach(word => {
+    allUserVocabulary.forEach(word => {
       // Split each Chinese word into characters
       word.chinese.split('').forEach(char => {
         vocabularyChars.add(char);
@@ -402,7 +389,6 @@ export async function generateSentence(
     
     // For beginner difficulty, allow all chars in vocabulary list plus common connecting words
     if (difficulty === "beginner") {
-      // For each character in the sentence, check if it's allowed
       const unknownChars = uniqueSentenceWords.filter(char => 
         !vocabularyChars.has(char) &&                 // Not in vocabulary
         !commonChineseChars.includes(char) &&         // Not a common particle
@@ -412,8 +398,7 @@ export async function generateSentence(
       );
       
       if (unknownChars.length > 0) {
-        console.log(`Beginner sentence has unknown characters: ${unknownChars.join(', ')}`);
-        // Only throw error if there are actually unknown characters
+        console.log("unknownChars: ", unknownChars);
         throw new Error("Beginner level sentences must only use vocabulary from the list");
       }
     } 
@@ -432,15 +417,9 @@ export async function generateSentence(
       const maxUnknownRatio = difficulty === "intermediate" ? 0.1 : 0.2; // 10% for intermediate, 20% for advanced
       const unknownRatio = unknownChars.length / uniqueSentenceWords.length;
       
-      // Log detailed information for debugging
-      console.log(`${difficulty} sentence check: ${unknownChars.length} unknown chars out of ${uniqueSentenceWords.length} total (ratio: ${unknownRatio.toFixed(2)})`);
-      if (unknownChars.length > 0) {
-        console.log(`Unknown chars: ${unknownChars.join(', ')}`);
-      }
-      
       // Reject sentences with too many unknown characters
       if (unknownRatio > maxUnknownRatio) {
-        throw new Error(`${difficulty} level sentences have too many unknown characters (${unknownRatio.toFixed(2)})`);
+        throw new Error(`${difficulty} level sentences have too many unknown characters (${unknownRatio.toFixed(2)}). Unknown characters: ${unknownChars.join(', ')}`);
       }
     }
     
@@ -451,7 +430,7 @@ export async function generateSentence(
     };
   } catch (error) {
     console.error("Error generating sentence:", error);
-    throw new Error("Failed to generate sentence. Please try again.");
+    throw new Error(`Failed to generate sentence with error ${error}. Please try again.`);
   }
 }
 

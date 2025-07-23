@@ -132,11 +132,6 @@ export const LESSON14_WORDLIST: WordList = {
       "english": "class"
     },
     {
-      "chinese": "长",
-      "pinyin": "zhǎng",
-      "english": "to grow, to appear"
-    },
-    {
       "chinese": "可爱",
       "pinyin": "kě'ài",
       "english": "cute, lovable"
