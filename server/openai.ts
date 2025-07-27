@@ -287,74 +287,34 @@ export async function generateSentence(
       messages: [
         {
           role: "system",
-          content: `You are a Mandarin Chinese language teacher creating practice sentences for students.
-          Your task is to create grammatically correct and semantically meaningful Mandarin sentences 
-          using ONLY characters from the provided vocabulary list.
-          
-          EXTREMELY IMPORTANT CONSTRAINTS:
-          1. ONLY use characters from the provided list - NO exceptions
-          2. Create sentences that are SEMANTICALLY MEANINGFUL and LOGICAL
-          3. Do not break words into individual characters unless they make sense as standalone words
-          4. Names should be kept together as proper names (e.g., 王朋 should be "Wang Peng", not used as separate characters)
-          5. Respect the original meaning of each character and word
-          6. NEVER create contradictory or impossible statements (e.g., "她男姐姐" is nonsensical because "姐姐" must be female)
-          7. ALWAYS maintain real-world logic and consistency
-          
-          For example:
-          - If given "王朋" (Wang Peng), use it as a name, not as separate characters
-          - If given "学生" (student), use it as "student", not as separate characters with different meanings
-          - If given "美国" (America), use it as "America", not as "beautiful country"
-          
-          STRICT LOGICAL AND GRAMMATICAL CONSTRAINTS:
-          - Family terms must be used correctly (弟弟 = younger brother, 姐姐 = older sister, etc.)
-          - Gender terms must be consistent (男 = male, 女 = female)
-          - Time expressions must be consistent (明天 = tomorrow, 昨天 = yesterday)
-          - Foods must be paired with appropriate verbs (吃 for solid food, 喝 for drinks)
-          - Locations and objects must be used realistically
-          - Question particles must be used correctly (吗 for yes/no questions, 呢 for "what about" questions)
-          - The 吧 particle should only be used for suggestions or mild commands, not after greetings
-          - Measure words must match their nouns properly
-          - Basic greeting phrases must follow standard patterns (你好, 早上好, etc.)
-          
-          COMMON GRAMMAR MISTAKES TO AVOID:
-          - "你好吧" is incorrect; the proper greeting is just "你好"
-          - "我是去" is incorrect; it should be "我去" (I go) or "我要去" (I want to go)
-          - "他学三年中文" needs the 了 particle when referring to past: "他学了三年中文"
-          - Mixing incompatible particles in the same sentence
-          
+          content: `Create a grammatically correct and meaningful Mandarin sentence using ONLY the provided characters.
+
+          RULES:
+          1. Use only characters from the provided list (and common words like particles, pronouns)
+          2. Keep multi-character words together (王朋 = "Wang Peng", not separate characters)
+          3. Ensure sentences make logical sense (no contradictions like "male sister")
+          4. Maintain real-world logic and coherence (no unusual descriptions like "happy car")
+          5. Use proper grammar and natural word order
+
           ${difficultyGuide[difficulty]}
-          
-          You must create a sentence that:
-          1. ONLY uses characters from the provided character list
-          2. Is grammatically correct
-          3. Makes logical sense in real-world contexts
-          4. Uses words in their proper, natural context
-          5. Preserves the meaning of proper names and vocabulary words
-          
-          Provide the sentence in Chinese characters, pinyin (with proper tone marks), and an English translation.
-          Format your response as a valid JSON object with 'chinese', 'pinyin', and 'english' fields.
-          IMPORTANT Even though it is not standard practice to use spaces in a chinese sentence, please include spaces between words in the chinese character field of your JSON`
+
+          Return JSON format: {"chinese": "sentence with spaces", "pinyin": "with tone marks", "english": "translation"}`
         },
         {
-          role: "user",
-          content: `Original vocabulary words: ${originalWords.join(', ')}
-          Individual characters available: ${allChars.join(' ')}
-          
-          Difficulty level: ${difficulty}
-          
-          For this specific request: ${randomPattern}
-          
-          Generate a natural, meaningful sentence that uses these vocabulary words or their characters appropriately.
-          The sentence must make logical sense and only use the available characters.
-          
-          IMPORTANT: Preserve the original meaning of words. If a character is part of a name or multi-character word,
-          it should typically be used in that context, not broken apart unless it makes sense to do so.`
+          role: "user", 
+          content: `Available characters: ${allChars.join(' ')}
+          Original words: ${originalWords.join(', ')}
+          Difficulty: ${difficulty}
+          Pattern: ${randomPattern}
+
+          Create a natural sentence using these characters appropriately.`
         }
       ],
       response_format: { type: "json_object" }
     });
 
     const generatedContent = response.choices[0].message.content;
+    console.log(generatedContent);
     if (!generatedContent) {
       throw new Error("No content generated");
     }
