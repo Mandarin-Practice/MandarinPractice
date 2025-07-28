@@ -411,7 +411,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Track word usage to ensure all words get used in practice
   const wordUsageStats: Record<number, { uses: number, lastUsed: number }> = {};
-  
+           const selectRandomSubset = <T>(arr: T[], count: number): T[] => {
+              const shuffled = arr.slice();
+              for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+              }
+              return shuffled.slice(0, count);
+            };
+
+
+
   // Background cache filler function - runs in the background to keep the cache filled
   async function fillSentenceCache() {
     try {
@@ -541,6 +551,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               userVocabulary, 
               wordCounts[difficulty]
             );
+               const vocab = selectRandomSubset(userVocabulary, 10);
             
             // Add common grammatical particles if they aren't already in the vocabulary
             // This helps create more natural sentences while still focusing on the target vocabulary
@@ -566,16 +577,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
               
               try {
                 // Try generating with enhanced vocabulary first
-                sentence = await generateSentence(enhancedVocabulary, difficulty, true);
+                sentence = await generateSentence(vocab, difficulty, true);
               } catch (err) {
                 const error = err as Error;
                 console.error("Couldn't generate with enhanced vocabulary, falling back to strict mode:", error.message);
                 // Fall back to strict mode with only the original vocabulary
-                sentence = await generateSentence(selectedWords, difficulty);
+                sentence = await generateSentence(vocab, difficulty);
               }
             } else {
               // Not enough words for enhancement, use strict mode
-              sentence = await generateSentence(selectedWords, difficulty);
+              sentence = await generateSentence(vocab, difficulty);
             }
             
             // Update word usage statistics
@@ -660,7 +671,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Take the top N words
         return weightedWords.slice(0, selectionCount).map(item => item.word);
       };
-      
+
       // Check if cache is expired
       const cacheIsExpired = (Date.now() - sentenceCache.lastUpdated) > sentenceCache.expiryTimeMs;
       
@@ -717,13 +728,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           intermediate: 5,
           advanced: 7
         };
-        
+
         // Select a subset of vocabulary words, prioritizing less used words
         const selectedWords = selectWords(
           userVocabulary, 
           wordCounts[typedDifficulty]
         );
-        
+
+        const vocab = selectRandomSubset(userVocabulary, 10);
+
         // Add common grammatical particles for more natural sentences
         const commonWords = [
           { chinese: "的", pinyin: "de", english: "possessive particle" },
@@ -746,16 +759,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           try {
             // Try generating with enhanced vocabulary first
-            sentence = await generateSentence(enhancedVocabulary, typedDifficulty, true);
+            sentence = await generateSentence(vocab, typedDifficulty, true);
           } catch (err) {
             const error = err as Error;
             console.error("Couldn't generate with enhanced vocabulary, falling back to strict mode:", error.message);
             // Fall back to strict mode with only the original vocabulary
-            sentence = await generateSentence(selectedWords, typedDifficulty);
+            sentence = await generateSentence(vocab, typedDifficulty);
           }
         } else {
           // Not enough words for enhancement, use strict mode
-          sentence = await generateSentence(selectedWords, typedDifficulty);
+          sentence = await generateSentence(vocab, typedDifficulty);
         }
         
         // Update word usage statistics
