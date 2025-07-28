@@ -316,8 +316,8 @@ export const LESSON3_WORDLIST = {
     },
     {
       chinese: "还",
-      pinyin: "hái",
-      english: "also, too, as well"
+      pinyin: "hái; huán",
+      english: "also, too, as well; to return (something)"
     },
     {
       chinese: "同学",
