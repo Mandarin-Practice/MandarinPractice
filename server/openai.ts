@@ -255,22 +255,19 @@ export async function generateSentence(
 
   // Pick one sentence pattern to specifically request
   const sentencePatterns = [
-    "Create a question using 吗, 呢, or 吧.",
-    "Create an imperative statement (a command or request).",
-    "Create a comparison between two things.",
-    "Create an if/then conditional statement.",
-    "Create a sentence expressing an opinion or preference.",
-    "Create a time-based sentence about a daily routine.",
-    "Create a descriptive sentence about weather, food, or a place.",
-    "Create a cause and effect relationship sentence.",
+    "Create a yes/no question using 吗, 呢, or 吧.",
+    "Create a command or request (imperative).",
+    "Create a sentence comparing two things.",
+    "Create a conditional sentence (if...then...).",
+    "Create a sentence expressing opinion or preference.",
+    "Create a sentence describing time or routine.",
+    "Create a descriptive sentence about environment, food, or place.",
+    "Create a cause-and-effect sentence.",
     "Create a sentence about future plans or intentions.",
-    "Create a sentence with a location expression.",
-    `Create a sentence about ${dayTime} activities.`,
-    `Create a sentence mentioning it's ${dayOfWeek}.`,
-    `Create a seasonal sentence about ${season}.`,
+    "Create a sentence indicating location.",
     "Create a sentence with a negative statement (using 不 or 没).",
-    "Create a sentence about wanting or needing something.",
-    "Create a sentence with emotional expression (happy, sad, tired, etc)."
+    "Create a sentence expressing desire or necessity.",
+    "Create a sentence expressing an emotion."
   ];
 
   // Randomly select a sentence pattern to request
@@ -281,29 +278,29 @@ export async function generateSentence(
   // Get the original words to provide context
   const originalWords = vocabulary.map(word => word.chinese);
   
+  console.log("randomPattern: ", randomPattern);
+  console.log("originalWords: ", originalWords.join(", "))
   try {
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
         {
           role: "system",
-          content: `Create a grammatically correct and meaningful Mandarin sentence using ONLY the provided characters.
+          content: `You are a Mandarin Chinese language teacher creating practice sentences for students.
+          Your task is to create a grammatically correct and meaningful Mandarin sentence using availiable vocabulary.
 
           RULES:
-          1. Use only characters from the provided list (and common words like particles, pronouns)
+          1. Don't use vocabulary that isn't provided
           2. Keep multi-character words together (王朋 = "Wang Peng", not separate characters)
           3. Ensure sentences make logical sense (no contradictions like "male sister")
           4. Maintain real-world logic and coherence (no unusual descriptions like "happy car")
           5. Use proper grammar and natural word order
 
-          ${difficultyGuide[difficulty]}
-
           Return JSON format: {"chinese": "sentence with spaces", "pinyin": "with tone marks", "english": "translation"}`
         },
         {
           role: "user", 
-          content: `Available characters: ${allChars.join(' ')}
-          Original words: ${originalWords.join(', ')}
+          content: `Available vocabulary: ${originalWords.join(', ')}
           Difficulty: ${difficulty}
           Pattern: ${randomPattern}
 
@@ -314,7 +311,6 @@ export async function generateSentence(
     });
 
     const generatedContent = response.choices[0].message.content;
-    console.log(generatedContent);
     if (!generatedContent) {
       throw new Error("No content generated");
     }
@@ -323,7 +319,8 @@ export async function generateSentence(
     
     // Validate that the sentence uses mostly words from the vocabulary
     const sentenceWords = parsedContent.chinese.replace(/[，。！？]/g, '').split('');
-    console.log("sentenceWords: ", sentenceWords.join(""));
+    console.log("Generated Mandarin: ", sentenceWords.join(""));
+    console.log("Generated English: ", parsedContent.english);
     
     // Create a unique array of characters in a simpler way
     const uniqueSentenceWords: string[] = [];
@@ -347,40 +344,16 @@ export async function generateSentence(
       });
     });
     
-    // For beginner difficulty, allow all chars in vocabulary list plus common connecting words
-    if (difficulty === "beginner") {
-      const unknownChars = uniqueSentenceWords.filter(char => 
-        !vocabularyChars.has(char) &&                 // Not in vocabulary
-        !commonChineseChars.includes(char) &&         // Not a common particle
-        char.trim() !== '' &&                         // Not whitespace
-        !/\s/.test(char) &&                           // Not whitespace
-        !(/[，。！？,.!?]/.test(char))                 // Not punctuation
-      );
-      
-      if (unknownChars.length > 0) {
-        console.log("unknownChars: ", unknownChars);
-        throw new Error("Beginner level sentences must only use vocabulary from the list");
-      }
-    } 
-    // For intermediate/advanced, allow a percentage of non-vocabulary words
-    else if (difficulty === "intermediate" || difficulty === "advanced") {
-      // Find characters in the sentence that aren't in vocabulary or common chars
-      const unknownChars = uniqueSentenceWords.filter(char => 
-        !vocabularyChars.has(char) && 
-        !commonChineseChars.includes(char) && 
-        char.trim() !== '' && 
-        !/\s/.test(char) &&
-        !(/[，。！？,.!?]/.test(char))
-      );
-      
-      // Allow more unknown characters for higher difficulties
-      const maxUnknownRatio = difficulty === "intermediate" ? 0.1 : 0.2; // 10% for intermediate, 20% for advanced
-      const unknownRatio = unknownChars.length / uniqueSentenceWords.length;
-      
-      // Reject sentences with too many unknown characters
-      if (unknownRatio > maxUnknownRatio) {
-        throw new Error(`${difficulty} level sentences have too many unknown characters (${unknownRatio.toFixed(2)}). Unknown characters: ${unknownChars.join(', ')}`);
-      }
+    const unknownChars = uniqueSentenceWords.filter(char => 
+      !vocabularyChars.has(char) &&                 // Not in vocabulary
+      !commonChineseChars.includes(char) &&         // Not a common particle
+      char.trim() !== '' &&                         // Not whitespace
+      !/\s/.test(char) &&                           // Not whitespace
+      !(/[，。！？,.!?]/.test(char))                 // Not punctuation
+    );
+    
+    if (unknownChars.length > 0) {
+      console.log("Warning: sentence contains unknownChars: ", unknownChars);
     }
     
     return {
@@ -389,7 +362,6 @@ export async function generateSentence(
       requestedPattern: randomPattern // Include the pattern that was requested
     };
   } catch (error) {
-    console.error("Error generating sentence:", error);
     throw new Error(`Failed to generate sentence with error ${error}. Please try again.`);
   }
 }
