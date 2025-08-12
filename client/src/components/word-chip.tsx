@@ -1,35 +1,26 @@
+import { apiRequest } from "@/lib/queryClient";
+import { FullProficiency } from "@shared/schema";
 import { X, CheckCircle, XCircle, Info, Star } from "lucide-react";
 import { Link } from "wouter";
 
 interface WordChipProps {
-  word: {
-    id: number;
-    chinese: string;
-    pinyin: string;
-    english: string;
-    active: string;
-  };
+  word: FullProficiency;
   proficiency?: {
-    proficiencyPercent: number;
-    correctCount: string;
-    attemptCount: string;
+    correctCount: number;
+    attemptCount: number;
+    percentCorrect: number;
   } | null;
   onRemove: () => void;
   onToggleActive?: () => void;
-  onSave?: () => void; // Function to save word to user's list
   saved?: boolean; // Whether the word is saved in user's list
 }
 
 export default function WordChip({ 
   word, 
-  proficiency, 
   onRemove, 
   onToggleActive,
-  onSave,
   saved = false 
-}: WordChipProps) {
-  const isActive = word.active === "true";
-  
+}: WordChipProps) {  
   // Determine proficiency color
   const getProficiencyColor = (percent: number) => {
     if (percent >= 70) return "text-green-600 dark:text-green-500";
@@ -41,7 +32,7 @@ export default function WordChip({
     <div className={`inline-flex items-center px-3 py-2 rounded-md border-2 shadow-sm ${
       saved
         ? "bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 text-foreground"
-        : isActive 
+        : word.active 
           ? "bg-accent/40 border-primary/40 text-foreground" 
           : "bg-accent/10 border-border text-foreground"
     }`}>
@@ -50,10 +41,10 @@ export default function WordChip({
       <span className="mx-1.5 font-semibold text-foreground">{word.english}</span>
       
       {/* Proficiency indicator */}
-      {proficiency && Number(proficiency.attemptCount) > 0 && (
+      {word.attemptCount > 0 && (
         <span 
-          className={`ml-2 flex items-center ${getProficiencyColor(proficiency.proficiencyPercent)}`}
-          title={`Proficiency: ${proficiency.proficiencyPercent}% (${proficiency.correctCount}/${proficiency.attemptCount})`}
+          className={`ml-2 flex items-center ${getProficiencyColor(word.percentCorrect)}`}
+          title={`Proficiency: ${word.percentCorrect}% (${word.correctCount}/${word.attemptCount})`}
         >
           <Star className="h-3.5 w-3.5 fill-current" />
         </span>
@@ -68,9 +59,9 @@ export default function WordChip({
       </Link>
       
       {/* Save button */}
-      {onSave && !saved && (
+      {!saved && (
         <button
-          onClick={onSave}
+          onClick={async () => { await apiRequest('POST', "/api/vocabulary/words", word); }}
           className="ml-2 text-emerald-600 hover:text-emerald-700 dark:text-emerald-500 dark:hover:text-emerald-600"
           aria-label="Save word to your list"
           title="Save to your list"
@@ -84,14 +75,14 @@ export default function WordChip({
         <button
           onClick={onToggleActive}
           className={`ml-2 ${
-            isActive 
+            word.active 
               ? "text-green-600 hover:text-green-700 dark:text-green-500 dark:hover:text-green-600" 
               : "text-foreground/40 hover:text-foreground/60"
           }`}
-          aria-label={isActive ? "Deactivate word" : "Activate word"}
-          title={isActive ? "Active" : "Inactive"}
+          aria-label={word.active ? "Deactivate word" : "Activate word"}
+          title={word.active ? "Active" : "Inactive"}
         >
-          {isActive ? <CheckCircle className="h-3.5 w-3.5" /> : <XCircle className="h-3.5 w-3.5" />}
+          {word.active ? <CheckCircle className="h-3.5 w-3.5" /> : <XCircle className="h-3.5 w-3.5" />}
         </button>
       )}
       

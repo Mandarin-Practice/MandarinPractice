@@ -8,7 +8,6 @@ import { useToast } from "@/hooks/use-toast";
 import WordChip from "@/components/word-chip";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/use-auth";
-import { useUserWordList } from "@/hooks/use-user-word-list";
 import { LESSON1_WORDLIST } from "@/data/lesson1-wordlist";
 import { LESSON2_WORDLIST } from "@/data/lesson2-wordlist";
 import { LESSON3_WORDLIST } from "@/data/lesson3-wordlist";
@@ -29,17 +28,15 @@ import { LESSON17_WORDLIST } from "@/data/lesson17-wordlist";
 import { LESSON18_WORDLIST } from "@/data/lesson18-wordlist";
 import { LESSON19_WORDLIST } from "@/data/lesson19-wordlist";
 import { LESSON20_WORDLIST } from "@/data/lesson20-wordlist";
+import { FullProficiency, Vocabulary } from "@shared/schema";
+import { string } from "zod";
 
 interface WordList {
   id: string;
   name: string;
   description: string;
   category?: string; // Category/folder to group word lists
-  words: {
-    chinese: string;
-    pinyin: string;
-    english: string;
-  }[];
+  words: {chinese: string, pinyin: string, english: string}[];
 }
 
 const SAMPLE_WORD_LISTS: WordList[] = [
@@ -81,73 +78,25 @@ export default function WordList() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user, signIn } = useAuth();
-  const { 
-    wordList: userWordList, 
-    isLoading: userWordListLoading,
-    addWordToList,
-    removeWordFromList
-  } = useUserWordList();
 
   // Fetch vocabulary data based on user login status
-  const { data: vocabulary, isLoading: vocabularyLoading } = useQuery({
-    queryKey: ['/api/vocabulary', user?.backendUser?.id],
-    queryFn: async () => {
-      let url = '/api/vocabulary';
-      
-      // If user is logged in, fetch their personal word list
-      if (user?.backendUser?.id) {
-        url = `${url}?userId=${user.backendUser.id}`;
-      }
-      
-      const response = await fetch(url);
+  const { data: vocabularyWithProficiency, isLoading: vocabularyLoading } = useQuery({
+    queryKey: ['/api/vocabulary/full-proficiency'],
+    queryFn: async (): Promise<FullProficiency[]> => {      
+      const response = await apiRequest('GET', '/api/vocabulary/full-proficiency');
       if (!response.ok) {
         throw new Error('Failed to fetch vocabulary');
       }
       return response.json();
     },
+    enabled: !!user?.backendUser?.id,
     refetchOnWindowFocus: false,
   });
-
-  // Combine loading states
-  const isLoading = vocabularyLoading || userWordListLoading;
-
-  // State for proficiency data
-  const [proficiencyData, setProficiencyData] = useState<Record<number, any>>({});
-  const [isLoadingProficiency, setIsLoadingProficiency] = useState(false);
-
-  // Fetch proficiency data for each word
-  useEffect(() => {
-    if (vocabulary && Array.isArray(vocabulary) && vocabulary.length > 0) {
-      setIsLoadingProficiency(true);
-      
-      const fetchProficiencyData = async () => {
-        const proficiencyMap: Record<number, any> = {};
-        
-        const promises = vocabulary.map(async (word) => {
-          try {
-            const response = await apiRequest('GET', `/api/word-proficiency/${word.id}`);
-            if (response.ok) {
-              const data = await response.json();
-              proficiencyMap[word.id] = data;
-            }
-          } catch (error) {
-            console.error(`Failed to fetch proficiency for word ID ${word.id}:`, error);
-          }
-        });
-        
-        await Promise.all(promises);
-        setProficiencyData(proficiencyMap);
-        setIsLoadingProficiency(false);
-      };
-      
-      fetchProficiencyData();
-    }
-  }, [vocabulary]);
 
   // Add word mutation
   const addWordMutation = useMutation({
     mutationFn: async (data: { chinese: string; pinyin: string; english: string }) => {
-      const response = await apiRequest('POST', '/api/vocabulary', data);
+      const response = await apiRequest('POST', '/api/vocabulary/words', data);
       if (!response.ok) {
         throw new Error('Failed to add word');
       }
@@ -238,10 +187,15 @@ export default function WordList() {
   };
 
   // Function to handle showing preview of word list
-  const handleShowPreview = (listId: string) => {
+  const handleShowPreview = async (listId: string) => {
     const list = SAMPLE_WORD_LISTS.find(l => l.id === listId);
     if (list) {
-      setPreviewList(list);
+      const listWords = list.words.map(word => ({ chinese: word.chinese }));
+      const listVocab = await apiRequest('POST', `/api/vocabulary/words/get-chinese-batch`, {
+        words: listWords
+      });
+      const listVocabData = await listVocab.json();
+      setPreviewList({id: list.id, name: list.name, description: list.description, category: list.category, words: listVocabData});
       // Initialize all words as selected
       const initialSelection: Record<number, boolean> = {};
       list.words.forEach((_, index) => {
@@ -267,24 +221,16 @@ export default function WordList() {
 
   // Import word list mutation
   const importWordListMutation = useMutation({
-    mutationFn: async (data: { wordList: { chinese: string; pinyin: string; english: string }[] }): Promise<{
+    mutationFn: async (data: { wordList: {chinese: string, pinyin: string, english: string, active: boolean}[] }): Promise<{
       savedWords: any[];
       stats: {
         totalRequested: number;
-        validWords: number;
         savedWords: number;
-        validationErrors: number;
-        saveErrors: number;
       };
     }> => {
+      const words = data.wordList;
+
       // Change the data structure to match what the server expects
-      const words = data.wordList.map(word => ({
-        chinese: word.chinese,
-        pinyin: word.pinyin,
-        english: word.english,
-        active: "true"
-      }));
-      
       console.log('[IMPORT CLIENT] Preparing import of', words.length, 'words');
       console.log('[IMPORT CLIENT] First few words:', words.slice(0, 3));
       console.log('[IMPORT CLIENT] Authentication status:', {
@@ -297,99 +243,17 @@ export default function WordList() {
       const userId = user?.backendUser?.id;
       
       // Split words into smaller batches to avoid issues with large imports
-      const BATCH_SIZE = 5; // Reduced batch size for better reliability
-      const allResults: {
-        savedWords: any[];
-        stats: {
-          totalRequested: number;
-          validWords: number;
-          savedWords: number;
-          validationErrors: number;
-          saveErrors: number;
-        }
-      } = {
-        savedWords: [],
-        stats: {
-          totalRequested: words.length,
-          validWords: 0,
-          savedWords: 0,
-          validationErrors: 0,
-          saveErrors: 0
-        }
-      };
       
-      // Process words in batches with more robust error handling
-      for (let i = 0; i < words.length; i += BATCH_SIZE) {
-        const batch = words.slice(i, i + BATCH_SIZE);
-        const batchPayload = userId ? { words: batch, userId } : { words: batch };
-        
-        console.log(`[IMPORT CLIENT] Sending batch ${Math.floor(i/BATCH_SIZE) + 1} with ${batch.length} words (${i+1} to ${Math.min(i+BATCH_SIZE, words.length)} of ${words.length})`);
-        
-        try {
-          // Add a slight delay between batches to prevent overwhelming the server
-          if (i > 0) {
-            await new Promise(resolve => setTimeout(resolve, 500));
-          }
-          
-          const response = await apiRequest('POST', '/api/vocabulary/import', batchPayload);
-          
-          // Enhanced error handling
-          if (!response.ok) {
-            const errorText = await response.text().catch(() => 'Unknown error');
-            console.error(`[IMPORT CLIENT] Batch ${Math.floor(i/BATCH_SIZE) + 1} failed:`, {
-              status: response.status,
-              statusText: response.statusText,
-              body: errorText
-            });
-            throw new Error(`Failed to import batch ${Math.floor(i/BATCH_SIZE) + 1}: ${response.status} ${response.statusText}`);
-          }
-          
-          // Parse JSON response with error handling
-          let batchResult;
-          try {
-            batchResult = await response.json();
-          } catch (jsonError) {
-            console.error('[IMPORT CLIENT] Failed to parse JSON response:', jsonError);
-            throw new Error('Invalid response format from server');
-          }
-          
-          console.log(`[IMPORT CLIENT] Batch ${Math.floor(i/BATCH_SIZE) + 1} result:`, batchResult);
-          
-          // Add this batch's saved words to the combined results
-          if (batchResult.savedWords) {
-            allResults.savedWords = [...allResults.savedWords, ...batchResult.savedWords];
-            
-            // Update the stats
-            if (batchResult.stats) {
-              allResults.stats.validWords += batchResult.stats.validWords;
-              allResults.stats.savedWords += batchResult.stats.savedWords;
-              allResults.stats.validationErrors += batchResult.stats.validationErrors;
-              allResults.stats.saveErrors += batchResult.stats.saveErrors;
-            }
-          } else {
-            // Handle old response format
-            allResults.savedWords = [...allResults.savedWords, ...(Array.isArray(batchResult) ? batchResult : [])];
-            allResults.stats.savedWords += Array.isArray(batchResult) ? batchResult.length : 0;
-            allResults.stats.validWords += Array.isArray(batchResult) ? batchResult.length : 0;
-          }
-        } catch (batchError) {
-          console.error(`[IMPORT CLIENT] Error processing batch ${Math.floor(i/BATCH_SIZE) + 1}:`, batchError);
-          // Continue with next batch instead of failing the entire import
-          toast({
-            title: `Batch ${Math.floor(i/BATCH_SIZE) + 1} failed`,
-            description: batchError instanceof Error ? batchError.message : 'Unknown error',
-            variant: 'destructive',
-          });
-        }
+      const response = await apiRequest('POST', '/api/vocabulary/words/import', { words: words, userId });
+
+      if (!response.ok) {
+        throw new Error('Failed to import word list');
       }
       
-      console.log('[IMPORT CLIENT] All batches processed, combined results:', allResults);
-      return allResults;
+      return response.json();
     },
     onSuccess: (data) => {
-      // Invalidate both general vocabulary and user-specific word list queries
       queryClient.invalidateQueries({ queryKey: ['/api/vocabulary'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/auth/wordlist'] });
       
       // New response format has data.savedWords and data.stats
       const savedWords = data.savedWords || data;
@@ -410,10 +274,6 @@ export default function WordList() {
         message = user?.backendUser?.id 
           ? `${stats.savedWords} out of ${stats.totalRequested} words were added to your personal word list` 
           : `${stats.savedWords} out of ${stats.totalRequested} words were added to the vocabulary database`;
-          
-        if (stats.validationErrors > 0) {
-          message += `\n${stats.validationErrors} words had validation errors`;
-        }
       }
       
       toast({
@@ -439,7 +299,10 @@ export default function WordList() {
       .filter(([_, selected]) => selected)
       .map(([index]) => parseInt(index));
     
-    const wordsToImport = selectedIndices.map(index => previewList.words[index]);
+    const wordsToImport = selectedIndices.map(index => ({
+      ...previewList.words[index],
+      active: true,
+    }));
     
     if (wordsToImport.length === 0) {
       toast({
@@ -454,19 +317,18 @@ export default function WordList() {
   };
 
   // Function to import entire word list
-  const handleImportWordList = (listId: string) => {
+  const   handleImportWordList = async (listId: string) => {
     const list = SAMPLE_WORD_LISTS.find(l => l.id === listId);
     if (list) {
       console.log(`[IMPORT] Starting import of word list: ${list.name} (${list.id})`);
-      console.log(`[IMPORT] First few words:`, list.words.slice(0, 3));
-      importWordListMutation.mutateAsync({ wordList: list.words });
+      importWordListMutation.mutateAsync({ wordList: list.words.map(word => { return {...word, active: true}}) });
     }
   };
 
   // Function to remove a word
   const handleRemoveWord = async (wordId: number) => {
     try {
-      const response = await apiRequest('DELETE', `/api/vocabulary/${wordId}`);
+      const response = await apiRequest('DELETE', `/api/vocabulary/words/${wordId}`);
       if (!response.ok) {
         throw new Error('Failed to remove word');
       }
@@ -491,7 +353,7 @@ export default function WordList() {
     }
     
     try {
-      const response = await apiRequest('DELETE', '/api/vocabulary');
+      const response = await apiRequest('DELETE', '/api/vocabulary/words');
       if (!response.ok) {
         throw new Error('Failed to clear vocabulary');
       }
@@ -510,10 +372,10 @@ export default function WordList() {
   };
 
   // Function to toggle active status of a word
-  const handleToggleActive = async (wordId: number, currentActive: string) => {
+  const handleToggleActive = async (wordId: number, currentActive: boolean) => {
     try {
-      const response = await apiRequest('PATCH', `/api/vocabulary/${wordId}`, {
-        active: currentActive === '1' ? '0' : '1'
+      const response = await apiRequest('PATCH', `/api/vocabulary/words/${wordId}`, {
+        active: !currentActive
       });
       if (!response.ok) {
         throw new Error('Failed to update word');
@@ -534,14 +396,14 @@ export default function WordList() {
   };
 
   // Function to group words by homophones
-  const getHomophoneGroups = (words: any[]) => {
+  const getHomophoneGroups = (words: FullProficiency[]) => {
     if (!Array.isArray(words) || words.length === 0) return [];
     
     // Group by normalized pinyin
-    const pinyinGroups: Record<string, any[]> = {};
+    const pinyinGroups: Record<string, FullProficiency[]> = {};
     
     // Special case for "tā" (他/她/它) pronouns
-    const pronounGroup: any[] = [];
+    const pronounGroup: FullProficiency[] = [];
     
     words.forEach(word => {
       const normalizedPinyin = normalizePinyin(word.pinyin);
@@ -562,7 +424,7 @@ export default function WordList() {
     // Convert to array format
     const result: Array<{
       type: 'pronoun' | 'pinyin';
-      words: any[];
+      words: FullProficiency[];
     }> = [];
     
     // Add pronoun group if it has multiple items
@@ -587,7 +449,7 @@ export default function WordList() {
   };
 
   // Filter vocabulary based on search query
-  const filterVocabulary = (words: any[]) => {
+  const filterVocabulary = (words: FullProficiency[]) => {
     if (!searchQuery) return words;
     
     return words.filter(word => {
@@ -610,7 +472,7 @@ export default function WordList() {
   // Function to get stats about a word list (how many are already imported)
   const getWordListStats = (listId: string) => {
     const list = SAMPLE_WORD_LISTS.find(l => l.id === listId);
-    if (!list || !vocabulary || !Array.isArray(vocabulary)) {
+    if (!list || !vocabularyWithProficiency || !Array.isArray(vocabularyWithProficiency)) {
       return { total: 0, imported: 0 };
     }
     
@@ -619,10 +481,7 @@ export default function WordList() {
     
     list.words.forEach(word => {
       // Check if this word already exists in the vocabulary
-      const exists = vocabulary.some(v => 
-        v.chinese === word.chinese && 
-        normalizePinyin(v.pinyin) === normalizePinyin(word.pinyin)
-      );
+      const exists = vocabularyWithProficiency.some(v => v.chinese === word.chinese && v.pinyin === word.pinyin);
       
       if (exists) {
         imported++;
@@ -854,7 +713,7 @@ export default function WordList() {
                       </div>
                       
                       {/* Lists in this category */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      {(vocabularyWithProficiency && <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         {listsInCategory.map((list) => {
                           const { total, imported } = getWordListStats(list.id);
                           return (
@@ -902,7 +761,7 @@ export default function WordList() {
                             </div>
                           );
                         })}
-                      </div>
+                      </div>)}
                     </div>
                   );
                 });
@@ -963,7 +822,7 @@ export default function WordList() {
               </div>
               
               {/* Search input */}
-              {vocabulary && Array.isArray(vocabulary) && vocabulary.length > 0 ? (
+              {vocabularyWithProficiency && Array.isArray(vocabularyWithProficiency) && vocabularyWithProficiency.length > 0 ? (
                 <div className="relative mb-5 mt-2">
                   <div className="text-sm font-bold mb-1">
                     Search Words
@@ -1001,13 +860,13 @@ export default function WordList() {
                 </div>
               ) : null}
               
-              {isLoading ? (
+              {vocabularyLoading ? (
                 <div className="flex flex-wrap gap-2 mb-4">
                   <p>Loading vocabulary...</p>
                 </div>
-              ) : vocabulary && Array.isArray(vocabulary) && vocabulary.length > 0 ? (
+              ) : vocabularyWithProficiency && Array.isArray(vocabularyWithProficiency) && vocabularyWithProficiency.length > 0 ? (
                 // Check if there are any results after filtering
-                filterVocabulary(vocabulary).length === 0 ? (
+                filterVocabulary(vocabularyWithProficiency).length === 0 ? (
                   <div className="italic mb-4 font-medium">
                     No words match your search query.
                   </div>
@@ -1016,7 +875,7 @@ export default function WordList() {
                     // Homophone grouping mode
                     <div className="space-y-4 mb-4">
                       {/* Display homophone groups */}
-                      {getHomophoneGroups(filterVocabulary(vocabulary)).map((group, index) => (
+                      {getHomophoneGroups(filterVocabulary(vocabularyWithProficiency)).map((group, index) => (
                         <div key={index} className="border-2 border-border rounded-md p-4 bg-accent/10 shadow-md">
                           <h4 className="text-md font-bold mb-3 text-primary flex items-center">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
@@ -1031,10 +890,8 @@ export default function WordList() {
                               <WordChip
                                 key={word.id}
                                 word={word}
-                                proficiency={proficiencyData[word.id]}
                                 onRemove={() => handleRemoveWord(word.id)}
                                 onToggleActive={() => handleToggleActive(word.id, word.active)}
-                                onSave={user ? () => addWordToList(word.id) : undefined}
                               />
                             ))}
                           </div>
@@ -1044,7 +901,7 @@ export default function WordList() {
                       {/* Display words without homophones */}
                       {(() => {
                         // Get filtered vocabulary
-                        const filteredVocab = filterVocabulary(vocabulary);
+                        const filteredVocab = filterVocabulary(vocabularyWithProficiency);
                         
                         // Get all words that are in homophone groups
                         const homophoneGroups = getHomophoneGroups(filteredVocab);
@@ -1073,10 +930,8 @@ export default function WordList() {
                                 <WordChip
                                   key={word.id}
                                   word={word}
-                                  proficiency={proficiencyData[word.id]}
                                   onRemove={() => handleRemoveWord(word.id)}
                                   onToggleActive={() => handleToggleActive(word.id, word.active)}
-                                  onSave={user ? () => addWordToList(word.id) : undefined}
                                 />
                               ))}
                             </div>
@@ -1098,14 +953,12 @@ export default function WordList() {
                         All Vocabulary Words
                       </h4>
                       <div className="flex flex-wrap gap-2.5 ml-1">
-                        {filterVocabulary(vocabulary).map((word) => (
+                        {filterVocabulary(vocabularyWithProficiency).map((word) => (
                           <WordChip
                             key={word.id}
                             word={word}
-                            proficiency={proficiencyData[word.id]}
                             onRemove={() => handleRemoveWord(word.id)}
                             onToggleActive={() => handleToggleActive(word.id, word.active)}
-                            onSave={user ? () => addWordToList(word.id) : undefined}
                           />
                         ))}
                       </div>
@@ -1169,16 +1022,16 @@ export default function WordList() {
           </CardHeader>
           
           <CardContent>
-            {isLoading || isLoadingProficiency ? (
+            {vocabularyLoading ? (
               <div className="flex flex-wrap gap-2 mb-4">
                 <p>Loading proficiency data...</p>
               </div>
-            ) : vocabulary && Array.isArray(vocabulary) && vocabulary.length > 0 ? (
+            ) : vocabularyWithProficiency && Array.isArray(vocabularyWithProficiency) && vocabularyWithProficiency.length > 0 ? (
               <div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                   <div className="border-2 border-border rounded-md p-4 bg-accent/10 shadow-md text-center">
                     <div className="text-3xl font-bold text-green-500 mb-1">
-                      {Object.values(proficiencyData).filter(p => p?.correctCount >= 3).length}
+                      {vocabularyWithProficiency.filter(p => p?.correctCount >= 3).length}
                     </div>
                     <div className="text-sm font-medium">
                       Mastered Words
@@ -1187,7 +1040,7 @@ export default function WordList() {
                   
                   <div className="border-2 border-border rounded-md p-4 bg-accent/10 shadow-md text-center">
                     <div className="text-3xl font-bold text-yellow-500 mb-1">
-                      {Object.values(proficiencyData).filter(p => p?.correctCount > 0 && p?.correctCount < 3).length}
+                      {vocabularyWithProficiency.filter(p => p?.correctCount > 0 && p?.correctCount < 3).length}
                     </div>
                     <div className="text-sm font-medium">
                       Learning Words
@@ -1196,7 +1049,7 @@ export default function WordList() {
                   
                   <div className="border-2 border-border rounded-md p-4 bg-accent/10 shadow-md text-center">
                     <div className="text-3xl font-bold text-red-500 mb-1">
-                      {Object.values(proficiencyData).filter(p => !p || p?.correctCount === 0).length}
+                      {vocabularyWithProficiency.filter(p => !p || p?.correctCount === 0).length}
                     </div>
                     <div className="text-sm font-medium">
                       New Words
@@ -1218,21 +1071,19 @@ export default function WordList() {
                       Mastered Words
                     </h4>
                     <div className="flex flex-wrap gap-2.5 ml-1">
-                      {vocabulary
-                        .filter(word => proficiencyData[word.id]?.correctCount >= 3)
+                      {vocabularyWithProficiency
+                        .filter(word => word.correctCount >= 3)
                         .map(word => (
                           <WordChip
                             key={word.id}
                             word={word}
-                            proficiency={proficiencyData[word.id]}
                             onRemove={() => handleRemoveWord(word.id)}
                             onToggleActive={() => handleToggleActive(word.id, word.active)}
-                            onSave={user ? () => addWordToList(word.id) : undefined}
                           />
                         ))
                       }
                     </div>
-                    {vocabulary.filter(word => proficiencyData[word.id]?.correctCount >= 3).length === 0 && (
+                    {vocabularyWithProficiency.filter(word => word.correctCount >= 3).length === 0 && (
                       <p className="text-sm italic text-foreground/70 mt-2">No mastered words yet. Keep practicing!</p>
                     )}
                   </div>
@@ -1246,21 +1097,19 @@ export default function WordList() {
                       Learning Words
                     </h4>
                     <div className="flex flex-wrap gap-2.5 ml-1">
-                      {vocabulary
-                        .filter(word => proficiencyData[word.id]?.correctCount > 0 && proficiencyData[word.id]?.correctCount < 3)
+                      {vocabularyWithProficiency
+                        .filter(word => word.correctCount > 0 && word.correctCount < 3)
                         .map(word => (
                           <WordChip
                             key={word.id}
                             word={word}
-                            proficiency={proficiencyData[word.id]}
                             onRemove={() => handleRemoveWord(word.id)}
                             onToggleActive={() => handleToggleActive(word.id, word.active)}
-                            onSave={user ? () => addWordToList(word.id) : undefined}
                           />
                         ))
                       }
                     </div>
-                    {vocabulary.filter(word => proficiencyData[word.id]?.correctCount > 0 && proficiencyData[word.id]?.correctCount < 3).length === 0 && (
+                    {vocabularyWithProficiency.filter(word => word.correctCount > 0 && word.correctCount < 3).length === 0 && (
                       <p className="text-sm italic text-foreground/70 mt-2">No words in progress. Start practicing!</p>
                     )}
                   </div>
@@ -1275,16 +1124,14 @@ export default function WordList() {
                       New Words
                     </h4>
                     <div className="flex flex-wrap gap-2.5 ml-1">
-                      {vocabulary
-                        .filter(word => !proficiencyData[word.id] || proficiencyData[word.id]?.correctCount === 0)
+                      {vocabularyWithProficiency
+                        .filter(word => word.correctCount === 0)
                         .map(word => (
                           <WordChip
                             key={word.id}
                             word={word}
-                            proficiency={proficiencyData[word.id]}
                             onRemove={() => handleRemoveWord(word.id)}
                             onToggleActive={() => handleToggleActive(word.id, word.active)}
-                            onSave={user ? () => addWordToList(word.id) : undefined}
                           />
                         ))
                       }
@@ -1362,14 +1209,14 @@ export default function WordList() {
                   Sign In with Google
                 </Button>
               </div>
-            ) : userWordListLoading ? (
+            ) : vocabularyLoading ? (
               <div className="flex justify-center p-8">
                 <svg className="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
               </div>
-            ) : userWordList && userWordList.length > 0 ? (
+            ) : vocabularyWithProficiency && vocabularyWithProficiency!.length > 0 ? (
               <div>
                 <div className="flex justify-between items-center mb-4 border-b border-border pb-3">
                   <h3 className="text-lg font-bold">Your Saved Words</h3>
@@ -1437,12 +1284,11 @@ export default function WordList() {
                     Your Saved Words
                   </h4>
                   <div className="flex flex-wrap gap-2.5 ml-1">
-                    {filterVocabulary(userWordList).map((word) => (
+                    {vocabularyWithProficiency && filterVocabulary(vocabularyWithProficiency!).map((word) => (
                       <WordChip
                         key={word.id}
                         word={word}
-                        proficiency={proficiencyData[word.id]}
-                        onRemove={() => removeWordFromList(word.id)}
+                        onRemove={() => handleRemoveWord(word.id)}
                         saved={true}
                       />
                     ))}

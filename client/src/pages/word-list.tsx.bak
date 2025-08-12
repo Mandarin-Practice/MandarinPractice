@@ -948,7 +948,7 @@ export default function WordList() {
 
   // Fetch user's vocabulary
   const { data: vocabulary, isLoading } = useQuery({
-    queryKey: ['/api/vocabulary'],
+    queryKey: ['/api/vocabulary/words'],
     refetchOnWindowFocus: false,
   });
   
@@ -966,7 +966,7 @@ export default function WordList() {
         
         const promises = vocabulary.map(async (word) => {
           try {
-            const response = await apiRequest('GET', `/api/word-proficiency/${word.id}`);
+            const response = await apiRequest('GET', `/api/vocabulary/proficiency/${word.id}`);
             if (response.ok) {
               const data = await response.json();
               proficiencyMap[word.id] = data;
@@ -988,7 +988,7 @@ export default function WordList() {
   // Save vocabulary mutation
   const saveVocabularyMutation = useMutation({
     mutationFn: async (words: { chinese: string; pinyin: string; english: string }[]) => {
-      const response = await apiRequest('POST', '/api/vocabulary', { words });
+      const response = await apiRequest('POST', '/api/vocabulary/words', { words });
       return response.json();
     },
     onSuccess: (result, variables) => {
@@ -1021,12 +1021,12 @@ export default function WordList() {
   // Delete word mutation
   const deleteWordMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await apiRequest('DELETE', `/api/vocabulary/${id}`);
+      const response = await apiRequest('DELETE', `/api/vocabulary/words/${id}`);
       return response.json();
     },
     onSuccess: (_, deletedId) => {
       // Perform a background refetch to refresh the data after deletion
-      queryClient.refetchQueries({ queryKey: ['/api/vocabulary'] });
+      queryClient.refetchQueries({ queryKey: ['/api/vocabulary/words'] });
       
       toast({
         title: "Word removed",
@@ -1050,7 +1050,7 @@ export default function WordList() {
   // Toggle word active status mutation
   const toggleActiveStatusMutation = useMutation({
     mutationFn: async ({ id, active }: { id: number, active: string }) => {
-      const response = await apiRequest('PATCH', `/api/vocabulary/${id}`, { active });
+      const response = await apiRequest('PATCH', `/api/vocabulary/words/${id}`, { active });
       return response.json();
     },
     onSuccess: () => {
@@ -1061,7 +1061,7 @@ export default function WordList() {
   // Clear all words mutation
   const clearWordsMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('DELETE', '/api/vocabulary');
+      const response = await apiRequest('DELETE', '/api/vocabulary/words');
       return response.json();
     },
     onSuccess: () => {
@@ -1080,7 +1080,7 @@ export default function WordList() {
       const wordList = SAMPLE_WORD_LISTS.find(list => list.id === listId);
       if (!wordList) throw new Error("Word list not found");
       
-      const response = await apiRequest('POST', '/api/vocabulary/import', { words: wordList.words });
+      const response = await apiRequest('POST', '/api/vocabulary/words/import', { words: wordList.words });
       const result = await response.json();
       return {
         wordList,
@@ -1147,14 +1147,14 @@ export default function WordList() {
   // Fix to ensure removing a homophone doesn't affect the display of other homophones
   const handleRemoveWord = (id: number) => {
     // Get the current vocabulary data before deleting
-    const currentVocabulary = queryClient.getQueryData(['/api/vocabulary']) as any[];
+    const currentVocabulary = queryClient.getQueryData(['/api/vocabulary/words']) as any[];
     
     if (currentVocabulary && Array.isArray(currentVocabulary)) {
       // Create a filtered list that doesn't include the word being deleted
       const filteredVocabulary = currentVocabulary.filter(word => word.id !== id);
       
       // Update the query cache with this filtered list (optimistic update)
-      queryClient.setQueryData(['/api/vocabulary'], filteredVocabulary);
+      queryClient.setQueryData(['/api/vocabulary/words'], filteredVocabulary);
       
       // Also update proficiency data for the removed word
       const updatedProficiencyData = { ...proficiencyData };

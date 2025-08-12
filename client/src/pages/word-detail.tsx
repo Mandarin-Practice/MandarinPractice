@@ -27,9 +27,9 @@ export default function WordDetail() {
   
   // Fetch the word details
   const { data: word, isLoading } = useQuery({
-    queryKey: ['/api/vocabulary', wordId],
+    queryKey: ['/api/vocabulary/words', wordId],
     queryFn: async () => {
-      const response = await apiRequest('GET', `/api/vocabulary/${wordId}`);
+      const response = await apiRequest('GET', `/api/vocabulary/words/${wordId}`);
       if (!response.ok) {
         if (response.status === 404) {
           throw new Error('Word not found');
@@ -44,9 +44,9 @@ export default function WordDetail() {
   
   // Fetch word proficiency data
   const { data: proficiency, isLoading: isLoadingProficiency } = useQuery({
-    queryKey: ['/api/word-proficiency', wordId],
+    queryKey: ['/api/vocabulary/proficiency', wordId],
     queryFn: async () => {
-      const response = await apiRequest('GET', `/api/word-proficiency/${wordId}`);
+      const response = await apiRequest('GET', `/api/vocabulary/proficiency/${wordId}`);
       if (!response.ok) {
         throw new Error('Failed to fetch word proficiency');
       }
@@ -77,7 +77,7 @@ export default function WordDetail() {
   // Delete word mutation
   const deleteWordMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('DELETE', `/api/vocabulary/${wordId}`);
+      const response = await apiRequest('DELETE', `/api/vocabulary/words/${wordId}`);
       return response.json();
     },
     onSuccess: () => {
@@ -170,7 +170,7 @@ export default function WordDetail() {
                 <div className="space-y-3">
                   <div className="flex justify-between items-center text-sm">
                     <span>Mastery Level</span>
-                    <span className="font-medium">{proficiency.proficiencyPercent}%</span>
+                    <span className="font-medium">{proficiency.percentCorrect}%</span>
                   </div>
 
                   <div className="relative pt-1">
@@ -212,9 +212,9 @@ export default function WordDetail() {
                       onClick={() => {
                         if (confirm("Are you sure you want to reset your progress for this word?")) {
                           // Reset word proficiency
-                          apiRequest('DELETE', `/api/word-proficiency/${wordId}`)
+                          apiRequest('DELETE', `/api/vocabulary/proficiency/${wordId}`)
                             .then(() => {
-                              queryClient.invalidateQueries({ queryKey: ['/api/word-proficiency', wordId] });
+                              queryClient.invalidateQueries({ queryKey: ['/api/vocabulary/proficiency', wordId] });
                               toast({
                                 title: 'Progress reset',
                                 description: 'Word proficiency has been reset',
@@ -324,9 +324,8 @@ export default function WordDetail() {
                 onClick={() => {
                   // Toggle active status
                   const newActive = "false";
-                  const response = apiRequest('PATCH', `/api/vocabulary/${wordId}`, { active: newActive });
+                  const response = apiRequest('PATCH', `/api/vocabulary/words/${wordId}`, { active: newActive });
                   response.then(() => {
-                    queryClient.invalidateQueries({ queryKey: ['/api/vocabulary', wordId] });
                     queryClient.invalidateQueries({ queryKey: ['/api/vocabulary'] });
                     toast({
                       title: 'Word deactivated',
@@ -344,9 +343,8 @@ export default function WordDetail() {
                 onClick={() => {
                   // Toggle active status
                   const newActive = "true";
-                  const response = apiRequest('PATCH', `/api/vocabulary/${wordId}`, { active: newActive });
+                  const response = apiRequest('PATCH', `/api/vocabulary/words/${wordId}`, { active: newActive });
                   response.then(() => {
-                    queryClient.invalidateQueries({ queryKey: ['/api/vocabulary', wordId] });
                     queryClient.invalidateQueries({ queryKey: ['/api/vocabulary'] });
                     toast({
                       title: 'Word activated',

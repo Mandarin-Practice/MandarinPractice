@@ -58,8 +58,6 @@ interface AuthContextType {
   loginWithCredentials: (credentials: LoginCredentials) => Promise<void>; // Username/password login
   registerWithCredentials: (credentials: RegisterCredentials) => Promise<void>; // Register new user
   signOut: () => Promise<void>;
-  saveWordToList: (wordId: number) => Promise<void>;
-  removeWordFromList: (wordId: number) => Promise<void>;
   updateUserProfile: (updates: ProfileUpdate) => Promise<void>;
 }
 
@@ -187,7 +185,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           console.log("User authenticated, refreshing data");
           setTimeout(() => {
             refetchBackendUser();
-            queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/vocabulary"] });
           }, 500); // Small delay to ensure Firebase auth is fully processed
         }
       },
@@ -234,7 +232,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       localStorage.setItem("auth_user_id", userData.id.toString());
 
       // Invalidate queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/vocabulary"] });
 
       toast({
         title: "Login successful",
@@ -288,7 +286,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       localStorage.setItem("auth_user_id", userData.id.toString());
 
       // Invalidate queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/vocabulary"] });
 
       toast({
         title: "Registration successful",
@@ -339,7 +337,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (result.user) {
         console.log("Got user from popup:", result.user);
         await registerOrLoginWithBackend(result.user);
-        queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/vocabulary/words"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/vocabulary/proficiency"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/vocabulary/full-proficiency"] });
         await refetchBackendUser();
         console.log("User data refreshed after popup sign-in");
       }
@@ -360,7 +360,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.log("Signing out...");
       await firebaseSignOut(auth);
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/vocabulary"] });
       toast({
         title: "Signed out",
         description: "You have been signed out successfully.",
@@ -369,102 +369,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.error("Sign out error:", error);
       toast({
         title: "Sign out failed",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Save word to user's list
-  const saveWordToList = async (wordId: number) => {
-    // Get user ID from either Firebase or local auth
-    const effectiveBackendUser = localUser || backendUser;
-
-    if (!effectiveBackendUser) {
-      toast({
-        title: "Not signed in",
-        description: "You need to sign in to save words to your list.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      // Regular API call to save word
-      const response = await fetch(`/api/auth/wordlist`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId: effectiveBackendUser.id,
-          wordId,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to save word to list");
-      }
-
-      // Invalidate queries
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
-
-      toast({
-        title: "Word saved",
-        description: "Word has been added to your list.",
-      });
-    } catch (error) {
-      console.error("Save word error:", error);
-      toast({
-        title: "Failed to save word",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Remove word from user's list
-  const removeWordFromList = async (wordId: number) => {
-    // Get user ID from either Firebase or local auth
-    const effectiveBackendUser = localUser || backendUser;
-
-    if (!effectiveBackendUser) {
-      toast({
-        title: "Not signed in",
-        description: "You need to sign in to remove words from your list.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      // Regular API call to remove word
-      const response = await fetch(`/api/auth/wordlist`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId: effectiveBackendUser.id,
-          wordId,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to remove word from list");
-      }
-
-      // Invalidate queries
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
-
-      toast({
-        title: "Word removed",
-        description: "Word has been removed from your list.",
-      });
-    } catch (error) {
-      console.error("Remove word error:", error);
-      toast({
-        title: "Failed to remove word",
         description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive",
       });
@@ -625,7 +529,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       // Clear any data
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/wordlist"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/vocabulary"] });
 
       toast({
         title: "Signed out",
@@ -649,8 +553,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     loginWithCredentials, // Username/password login
     registerWithCredentials, // Register new user
     signOut: effectiveSignOut,
-    saveWordToList,
-    removeWordFromList,
     updateUserProfile,
   };
 

@@ -78,8 +78,8 @@ export const LESSON13_WORDLIST: WordList = {
     },
     {
       "chinese": "过",
-      "pinyin": "guo",
-      "english": "(particle used after a verb to indicate a past experience)"
+      "pinyin": "guò; guo",
+      "english": "to pass; (particle used after a verb to indicate a past experience)"
     },
     {
       "chinese": "中国城",
@@ -125,11 +125,6 @@ export const LESSON13_WORDLIST: WordList = {
       "chinese": "南",
       "pinyin": "nán",
       "english": "south"
-    },
-    {
-      "chinese": "过",
-      "pinyin": "guò",
-      "english": "to pass"
     },
     {
       "chinese": "路口",
