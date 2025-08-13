@@ -135,13 +135,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!userId) {
         return res.status(400).json({ message: "Unauthorized" });
       }
-
       const vocabulary = await storage.getAllVocabulary(userId);
 
       if (!Array.isArray(vocabulary)) {
         return res.status(400).json({ message: "Failed to fetch all vocab with userId: " + userId });
       }
-
       res.json(vocabulary);
     } catch (error) {
       console.log("Failed to fetch vocabulary with error" + error);
@@ -254,7 +252,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (isNaN(id)) {
         return res.status(400).json({ message: "Invalid ID format" });
       }
-
       await storage.deleteVocabulary(userId, id);
       res.status(200).json({ message: "Vocabulary deleted" });
     } catch (error) {
@@ -418,7 +415,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Try to get vocabulary from user accounts first
       const users = await storage.getAllUsers();
       let userVocabulary: FullProficiency[] = [];
-
       // If we have users, try to use their vocabulary for more relevant sentences
       if (users && users.length > 0) {
         // Get a random user's word list
@@ -432,7 +428,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error("Error fetching sample user vocabulary:", error);
         }
       }
-
       if (userVocabulary.length === 0) return; // Nothing to cache if no vocabulary
 
       // Function to select words, prioritizing newer lesson words and less frequently used words
@@ -534,7 +529,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
               userVocabulary,
               10
             );
-
             // Add common grammatical particles if they aren't already in the vocabulary
             // This helps create more natural sentences while still focusing on the target vocabulary
             const commonWords = [
@@ -556,7 +550,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
               // Add common words as supplementary vocabulary
               const enhancedVocabulary = [...selectedWords, ...additionalWords];
-
               try {
                 // Try generating with enhanced vocabulary first
                 sentence = await generateSentence(selectedWords, difficulty, true);
@@ -677,7 +670,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // If we reach here, there's no cache or we need a new sentence
-
       const userId = req.authenticatedUserId;
 
       if (!userId) {
@@ -701,7 +693,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (userVocabulary.length === 0) {
         console.log("No active vocabulary words available. Please add or activate some words first.");
       }
-
       // Generate new sentence using OpenAI with retries
       try {
         // Select a subset of vocabulary words, prioritizing less used words
@@ -709,7 +700,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userVocabulary,
           10
         );
-
         // Add common grammatical particles for more natural sentences
         const commonWords = [
           { chinese: "的", pinyin: "de", english: "possessive particle" },
@@ -729,7 +719,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           // Add common words as supplementary vocabulary
           const enhancedVocabulary = [...selectedWords, ...additionalWords];
-
           try {
             // Try generating with enhanced vocabulary first
             sentence = await generateSentence(selectedWords, typedDifficulty, true);
@@ -779,7 +768,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (aiValidationResult.score < 7) {
             if (aiValidationResult.corrections) {
               console.log(`Suggested corrections: ${aiValidationResult.corrections}. Original sentence: ${sentence.chinese}`);
-
               console.log("Applying AI-suggested corrections to improve sentence quality");
               sentence.chinese = aiValidationResult.corrections;
 
@@ -801,13 +789,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.log("Continuing with very simple pattern-validated sentence despite AI validation error");
           }
         }
-
         // Additional step: Even if validation passed, double-check the translation quality
         if (aiValidationResult.isValid) {
           try {
             console.log("Verifying translation quality for:", sentence.chinese);
             const translationCheck = await verifyTranslationQuality(sentence.chinese);
-
             if (!translationCheck.isNaturalTranslation) {
               console.log(`Translation quality check failed: "${sentence.chinese}"`);
               console.log(`Feedback: ${translationCheck.feedback}`);
@@ -833,7 +819,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Continue with the sentence - don't block if this additional check fails
           }
         }
-
         if (aiValidationResult.isValid) {
           // Add to cache for future use - only if it passed both validations
           if (sentenceCache[typedDifficulty].length < sentenceCache.maxSize) {
@@ -867,7 +852,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!word) {
         return res.status(400).json({ message: "Word is required" });
       }
-
       // Generate sentence using OpenAI with specific word
       try {
         const sentence = await generateSentenceWithWord(word, difficulty);
@@ -910,7 +894,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error("No proficiency found for word ID:", wordId);
         return res.status(400).json({ message: `Failed to fetch proficiency ${wordId} with userId: ${userId}` });
       }
-
       res.json({
         proficiency
       });
@@ -929,7 +912,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const wordsWithCorrectness = req.body.wordsWithCorrectness; // { wordId: number, isCorrect: boolean }[]
-
       if (!Array.isArray(wordsWithCorrectness)) {
         return res.status(400).json({ message: "Invalid word ID format" });
       }
@@ -949,7 +931,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       else {
         return res.status(400).json({ message: "Invalid word format. Each word must have either wordId or chinese." });
       }
-
       res.json({proficiencies});
     } catch (error) {
       res.status(500).json({ message: error instanceof Error ? error.message : "Failed to update word proficiencies" });
@@ -998,7 +979,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (isNaN(wordId)) {
         return res.status(400).json({ message: "Invalid ID format" });
       }
-
       await storage.removeWordProficiency(userId, wordId);
       res.json({ message: "Word proficiency reset successfully" });
     } catch (error) {
@@ -1027,7 +1007,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error("No proficiency found for word ID:", wordId);
         return res.status(400).json({ message: `Failed to fetch proficiency ${wordId} with userId: ${userId}` });
       }
-
       res.json({
         proficiency
       });

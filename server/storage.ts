@@ -29,6 +29,10 @@ import { check } from "drizzle-orm/mysql-core";
 //   console.log(`📊 Pool status: ${pool.totalCount} total, ${pool.idleCount} idle, ${pool.waitingCount} waiting`);
 // }, 5000);
 
+// setInterval(() => {
+//   console.log(`📊 Pool status: ${pool.totalCount} total, ${pool.idleCount} idle, ${pool.waitingCount} waiting`);
+// }, 5000);
+
 // Interface for CRUD operations on vocabulary
 export interface IStorage {
   // User authentication methods
