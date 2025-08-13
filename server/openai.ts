@@ -3,6 +3,8 @@ import { Vocabulary } from "@shared/schema";
 import OpenAI from "openai";
 import { storage } from "./storage";
 
+import dotenv from 'dotenv';
+dotenv.config({ path: '.env.local' });
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "your-api-key" });
 
@@ -256,22 +258,19 @@ export async function generateSentence(
 
   // Pick one sentence pattern to specifically request
   const sentencePatterns = [
-    "Create a question using 吗, 呢, or 吧.",
-    "Create an imperative statement (a command or request).",
-    "Create a comparison between two things.",
-    "Create an if/then conditional statement.",
-    "Create a sentence expressing an opinion or preference.",
-    "Create a time-based sentence about a daily routine.",
-    "Create a descriptive sentence about weather, food, or a place.",
-    "Create a cause and effect relationship sentence.",
+    "Create a yes/no question using 吗, 呢, or 吧.",
+    "Create a command or request (imperative).",
+    "Create a sentence comparing two things.",
+    "Create a conditional sentence (if...then...).",
+    "Create a sentence expressing opinion or preference.",
+    "Create a sentence describing time or routine.",
+    "Create a descriptive sentence about environment, food, or place.",
+    "Create a cause-and-effect sentence.",
     "Create a sentence about future plans or intentions.",
-    "Create a sentence with a location expression.",
-    `Create a sentence about ${dayTime} activities.`,
-    `Create a sentence mentioning it's ${dayOfWeek}.`,
-    `Create a seasonal sentence about ${season}.`,
+    "Create a sentence indicating location.",
     "Create a sentence with a negative statement (using 不 or 没).",
-    "Create a sentence about wanting or needing something.",
-    "Create a sentence with emotional expression (happy, sad, tired, etc)."
+    "Create a sentence expressing desire or necessity.",
+    "Create a sentence expressing an emotion."
   ];
 
   // Randomly select a sentence pattern to request
@@ -279,12 +278,11 @@ export async function generateSentence(
 
   // Extract all individual characters from the vocabulary words
   const allChars = vocabulary.map(word => word.chinese.split('')).flat();
-  console.log(`Available characters from vocabulary: ${allChars.join(', ')}`);
-  
   // Get the original words to provide context
   const originalWords = vocabulary.map(word => word.chinese);
-  console.log(`Original vocabulary words: ${originalWords.join(', ')}`);
   
+  console.log("randomPattern: ", randomPattern);
+  console.log("originalWords: ", originalWords.join(", "))
   try {
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
@@ -292,67 +290,24 @@ export async function generateSentence(
         {
           role: "system",
           content: `You are a Mandarin Chinese language teacher creating practice sentences for students.
-          Your task is to create grammatically correct and semantically meaningful Mandarin sentences 
-          using ONLY characters from the provided vocabulary list.
-          
-          EXTREMELY IMPORTANT CONSTRAINTS:
-          1. ONLY use characters from the provided list - NO exceptions
-          2. Create sentences that are SEMANTICALLY MEANINGFUL and LOGICAL
-          3. Do not break words into individual characters unless they make sense as standalone words
-          4. Names should be kept together as proper names (e.g., 王朋 should be "Wang Peng", not used as separate characters)
-          5. Respect the original meaning of each character and word
-          6. NEVER create contradictory or impossible statements (e.g., "她男姐姐" is nonsensical because "姐姐" must be female)
-          7. ALWAYS maintain real-world logic and consistency
-          
-          For example:
-          - If given "王朋" (Wang Peng), use it as a name, not as separate characters
-          - If given "学生" (student), use it as "student", not as separate characters with different meanings
-          - If given "美国" (America), use it as "America", not as "beautiful country"
-          
-          STRICT LOGICAL AND GRAMMATICAL CONSTRAINTS:
-          - Family terms must be used correctly (弟弟 = younger brother, 姐姐 = older sister, etc.)
-          - Gender terms must be consistent (男 = male, 女 = female)
-          - Time expressions must be consistent (明天 = tomorrow, 昨天 = yesterday)
-          - Foods must be paired with appropriate verbs (吃 for solid food, 喝 for drinks)
-          - Locations and objects must be used realistically
-          - Question particles must be used correctly (吗 for yes/no questions, 呢 for "what about" questions)
-          - The 吧 particle should only be used for suggestions or mild commands, not after greetings
-          - Measure words must match their nouns properly
-          - Basic greeting phrases must follow standard patterns (你好, 早上好, etc.)
-          
-          COMMON GRAMMAR MISTAKES TO AVOID:
-          - "你好吧" is incorrect; the proper greeting is just "你好"
-          - "我是去" is incorrect; it should be "我去" (I go) or "我要去" (I want to go)
-          - "他学三年中文" needs the 了 particle when referring to past: "他学了三年中文"
-          - Mixing incompatible particles in the same sentence
-          
-          ${difficultyGuide[difficulty]}
-          
-          You must create a sentence that:
-          1. ONLY uses characters from the provided character list
-          2. Is grammatically correct
-          3. Makes logical sense in real-world contexts
-          4. Uses words in their proper, natural context
-          5. Preserves the meaning of proper names and vocabulary words
-          
-          Provide the sentence in Chinese characters, pinyin (with proper tone marks), and an English translation.
-          Format your response as a valid JSON object with 'chinese', 'pinyin', and 'english' fields.
-          IMPORTANT Even though it is not standard practice to use spaces in a chinese sentence, please include spaces between words in the chinese character field of your JSON`
+          Your task is to create a grammatically correct and meaningful Mandarin sentence using availiable vocabulary.
+
+          RULES:
+          1. Don't use vocabulary that isn't provided
+          2. Keep multi-character words together (王朋 = "Wang Peng", not separate characters)
+          3. Ensure sentences make logical sense (no contradictions like "male sister")
+          4. Maintain real-world logic and coherence (no unusual descriptions like "happy car")
+          5. Use proper grammar and natural word order
+
+          Return JSON format: {"chinese": "sentence with spaces", "pinyin": "with tone marks", "english": "translation"}`
         },
         {
-          role: "user",
-          content: `Original vocabulary words: ${originalWords.join(', ')}
-          Individual characters available: ${allChars.join(' ')}
-          
-          Difficulty level: ${difficulty}
-          
-          For this specific request: ${randomPattern}
-          
-          Generate a natural, meaningful sentence that uses these vocabulary words or their characters appropriately.
-          The sentence must make logical sense and only use the available characters.
-          
-          IMPORTANT: Preserve the original meaning of words. If a character is part of a name or multi-character word,
-          it should typically be used in that context, not broken apart unless it makes sense to do so.`
+          role: "user", 
+          content: `Available vocabulary: ${originalWords.join(', ')}
+          Difficulty: ${difficulty}
+          Pattern: ${randomPattern}
+
+          Create a natural sentence using these characters appropriately.`
         }
       ],
       response_format: { type: "json_object" }
@@ -367,6 +322,8 @@ export async function generateSentence(
     
     // Validate that the sentence uses mostly words from the vocabulary
     const sentenceWords = parsedContent.chinese.replace(/[，。！？]/g, '').split('');
+    console.log("Generated Mandarin: ", sentenceWords.join(""));
+    console.log("Generated English: ", parsedContent.english);
     
     // Create a unique array of characters in a simpler way
     const uniqueSentenceWords: string[] = [];
@@ -381,7 +338,7 @@ export async function generateSentence(
     const commonChineseChars = ['的', '了', '和', '是', '在', '有', '我', '你', '他', '她', '它', '们', '这', '那', '不', '很', '都', '也', '个', '吗', '吧', '呢', '啊', '就', '说', '能', '要', '会', '对', '给', '到', '得', '着', '过', '被', '上', '下', '前', '后', '里', '外', '左', '右', '中', '大', '小', '多', '少', '好', '与', '为', '因', '什么', '谢谢', '再见', '请', '问'];
     
     // Create a vocabulary set of all characters in the vocabulary list
-    const allUserVocabulary = await storage.getAllVocabulary(18);
+    const allUserVocabulary = vocabulary;
     const vocabularyChars: Set<string> = new Set();
     allUserVocabulary.forEach(word => {
       // Split each Chinese word into characters
@@ -390,50 +347,16 @@ export async function generateSentence(
       });
     });
     
-    // For beginner difficulty, allow all chars in vocabulary list plus common connecting words
-    if (difficulty === "beginner") {
-      console.log("Vocabulary characters:", Array.from(vocabularyChars).join(', '));
-      console.log("Common Chinese characters:", commonChineseChars.join(', '));
-      // For each character in the sentence, check if it's allowed
-      const unknownChars = uniqueSentenceWords.filter(char => 
-        !vocabularyChars.has(char) &&                 // Not in vocabulary
-        !commonChineseChars.includes(char) &&         // Not a common particle
-        char.trim() !== '' &&                         // Not whitespace
-        !/\s/.test(char) &&                           // Not whitespace
-        !(/[，。！？,.!?]/.test(char))                 // Not punctuation
-      );
-      
-      if (unknownChars.length > 0) {
-        console.log(`Beginner sentence has unknown characters: ${unknownChars.join(', ')}`);
-        // Only throw error if there are actually unknown characters
-        throw new Error("Beginner level sentences must only use vocabulary from the list");
-      }
-    } 
-    // For intermediate/advanced, allow a percentage of non-vocabulary words
-    else if (difficulty === "intermediate" || difficulty === "advanced") {
-      // Find characters in the sentence that aren't in vocabulary or common chars
-      const unknownChars = uniqueSentenceWords.filter(char => 
-        !vocabularyChars.has(char) && 
-        !commonChineseChars.includes(char) && 
-        char.trim() !== '' && 
-        !/\s/.test(char) &&
-        !(/[，。！？,.!?]/.test(char))
-      );
-      
-      // Allow more unknown characters for higher difficulties
-      const maxUnknownRatio = difficulty === "intermediate" ? 0.1 : 0.2; // 10% for intermediate, 20% for advanced
-      const unknownRatio = unknownChars.length / uniqueSentenceWords.length;
-      
-      // Log detailed information for debugging
-      console.log(`${difficulty} sentence check: ${unknownChars.length} unknown chars out of ${uniqueSentenceWords.length} total (ratio: ${unknownRatio.toFixed(2)})`);
-      if (unknownChars.length > 0) {
-        console.log(`Unknown chars: ${unknownChars.join(', ')}`);
-      }
-      
-      // Reject sentences with too many unknown characters
-      if (unknownRatio > maxUnknownRatio) {
-        throw new Error(`${difficulty} level sentences have too many unknown characters (${unknownRatio.toFixed(2)}). Unknown characters: ${unknownChars.join(', ')}`);
-      }
+    const unknownChars = uniqueSentenceWords.filter(char => 
+      !vocabularyChars.has(char) &&                 // Not in vocabulary
+      !commonChineseChars.includes(char) &&         // Not a common particle
+      char.trim() !== '' &&                         // Not whitespace
+      !/\s/.test(char) &&                           // Not whitespace
+      !(/[，。！？,.!?]/.test(char))                 // Not punctuation
+    );
+    
+    if (unknownChars.length > 0) {
+      console.log("Warning: sentence contains unknownChars: ", unknownChars);
     }
     
     return {
@@ -442,7 +365,6 @@ export async function generateSentence(
       requestedPattern: randomPattern // Include the pattern that was requested
     };
   } catch (error) {
-    console.error("Error generating sentence:", error);
     throw new Error(`Failed to generate sentence with error ${error}. Please try again.`);
   }
 }

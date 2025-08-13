@@ -23,6 +23,11 @@ import {
 import { db, pool } from "./db";
 import { eq, like, desc, asc, and, or, sql, inArray, not } from "drizzle-orm";
 import { convertNumericPinyinToTonal, isNumericPinyin } from './utils/pinyin-converter';
+import { check } from "drizzle-orm/mysql-core";
+
+// setInterval(() => {
+//   console.log(`📊 Pool status: ${pool.totalCount} total, ${pool.idleCount} idle, ${pool.waitingCount} waiting`);
+// }, 5000);
 
 // setInterval(() => {
 //   console.log(`📊 Pool status: ${pool.totalCount} total, ${pool.idleCount} idle, ${pool.waitingCount} waiting`);
@@ -240,6 +245,19 @@ export class DatabaseStorage implements IStorage {
       and(
         eq(wordProficiency.userId, userId),
         inArray(wordProficiency.chinese, words)
+      )
+    );
+    return vocab;
+  }
+
+  async getVocabularyBatchByChineseAndPinyin(userId: number, words: { chinese: string, pinyin: string }[]): Promise<Vocabulary[]> {
+    const chinese = words.map(word => word.chinese);
+    const pinyin = words.map(word => word.pinyin);
+    const vocab = await db.select(this.VOCABULARY_SELECT).from(wordProficiency).where(
+      and(
+        eq(wordProficiency.userId, userId),
+        inArray(wordProficiency.chinese, chinese),
+        inArray(wordProficiency.pinyin, pinyin)
       )
     );
     return vocab;

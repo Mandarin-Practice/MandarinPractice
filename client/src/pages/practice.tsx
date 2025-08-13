@@ -482,6 +482,23 @@ export default function Practice() {
     }
   });
 
+  const getSplitSentence = (): { chinese: string, pinyin: string }[] => {
+    let noPunctuationPinyin = generateSentenceMutation.data.pinyin.replace(/[,.!?]/g, '');
+    let noPunctuationChinese = generateSentenceMutation.data.chinese.replace(/[，。！？]/g, ' ');
+
+    let pinyinSentence = noPunctuationPinyin.split(/\s+/);
+    let chineseSentence = noPunctuationChinese.split(/\s+/).filter(Boolean);
+
+    let sentence: { chinese: string, pinyin: string }[] = []
+    for (let i = 0; i < pinyinSentence.length; i++) {
+      const char = chineseSentence[i];
+      const pinyin = pinyinSentence[i];
+      sentence.push({ chinese: char, pinyin: pinyin });
+    }
+
+    return sentence;
+  }
+
   // Calculate score based on accuracy and speed
   const calculateScore = (similarity: number) => {
     if (startTime === null) return;
