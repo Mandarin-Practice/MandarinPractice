@@ -396,455 +396,209 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create a sentence cache to speed up responses
-  const sentenceCache = {
-    beginner: [] as any[],
-    intermediate: [] as any[],
-    advanced: [] as any[],
-    lastUpdated: Date.now(),
-    maxSize: 10, // Store 10 sentences per difficulty level
-    expiryTimeMs: 60 * 60 * 1000 // Cache expires after 1 hour
+  // Sentence cache management per user to speed up responses and persist across reloads
+  const CACHE_MAX_SIZE = 5; // Always try to have 5 sentences cached per difficulty level
+  const CACHE_EXPIRY_MS = 60 * 60 * 1000; // Cache expires after 1 hour of inactivity
+
+  interface UserSentenceCache {
+    beginner: any[];
+    intermediate: any[];
+    advanced: any[];
+    lastUpdated: number;
+  }
+  const userSentenceCaches: Map<number, UserSentenceCache> = new Map();
+
+  function getUserCache(userId: number): UserSentenceCache {
+    let cache = userSentenceCaches.get(userId);
+    if (!cache) {
+      cache = { beginner: [], intermediate: [], advanced: [], lastUpdated: Date.now() };
+      userSentenceCaches.set(userId, cache);
+    }
+    if (Date.now() - cache.lastUpdated > CACHE_EXPIRY_MS) {
+      cache.beginner = [];
+      cache.intermediate = [];
+      cache.advanced = [];
+      cache.lastUpdated = Date.now();
+    }
+    return cache;
+  }
+
+  // Generate and validate a sentence for a user and difficulty
+  async function generateValidatedSentence(userId: number, typedDifficulty: 'beginner' | 'intermediate' | 'advanced'): Promise<any> {
+    let userVocabulary: FullProficiency[] = [];
+    try {
+      const allUserWords = await storage.getAllVocabularyWithProficiency(userId);
+      userVocabulary = allUserWords.filter(word => word && word.active);
+    } catch (error) {
+      console.error("Error fetching user vocabulary for cache generation:", error);
+    }
+    if (userVocabulary.length === 0) {
+      console.log("No active vocabulary words available for user:", userId);
+    }
+    // Select a subset of vocabulary words, prioritizing less used words
+    const selectedWords = selectWords(userVocabulary, 10);
+    // Add common grammatical particles for more natural sentences
+    const commonWords = [
+      { chinese: "的", pinyin: "de", english: "possessive particle" },
+      { chinese: "了", pinyin: "le", english: "completion particle" },
+      { chinese: "是", pinyin: "shì", english: "to be" },
+      { chinese: "在", pinyin: "zài", english: "at, in" },
+      { chinese: "和", pinyin: "hé", english: "and" },
+      { chinese: "吗", pinyin: "ma", english: "question particle" }
+    ];
+    let sentence;
+    if (selectedWords.length >= (typedDifficulty === "beginner" ? 3 : 2)) {
+      const existingChars = new Set(selectedWords.flatMap(w => w.chinese.split('')));
+      const additionalWords = commonWords.filter(w => !existingChars.has(w.chinese));
+      try {
+        sentence = await generateSentence(selectedWords, typedDifficulty, true);
+      } catch {
+        sentence = await generateSentence(selectedWords, typedDifficulty);
+      }
+    } else {
+      sentence = await generateSentence(selectedWords, typedDifficulty);
+    }
+    // Update word usage statistics
+    selectedWords.forEach(word => {
+      if (!wordUsageStats[word.id]) {
+        wordUsageStats[word.id] = { uses: 0, lastUsed: 0 };
+      }
+      wordUsageStats[word.id].uses += 1;
+      wordUsageStats[word.id].lastUsed = Date.now();
+    });
+    // AI validation and feedback
+    let aiValidationResult = { isValid: false, score: 0, feedback: "", corrections: "", translationPreview: "" };
+    try {
+      aiValidationResult = await validateSentenceWithAI(sentence.chinese, typedDifficulty);
+      if (aiValidationResult.score < 7 && aiValidationResult.corrections) {
+        sentence.chinese = aiValidationResult.corrections;
+        aiValidationResult.isValid = true;
+      } else if (aiValidationResult.score < 7) {
+        aiValidationResult.isValid = false;
+      }
+    } catch (error) {
+      console.error("AI validation error:", error);
+      if (sentence.chinese.length > 8) {
+        aiValidationResult.isValid = false;
+      }
+    }
+    if (aiValidationResult.isValid) {
+      try {
+        const translationCheck = await verifyTranslationQuality(sentence.chinese);
+        if (translationCheck.naturalEnglishTranslation) {
+          sentence.english = translationCheck.naturalEnglishTranslation;
+        }
+      } catch (error) {
+        console.error("Translation quality check error:", error);
+      }
+    }
+    return sentence;
+  }
+
+  // Helper function to select words, prioritizing less frequently used words
+  const selectWords = (wordsList: Array<{ id: number, lessonId?: number | null, chinese: string, pinyin: string, english: string}>, count: number) => {
+    // Ensure we don't try to select more words than available
+    const selectionCount = Math.min(count, wordsList.length);
+    const scrambledWords = [...wordsList] /* method that creates an array of references to the words in wordsList*/
+    scrambledWords.sort(() => 0.5 - Math.random()); // Shuffle the words randomly
+    // Create a weighted list based on usage
+    const weightedWords = scrambledWords.map(word => {
+      const stats = wordUsageStats[word.id] || { uses: 0, lastUsed: 0 };
+      // Lower score = higher priority for selection
+      // Weight by number of uses and how recently the word was used
+      const recencyFactor = Math.max(0, (Date.now() - stats.lastUsed) / (1000 * 60 * 60)); // hours since last use
+      const usageFactor = stats.uses + 1; // +1 to avoid division by zero
+      // Unused words get highest priority (score of 0)
+      const score = (stats.uses === 0) ? 0 : usageFactor / (recencyFactor + 0.1);
+
+      return {
+        word,
+        score
+      };
+    });
+
+    // Sort by score (lower = higher priority)
+    weightedWords.sort((a, b) => a.score - b.score);
+
+    // Take the top N words
+    return weightedWords.slice(0, selectionCount).map(item => item.word);
   };
 
   // Track word usage to ensure all words get used in practice
   const wordUsageStats: Record<number, { uses: number, lastUsed: number }> = {};
 
-  // Background cache filler function - runs in the background to keep the cache filled
-  async function fillSentenceCache() {
-    try {
-      // Try to get vocabulary from user accounts first
-      const users = await storage.getAllUsers();
-      let userVocabulary: FullProficiency[] = [];
-      // If we have users, try to use their vocabulary for more relevant sentences
-      if (users && users.length > 0) {
-        // Get a random user's word list
-        const randomUser = users[Math.floor(Math.random() * users.length)];
-        try {
-          const allUserWords = await storage.getAllVocabularyWithProficiency(randomUser.id);
-
-          // Filter out undefined entries and inactive words
-          userVocabulary = allUserWords.filter(word => word.active);
-        } catch (error) {
-          console.error("Error fetching sample user vocabulary:", error);
-        }
-      }
-      if (userVocabulary.length === 0) return; // Nothing to cache if no vocabulary
-
-      // Function to select words, prioritizing newer lesson words and less frequently used words
-      const selectWords = (wordsList: Array<{ id: number, lessonId?: number | null, chinese: string, pinyin: string, english: string}>, count: number) => {
-        // Ensure we don't try to select more words than available
-        const selectionCount = Math.min(count, wordsList.length);
-
-        // Identify advanced lesson words (from lessons 11-20)
-        const advancedLessonWords = wordsList.filter(word =>
-          word.lessonId && word.lessonId >= 11 && word.lessonId <= 20
-        );
-
-        // Always try to include at least one advanced lesson word if available
-        let selectedWords: typeof wordsList = [];
-
-        if (advancedLessonWords.length > 0 && count > 1) {
-          // Ensure a minimum percentage of words from newer lessons
-          const minAdvancedWords = Math.max(1, Math.floor(count * 0.5)); // At least 50% of words from newer lessons
-          const maxAdvancedWords = Math.min(advancedLessonWords.length, Math.ceil(count * 0.8)); // At most 80% of words
-
-          // Randomly select advanced lesson words
-          const shuffledAdvanced = [...advancedLessonWords].sort(() => 0.5 - Math.random());
-          const selectedAdvanced = shuffledAdvanced.slice(0, maxAdvancedWords);
-
-          // Add to selected words
-          selectedWords = selectedAdvanced;
-
-          // Remove selected advanced words from wordsList to avoid duplicates
-          const selectedIds = new Set(selectedWords.map(w => w.id));
-          const remainingWords = wordsList.filter(w => !selectedIds.has(w.id));
-
-          // Fill remaining slots based on usage weight
-          const remainingCount = count - selectedWords.length;
-          if (remainingCount > 0 && remainingWords.length > 0) {
-            // Create a weighted list based on usage
-            const weightedWords = remainingWords.map(word => {
-              const stats = wordUsageStats[word.id] || { uses: 0, lastUsed: 0 };
-              // Lower score = higher priority for selection
-              // Weight by number of uses and how recently the word was used
-              const recencyFactor = Math.max(0, (Date.now() - stats.lastUsed) / (1000 * 60 * 60)); // hours since last use
-              const usageFactor = stats.uses + 1; // +1 to avoid division by zero
-              // Unused words get highest priority (score of 0)
-              const score = (stats.uses === 0) ? 0 : usageFactor / (recencyFactor + 0.1);
-
-              return {
-                word,
-                score
-              };
-            });
-
-            // Sort by score (lower = higher priority)
-            weightedWords.sort((a, b) => a.score - b.score);
-
-            // Take the top N remaining words
-            const remainingSelected = weightedWords.slice(0, remainingCount).map(item => item.word);
-            selectedWords = [...selectedWords, ...remainingSelected];
-          }
-        } else {
-          // Fall back to original selection algorithm if no advanced lesson words available
-          // Create a weighted list based on usage
-          const scrambledWords = [...wordsList] /* method that creates an array of references to the words in wordsList*/
-          scrambledWords.sort(() => 0.5 - Math.random()); // Shuffle the words randomly
-          const weightedWords = scrambledWords.map(word => {
-            const stats = wordUsageStats[word.id] || { uses: 0, lastUsed: 0 };
-            // Lower score = higher priority for selection
-            // Weight by number of uses and how recently the word was used
-            const recencyFactor = Math.max(0, (Date.now() - stats.lastUsed) / (1000 * 60 * 60)); // hours since last use
-            const usageFactor = stats.uses + 1; // +1 to avoid division by zero
-            // Unused words get highest priority (score of 0)
-            const score = (stats.uses === 0) ? 0 : usageFactor / (recencyFactor + 0.1);
-
-            // Add a bonus for higher lesson IDs to prioritize newer vocabulary
-            const lessonBonus = word.lessonId ? Math.min(5, word.lessonId / 2) : 0;
-            const adjustedScore = score - lessonBonus;
-
-            return {
-              word,
-              score: adjustedScore
-            };
-          });
-
-          // Sort by score (lower = higher priority)
-          weightedWords.sort((a, b) => a.score - b.score);
-
-          // Take the top N words
-          selectedWords = weightedWords.slice(0, selectionCount).map(item => item.word);
-        }
-
-        return selectedWords;
-      };
-
-      // Fill cache for each difficulty if needed
-      for (const difficulty of ['beginner', 'intermediate', 'advanced'] as const) {
-        // Only fill if we need more sentences
-        if (sentenceCache[difficulty].length < sentenceCache.maxSize) {
-          try {
-            // Select a subset of vocabulary words, prioritizing less used words
-            const selectedWords = selectWords(
-              userVocabulary,
-              10
-            );
-            // Add common grammatical particles if they aren't already in the vocabulary
-            // This helps create more natural sentences while still focusing on the target vocabulary
-            const commonWords = [
-              { chinese: "的", pinyin: "de", english: "possessive particle" },
-              { chinese: "了", pinyin: "le", english: "completion particle" },
-              { chinese: "是", pinyin: "shì", english: "to be" },
-              { chinese: "在", pinyin: "zài", english: "at, in" },
-              { chinese: "和", pinyin: "hé", english: "and" },
-              { chinese: "吗", pinyin: "ma", english: "question particle" }
-            ];
-
-            // Only add common words if there are enough vocabulary words
-            // For beginner level, ensure we have at least 3 actual vocabulary words
-            let sentence;
-            if (selectedWords.length >= (difficulty === "beginner" ? 3 : 2)) {
-              // Filter out common words that are already in vocabulary
-              const existingChars = new Set(selectedWords.flatMap(w => w.chinese.split('')));
-              const additionalWords = commonWords.filter(w => !existingChars.has(w.chinese));
-
-              // Add common words as supplementary vocabulary
-              const enhancedVocabulary = [...selectedWords, ...additionalWords];
-              try {
-                // Try generating with enhanced vocabulary first
-                sentence = await generateSentence(selectedWords, difficulty, true);
-              } catch (err) {
-                const error = err as Error;
-                console.error("Couldn't generate with enhanced vocabulary, falling back to strict mode:", error.message);
-                // Fall back to strict mode with only the original vocabulary
-                sentence = await generateSentence(selectedWords, difficulty);
-              }
-            } else {
-              // Not enough words for enhancement, use strict mode
-              sentence = await generateSentence(selectedWords, difficulty);
-            }
-
-            // Update word usage statistics
-            selectedWords.forEach(word => {
-              if (!wordUsageStats[word.id]) {
-                wordUsageStats[word.id] = { uses: 0, lastUsed: 0 };
-              }
-              wordUsageStats[word.id].uses += 1;
-              wordUsageStats[word.id].lastUsed = Date.now();
-            });
-
-            // Validate sentence naturalness before adding to cache
-            const validationResult = validateSentence(sentence.chinese);
-
-            // Only add natural and grammatically correct sentences to the cache
-            if (validationResult.isValid) {
-              // Check for duplicates
-              const isDuplicate = sentenceCache[difficulty].some(s => s.chinese === sentence.chinese);
-              if (!isDuplicate) {
-                sentenceCache[difficulty].push({
-                  ...sentence,
-                  difficulty,
-                  createdAt: Date.now(),
-                  usedWords: selectedWords.map(w => w.id) // Track which words were used
-                });
-              }
-            } else {
-              console.log(`Rejected unnatural sentence: "${sentence.chinese}" - Reason: ${validationResult.reason}`);
-            }
-          } catch (error) {
-            console.error(`Error filling cache for ${difficulty}:`, error);
-          }
-        }
-      }
-
-      // Update the last updated timestamp
-      sentenceCache.lastUpdated = Date.now();
-    } catch (error) {
-      console.error("Error filling sentence cache:", error);
-    }
-  }
-
-  // Start filling the cache on server start (after a short delay)
-  setTimeout(() => {
-    fillSentenceCache();
-
-    // Set up periodic cache filling every 30 minutes
-    setInterval(fillSentenceCache, 30 * 60 * 1000);
-  }, 5000);
-
   // Generate a sentence using the user's vocabulary
-  app.post("/api/sentence/generate", verifyFirebaseToken, firebaseAuth, async (req, res) => {
-    try {
-      const { difficulty = "beginner" } = req.body;
-      const typedDifficulty = difficulty as 'beginner' | 'intermediate' | 'advanced';
-
-      // Helper function to select words, prioritizing less frequently used words
-      const selectWords = (wordsList: Array<{ id: number, lessonId?: number | null, chinese: string, pinyin: string, english: string}>, count: number) => {
-        // Ensure we don't try to select more words than available
-        const selectionCount = Math.min(count, wordsList.length);
-        const scrambledWords = [...wordsList] /* method that creates an array of references to the words in wordsList*/
-        scrambledWords.sort(() => 0.5 - Math.random()); // Shuffle the words randomly
-        // Create a weighted list based on usage
-        const weightedWords = scrambledWords.map(word => {
-          const stats = wordUsageStats[word.id] || { uses: 0, lastUsed: 0 };
-          // Lower score = higher priority for selection
-          // Weight by number of uses and how recently the word was used
-          const recencyFactor = Math.max(0, (Date.now() - stats.lastUsed) / (1000 * 60 * 60)); // hours since last use
-          const usageFactor = stats.uses + 1; // +1 to avoid division by zero
-          // Unused words get highest priority (score of 0)
-          const score = (stats.uses === 0) ? 0 : usageFactor / (recencyFactor + 0.1);
-
-          return {
-            word,
-            score
-          };
-        });
-
-        // Sort by score (lower = higher priority)
-        weightedWords.sort((a, b) => a.score - b.score);
-
-        // Take the top N words
-        return weightedWords.slice(0, selectionCount).map(item => item.word);
-      };
-
-      // Check if cache is expired
-      const cacheIsExpired = (Date.now() - sentenceCache.lastUpdated) > sentenceCache.expiryTimeMs;
-
-      // Try to get a sentence from the cache first
-      if (!cacheIsExpired && sentenceCache[typedDifficulty].length > 0) {
-        // Get a random cached sentence
-        const randomIndex = Math.floor(Math.random() * sentenceCache[typedDifficulty].length);
-        const cachedSentence = sentenceCache[typedDifficulty][randomIndex];
-
-        // Remove the used sentence from cache to prevent repetition
-        sentenceCache[typedDifficulty].splice(randomIndex, 1);
-
-        // Start refilling the cache in the background
-        setTimeout(fillSentenceCache, 100);
-
-        // Return the cached sentence with a flag indicating it's from cache
-        return res.json({
-          ...cachedSentence,
-          fromCache: true
-        });
-      }
-
-      // If we reach here, there's no cache or we need a new sentence
-      const userId = req.authenticatedUserId;
-
-      if (!userId) {
-        return res.status(400).json({ message: "Unauthorized" });
-      }
-
-      let userVocabulary: FullProficiency[] = [];
-
-      try {
-        const allUserWords = await storage.getAllVocabularyWithProficiency(userId);
-
-        // Filter out undefined entries and inactive words
-        userVocabulary = allUserWords
-          .filter(word => word && word.active);
-
-      } catch (error) {
-        console.error("Error fetching user vocabulary:", error);
-      }
-
-      // Final check if we have any vocabulary
-      if (userVocabulary.length === 0) {
-        console.log("No active vocabulary words available. Please add or activate some words first.");
-      }
-      // Generate new sentence using OpenAI with retries
-      try {
-        // Select a subset of vocabulary words, prioritizing less used words
-        const selectedWords = selectWords(
-          userVocabulary,
-          10
-        );
-        // Add common grammatical particles for more natural sentences
-        const commonWords = [
-          { chinese: "的", pinyin: "de", english: "possessive particle" },
-          { chinese: "了", pinyin: "le", english: "completion particle" },
-          { chinese: "是", pinyin: "shì", english: "to be" },
-          { chinese: "在", pinyin: "zài", english: "at, in" },
-          { chinese: "和", pinyin: "hé", english: "and" },
-          { chinese: "吗", pinyin: "ma", english: "question particle" }
-        ];
-
-        // Only add common words if there are enough vocabulary words
-        let sentence;
-        if (selectedWords.length >= (typedDifficulty === "beginner" ? 3 : 2)) {
-          // Filter out common words that are already in vocabulary
-          const existingChars = new Set(selectedWords.flatMap(w => w.chinese.split('')));
-          const additionalWords = commonWords.filter(w => !existingChars.has(w.chinese));
-
-          // Add common words as supplementary vocabulary
-          const enhancedVocabulary = [...selectedWords, ...additionalWords];
-          try {
-            // Try generating with enhanced vocabulary first
-            sentence = await generateSentence(selectedWords, typedDifficulty, true);
-          } catch (err) {
-            const error = err as Error;
-            console.error("Couldn't generate with enhanced vocabulary, falling back to strict mode:", error.message);
-            // Fall back to strict mode with only the original vocabulary
-            sentence = await generateSentence(selectedWords, typedDifficulty);
-          }
-        } else {
-          // Not enough words for enhancement, use strict mode
-          sentence = await generateSentence(selectedWords, typedDifficulty);
-        }
-
-        // Update word usage statistics
-        selectedWords.forEach(word => {
-          if (!wordUsageStats[word.id]) {
-            wordUsageStats[word.id] = { uses: 0, lastUsed: 0 };
-          }
-          wordUsageStats[word.id].uses += 1;
-          wordUsageStats[word.id].lastUsed = Date.now();
-        });
-
-        let aiValidationResult: {
-          isValid: boolean;
-          score: number;
-          feedback: string;
-          corrections?: string;
-          translationPreview?: string;
-        } = {
-          isValid: false,
-          score: 0,
-          feedback: "NO VALIDATION PERFORMED",
-          corrections: "",
-          translationPreview: ""
-        }
-
-        try {
-          console.log("Running AI validation for sentence:", sentence.chinese);
-          aiValidationResult = await validateSentenceWithAI(sentence.chinese, typedDifficulty);
-
-          // Log AI validation results
-          console.log(`AI validation results: Score=${aiValidationResult.score}, Valid=${aiValidationResult.isValid}`);
-          console.log(`AI feedback: ${aiValidationResult.feedback}`);
-
-          // If score is below 7, the sentence is not good enough
-          if (aiValidationResult.score < 7) {
-            if (aiValidationResult.corrections) {
-              console.log(`Suggested corrections: ${aiValidationResult.corrections}. Original sentence: ${sentence.chinese}`);
-              console.log("Applying AI-suggested corrections to improve sentence quality");
-              sentence.chinese = aiValidationResult.corrections;
-
-              aiValidationResult.isValid = true;
-            } else {
-              console.log("No corrections suggested by AI, but score is below 7");
-              // No corrections available and score below 7, reject
-              aiValidationResult.isValid = false;
-            }
-          }
-        } catch (aiError) {
-          // If AI validation errors, we're more cautious - only accept very simple sentences
-          console.error("AI validation error:", aiError);
-          if (sentence.chinese.length > 8) {
-            console.log("Rejecting longer sentence due to failed AI validation");
-            aiValidationResult.isValid = false;
-            aiValidationResult.feedback = "AI validation error - cannot verify semantic correctness";
-          } else {
-            console.log("Continuing with very simple pattern-validated sentence despite AI validation error");
-          }
-        }
-        // Additional step: Even if validation passed, double-check the translation quality
-        if (aiValidationResult.isValid) {
-          try {
-            console.log("Verifying translation quality for:", sentence.chinese);
-            const translationCheck = await verifyTranslationQuality(sentence.chinese);
-            if (!translationCheck.isNaturalTranslation) {
-              console.log(`Translation quality check failed: "${sentence.chinese}"`);
-              console.log(`Feedback: ${translationCheck.feedback}`);
-              console.log(`Better translation would be: ${translationCheck.naturalEnglishTranslation}`);
-
-              // If there's a translation issue, reject the sentence
-              // aiValidationResult.isValid = false;
-              // aiValidationResult.feedback = `Poor translation quality: ${translationCheck.feedback}`;
-
-              // Update the English translation with the improved version for future use
-              if (translationCheck.naturalEnglishTranslation) {
-                sentence.english = translationCheck.naturalEnglishTranslation;
-              }
-            } else {
-              console.log("Translation quality check passed");
-              // If there's a better translation available, use it
-              if (translationCheck.naturalEnglishTranslation) {
-                sentence.english = translationCheck.naturalEnglishTranslation;
-              }
-            }
-          } catch (translationError) {
-            console.error("Translation quality check error:", translationError);
-            // Continue with the sentence - don't block if this additional check fails
-          }
-        }
-        if (aiValidationResult.isValid) {
-          // Add to cache for future use - only if it passed both validations
-          if (sentenceCache[typedDifficulty].length < sentenceCache.maxSize) {
-            sentenceCache[typedDifficulty].push({
-              ...sentence,
-              difficulty: typedDifficulty,
-              createdAt: Date.now(),
-              usedWords: selectedWords.map(w => w.id) // Track which words were used
-            });
-          }
-
-          // Send the validated sentence to the client
-          res.json(sentence);
-        } else {
-          console.log(`Rejected sentence: "${sentence.chinese}" - Reason: ${aiValidationResult.feedback}`);
-        }
-      } catch (generateError) {
-        console.log("Error generating sentence with OpenAI. Error: " + generateError);
-        throw new Error("Sentence generation failed with error: " + generateError);
-      }
-    } catch (error) {
-      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to generate sentence" });
+app.get("/api/sentence/generate", verifyFirebaseToken, firebaseAuth, async (req, res) => {
+  try {
+    const receivedDifficulty = req.query.difficulty;
+    const difficulty = typeof receivedDifficulty === "string" ? receivedDifficulty : 'beginner';
+    const typedDifficulty = difficulty as 'beginner' | 'intermediate' | 'advanced';
+    const userId = req.authenticatedUserId;
+    if (!userId) {
+      return res.status(400).json({ message: "Unauthorized" });
     }
-  });
+    const userCache = getUserCache(userId);
+    let sentence: any;
+    if (userCache[typedDifficulty].length > 0) {
+      sentence = userCache[typedDifficulty].shift();
+    } else {
+      sentence = await generateValidatedSentence(userId, typedDifficulty);
+    }
+    userCache.lastUpdated = Date.now();
+    // Asynchronously refill cache up to the desired size
+    const toFill = CACHE_MAX_SIZE - userCache[typedDifficulty].length;
+    if (toFill > 0) {
+      (async () => {
+        for (let i = 0; i < toFill; i++) {
+          try {
+            const nextSentence = await generateValidatedSentence(userId, typedDifficulty);
+            userCache[typedDifficulty].push(nextSentence);
+          } catch (err) {
+            console.error("Error filling sentence cache:", err);
+            break;
+          }
+        }
+        userCache.lastUpdated = Date.now();
+      })();
+    }
+    return res.json(sentence);
+  } catch (error) {
+    console.error("Error in sentence generate route:", error);
+    return res.status(500).json({ message: error instanceof Error ? error.message : "Failed to generate sentence" });
+  }
+});
 
-  // Generate a sentence using a specific word
+// Fill sentence cache for a user on-demand (e.g., on login)
+app.post("/api/sentence/cache/fill", verifyFirebaseToken, firebaseAuth, async (req, res) => {
+  try {
+    const userId = req.authenticatedUserId;
+    if (!userId) {
+      return res.status(400).json({ message: "Unauthorized" });
+    }
+    const receivedDifficulty = req.query.difficulty;
+    const difficulty = typeof receivedDifficulty === "string" ? receivedDifficulty : 'beginner';
+    const typedDifficulty = difficulty as 'beginner' | 'intermediate' | 'advanced';
+    const count = req.query.count ? Math.max(0, parseInt(req.query.count as string, 10)) : 1;
+    const userCache = getUserCache(userId);
+    const toFill = Math.min(CACHE_MAX_SIZE - userCache[typedDifficulty].length, count);
+    for (let i = 0; i < toFill; i++) {
+      try {
+        const nextSentence = await generateValidatedSentence(userId, typedDifficulty);
+        userCache[typedDifficulty].push(nextSentence);
+      } catch (err) {
+        console.error("Error filling sentence cache:", err);
+        break;
+      }
+    }
+    userCache.lastUpdated = Date.now();
+    return res.json({ filledCount: toFill });
+  } catch (error) {
+    console.error("Error in cache fill route:", error);
+    return res.status(500).json({ message: error instanceof Error ? error.message : "Failed to fill sentence cache" });
+  }
+});
+
+// Generate a sentence using a specific word
   app.post("/api/sentence/generate/word", async (req, res) => {
     try {
       const { word, difficulty = "beginner" } = req.body;
