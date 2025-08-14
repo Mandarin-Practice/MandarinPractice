@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -37,9 +37,41 @@ interface Stats {
   correctAnswers: number; // Track separate from masteredWords
 }
 
-export default function Practice() {
+type SentenceCache = {
+  beginner: string[],
+  setBeginner: React.Dispatch<React.SetStateAction<string[]>>;
+  intermediate: string[],
+  setIntermediate: React.Dispatch<React.SetStateAction<string[]>>;
+  advanced: string[],
+  setAdvanced: React.Dispatch<React.SetStateAction<string[]>>;
+  maxSize: number; // Store 10 sentences per difficulty level
+}
+
+const SentenceContext = createContext<SentenceCache | undefined>(undefined);
+
+export const SentenceCacheProvider = ({ children }: { children: ReactNode }) => {
+  const [beginner, setBeginner] = useState([] as string[]);
+  const [intermediate, setIntermediate] = useState([] as string[]);
+  const [advanced, setAdvanced] = useState([] as string[]);
+  const maxSize = 10;
+  return (
+    <SentenceContext.Provider value={{ beginner, setBeginner, intermediate, setIntermediate, advanced, setAdvanced, maxSize }}>
+      {children}
+    </SentenceContext.Provider>
+  );
+};
+
+export const useSentenceCache = () => {
+  const context = useContext(SentenceContext);
+  if (!context) throw new Error('useSentenceCache must be used within SentenceCacheProvier');
+  return context;
+}
+
+function PracticeInner() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+
+  const sentenceCache = useSentenceCache();
 
   const [, navigate] = useLocation();
   const [userTranslation, setUserTranslation] = useState("");
@@ -125,6 +157,36 @@ export default function Practice() {
     intermediate: [],
     advanced: []
   });
+
+  async function fillSentenceCache() {
+    try {
+      for (const difficulty of ['beginner', 'intermediate', 'advanced'] as const) {
+        // Only fill if we need more sentences
+        if (sentenceCache[difficulty].length < sentenceCache.maxSize) {
+          try {
+            const response = await apiRequest('GET', `/api/sentence/generate?userId=${user?.backendUser.id}&difficulty=${difficulty}`);
+            if (!response.ok) throw new Error("Failed to fetch generated sentence");
+            const sentence = await response.json();
+            switch (difficulty) {
+              case 'beginner':
+                sentenceCache.setBeginner(prev => [...prev, sentence]);
+                break;
+              case 'intermediate':
+                sentenceCache.setIntermediate(prev => [...prev, sentence]);
+                break;
+              case 'advanced':
+                sentenceCache.setAdvanced(prev => [...prev, sentence]);
+                break;
+            }
+          } catch (error) {
+            console.error(`Error filling cache for ${difficulty}:`, error);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error filling sentence cache:", error);
+    }
+  }
   
   // Function to get a new sentence, with duplicate prevention and pre-fetching
   const fetchNewSentence = async (maxAttempts = 3): Promise<any> => {
@@ -160,7 +222,7 @@ export default function Practice() {
     
     // No usable preloaded sentences, fetch directly
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
-      const response = await apiRequest('POST', '/api/sentence/generate', { difficulty });
+      const response = await apiRequest('GET', `/api/sentence/generate?userId=${user?.backendUser.id}&difficulty=${difficulty}`);
       const data = await response.json();
       
       // Check if this sentence has been seen recently
@@ -174,14 +236,14 @@ export default function Practice() {
     
     // If we've tried max attempts and still got duplicates, just use the last generated sentence
     console.log("Max attempts reached, accepting any sentence");
-    const response = await apiRequest('POST', '/api/sentence/generate', { difficulty });
+    const response = await apiRequest('GET', `/api/sentence/generate?userId=${user?.backendUser.id}&difficulty=${difficulty}`);
     return response.json();
   };
   
   // Helper function to prefetch sentences in the background
   const prefetchSentence = async (difficulty: 'beginner' | 'intermediate' | 'advanced') => {
     try {
-      const response = await apiRequest('POST', '/api/sentence/generate', { difficulty });
+      const response = await apiRequest('GET', `/api/sentence/generate?userId=${user?.backendUser.id}&difficulty=${difficulty}`);
       const data = await response.json();
       
       // Add to the preloaded sentences queue (up to 3 per difficulty)
@@ -294,6 +356,15 @@ export default function Practice() {
     
     return () => clearInterval(checkDifficultyInterval);
   }, [currentDifficulty]);
+
+  // Keep sentence cache full
+  useEffect(() => {
+    const fillSentenceCacheInterval = setInterval(() => {
+      fillSentenceCache();
+    }, 5000);
+    
+    return () => clearInterval(fillSentenceCacheInterval);
+  }, [user]);
 
   // More robust approach to check if vocabulary is empty and handle redirects
   useEffect(() => {
@@ -887,5 +958,13 @@ export default function Practice() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Practice() {
+  return (
+    <SentenceCacheProvider>
+      <PracticeInner />
+    </SentenceCacheProvider>
   );
 }
