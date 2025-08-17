@@ -169,13 +169,13 @@ function PracticeInner() {
             const sentence = await response.json();
             switch (difficulty) {
               case 'beginner':
-                sentenceCache.setBeginner(prev => [...prev, sentence]);
+                sentenceCache.setBeginner(prev => [...prev, sentence.chinese]);
                 break;
               case 'intermediate':
-                sentenceCache.setIntermediate(prev => [...prev, sentence]);
+                sentenceCache.setIntermediate(prev => [...prev, sentence.chinese]);
                 break;
               case 'advanced':
-                sentenceCache.setAdvanced(prev => [...prev, sentence]);
+                sentenceCache.setAdvanced(prev => [...prev, sentence.chinese]);
                 break;
             }
           } catch (error) {
