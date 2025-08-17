@@ -63,7 +63,7 @@ export const SentenceCacheProvider = ({ children }: { children: ReactNode }) => 
 
 export const useSentenceCache = () => {
   const context = useContext(SentenceContext);
-  if (!context) throw new Error('useSentenceCache must be used within SentenceCacheProvier');
+  if (!context) throw new Error('useSentenceCache must be used within SentenceCacheProvider');
   return context;
 }
 
