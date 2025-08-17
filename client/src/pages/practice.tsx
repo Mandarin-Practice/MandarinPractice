@@ -37,9 +37,11 @@ interface Stats {
   correctAnswers: number; // Track separate from masteredWords
 }
 
-export default function Practice() {
+
+function PracticeInner() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+
 
   const [, navigate] = useLocation();
   const [userTranslation, setUserTranslation] = useState("");
@@ -119,91 +121,11 @@ export default function Practice() {
   // Get toast hook for notifications
   const { toast } = useToast();
   
-  // Local queue for pre-fetched sentences
-  const [preloadedSentences, setPreloadedSentences] = useState<{[key: string]: any[]}>({
-    beginner: [],
-    intermediate: [],
-    advanced: []
-  });
-  
-  // Function to get a new sentence, with duplicate prevention and pre-fetching
-  const fetchNewSentence = async (maxAttempts = 3): Promise<any> => {
-    // Always get the most recent difficulty setting
-    const difficulty = localStorage.getItem('difficulty') || 'beginner';
-    const typedDifficulty = difficulty as 'beginner' | 'intermediate' | 'advanced';
-    
-    console.log(`Generating sentence with difficulty: ${difficulty}`);
-    
-    // Try to use a pre-fetched sentence first (much faster)
-    if (preloadedSentences[typedDifficulty] && preloadedSentences[typedDifficulty].length > 0) {
-      // Get and remove the first sentence from the queue
-      const preloadedSentence = preloadedSentences[typedDifficulty][0];
-      
-      // Update the preloaded sentences array (remove the one we just used)
-      setPreloadedSentences(prev => ({
-        ...prev,
-        [typedDifficulty]: prev[typedDifficulty].slice(1)
-      }));
-      
-      // Start fetching a replacement sentence in the background
-      setTimeout(() => {
-        prefetchSentence(typedDifficulty);
-      }, 100);
-      
-      // If the sentence is a duplicate, try again, otherwise return it
-      if (preloadedSentence.chinese && recentSentences.includes(preloadedSentence.chinese)) {
-        console.log(`Preloaded sentence was recently used, trying again...`);
-      } else {
-        return preloadedSentence;
-      }
-    }
-    
-    // No usable preloaded sentences, fetch directly
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
-      const response = await apiRequest('POST', '/api/sentence/generate', { difficulty });
-      const data = await response.json();
-      
-      // Check if this sentence has been seen recently
-      if (data.chinese && recentSentences.includes(data.chinese)) {
-        console.log(`Sentence "${data.chinese}" was recently used, trying again... (attempt ${attempt + 1}/${maxAttempts})`);
-      } else {
-        // New sentence found, return it
-        return data;
-      }
-    }
-    
-    // If we've tried max attempts and still got duplicates, just use the last generated sentence
-    console.log("Max attempts reached, accepting any sentence");
-    const response = await apiRequest('POST', '/api/sentence/generate', { difficulty });
-    return response.json();
-  };
-  
-  // Helper function to prefetch sentences in the background
-  const prefetchSentence = async (difficulty: 'beginner' | 'intermediate' | 'advanced') => {
-    try {
-      const response = await apiRequest('POST', '/api/sentence/generate', { difficulty });
-      const data = await response.json();
-      
-      // Add to the preloaded sentences queue (up to 3 per difficulty)
-      setPreloadedSentences(prev => {
-        // Only add if we don't already have 3 sentences for this difficulty
-        if (prev[difficulty].length < 3) {
-          return {
-            ...prev,
-            [difficulty]: [...prev[difficulty], data]
-          };
-        }
-        return prev;
-      });
-    } catch (error) {
-      console.error("Error prefetching sentence:", error);
-    }
-  };
 
   // Generate sentence mutation with loading state handling
   const generateSentenceMutation = useMutation<any, unknown, void>({
     mutationFn: () => {
-      // Set a timeout to show a message if sentence generation takes too long
+      // Show a loading toast if sentence generation takes longer than expected
       const timeoutId = setTimeout(() => {
         toast({
           title: "Generating sentence...",
@@ -211,9 +133,14 @@ export default function Practice() {
           duration: 5000,
         });
       }, 2000);
-
-      // Return the fetch promise and clear the timeout when done
-      return fetchNewSentence()
+      // Fetch next sentence from backend cache or generator
+      return apiRequest('GET', `/api/sentence/generate?difficulty=${currentDifficulty}`)
+        .then(res => {
+          if (!res.ok) {
+            throw new Error('Failed to fetch sentence');
+          }
+          return res.json();
+        })
         .finally(() => clearTimeout(timeoutId));
     },
     onSuccess: (data) => {
@@ -295,6 +222,7 @@ export default function Practice() {
     return () => clearInterval(checkDifficultyInterval);
   }, [currentDifficulty]);
 
+
   // More robust approach to check if vocabulary is empty and handle redirects
   useEffect(() => {
     // Never check or redirect while vocabulary is still loading
@@ -353,22 +281,9 @@ export default function Practice() {
     }
   }, [vocabularyWords, isLoadingVocabulary, isVocabularyError, navigate]);
 
-  // Generate first sentence when component mounts and update totalWords count
-  // Also start prefetching sentences for each difficulty level
   useEffect(() => {
-    // Always generate a sentence immediately when the component mounts
-    // so users don't have to click "Next Sentence" for the first sentence
     generateSentenceMutation.mutate();
-    
-    // Start prefetching sentences for each difficulty level to ensure quick loading
-    setTimeout(() => {
-      prefetchSentence('beginner');
-      setTimeout(() => prefetchSentence('intermediate'), 200);
-      setTimeout(() => prefetchSentence('advanced'), 400);
-    }, 2000);
-    
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Empty dependency array ensures this only runs once on mount
+  }, []);
   
   // Handle vocabulary loading and update stats
   useEffect(() => {
@@ -889,3 +804,5 @@ export default function Practice() {
     </div>
   );
 }
+
+export default PracticeInner;

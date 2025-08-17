@@ -2,6 +2,7 @@ import { createContext, ReactNode, useContext, useEffect, useState, useCallback 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { auth, googleProvider } from "@/lib/firebase";
+import { apiRequest } from "@/lib/queryClient";
 import {
   signInWithPopup, // Changed from signInWithRedirect
   getRedirectResult, // Still imported for now, but will be removed from useEffect
@@ -341,6 +342,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
         queryClient.invalidateQueries({ queryKey: ["/api/vocabulary/proficiency"] });
         queryClient.invalidateQueries({ queryKey: ["/api/vocabulary/full-proficiency"] });
         await refetchBackendUser();
+        // Initialize sentence cache for practice page
+        try {
+          await apiRequest('POST', `/api/sentence/cache/fill?count=1`);
+        } catch (cacheError) {
+          console.error('Error initializing sentence cache:', cacheError);
+        }
         console.log("User data refreshed after popup sign-in");
       }
     } catch (error) {
