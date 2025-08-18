@@ -43,33 +43,6 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
-// Practice session schema to track user progress
-export const practiceSession = pgTable("practice_session", {
-  id: serial("id").primaryKey(),
-  sentenceChinese: text("sentence_chinese").notNull(),
-  sentencePinyin: text("sentence_pinyin").notNull(), 
-  sentenceEnglish: text("sentence_english").notNull(),
-  userTranslation: text("user_translation").notNull(),
-  accuracyScore: text("accuracy_score").notNull(),
-  timeScore: text("time_score").notNull(),
-  totalScore: text("total_score").notNull(),
-  timestamp: text("timestamp").notNull(),
-});
-
-export const practiceSessionSchema = createInsertSchema(practiceSession).pick({
-  sentenceChinese: true,
-  sentencePinyin: true,
-  sentenceEnglish: true,
-  userTranslation: true,
-  accuracyScore: true,
-  timeScore: true,
-  totalScore: true,
-  timestamp: true,
-});
-
-export type InsertPracticeSession = z.infer<typeof practiceSessionSchema>;
-export type PracticeSession = typeof practiceSession.$inferSelect;
-
 // Word proficiency schema to track mastery of individual words
 export const wordProficiency = pgTable("word_proficiency", {
   id: serial("id").primaryKey(),
