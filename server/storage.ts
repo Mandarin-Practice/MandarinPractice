@@ -5,15 +5,12 @@ import {
   type InsertCharacter,
   type CharacterDefinition,
   type InsertCharacterDefinition,
-  type LearnedDefinition,
-  type InsertLearnedDefinition,
   type CharacterCompound,
   type InsertCharacterCompound,
   type User,
   type InsertUser,
   characters,
   characterDefinitions,
-  learnedDefinitions,
   characterCompounds,
   wordProficiency,
   users,
@@ -86,11 +83,6 @@ export interface IStorage {
   // Character compound relationships methods
   getCharacterCompounds(componentId: number): Promise<{ compound: Character, position: number }[]>;
   getCompoundComponents(compoundId: number): Promise<{ component: Character, position: number }[]>;
-  
-  // User learned definitions methods
-  getLearnedDefinitions(userId: number): Promise<LearnedDefinition[]>;
-  toggleLearnedDefinition(userId: number, definitionId: number, isLearned: boolean): Promise<LearnedDefinition>;
-  updateLearnedDefinitionNotes(id: number, notes: string): Promise<LearnedDefinition>;
 }
 
 // Database storage implementation
@@ -916,61 +908,8 @@ export class DatabaseStorage implements IStorage {
     await db.delete(characterDefinitions).where(eq(characterDefinitions.id, id));
   }
   
-  // User learned definitions methods
-  async getLearnedDefinitions(userId: number): Promise<LearnedDefinition[]> {
-    return await db.select()
-      .from(learnedDefinitions)
-      .where(eq(learnedDefinitions.userId, userId));
-  }
-  
-  async toggleLearnedDefinition(userId: number, definitionId: number, isLearned: boolean): Promise<LearnedDefinition> {
-    // Check if record exists
-    const [existing] = await db.select()
-      .from(learnedDefinitions)
-      .where(
-        and(
-          eq(learnedDefinitions.userId, userId),
-          eq(learnedDefinitions.definitionId, definitionId)
-        )
-      );
-      
-    if (existing) {
-      // Update existing record
-      const [updated] = await db.update(learnedDefinitions)
-        .set({ isLearned })
-        .where(eq(learnedDefinitions.id, existing.id))
-        .returning();
-        
-      return updated;
-    } else {
-      // Create new record
-      const [newLearned] = await db.insert(learnedDefinitions)
-        .values({
-          userId,
-          definitionId,
-          isLearned
-        })
-        .returning();
-        
-      return newLearned;
-    }
-  }
-  
-  async updateLearnedDefinitionNotes(id: number, notes: string): Promise<LearnedDefinition> {
-    const [updated] = await db.update(learnedDefinitions)
-      .set({ notes })
-      .where(eq(learnedDefinitions.id, id))
-      .returning();
-      
-    if (!updated) {
-      throw new Error(`Learned definition with ID ${id} not found`);
-    }
-    
-    return updated;
-  }
-  
   // Character compound relationship methods
-  async getCharacterCompounds(componentId: number): Promise<{ compound: Character, position: number }[]> {
+  async getCharacterCompounds(character: number): Promise<{ compound: Character, position: number }[]> {
     try {
       // Get all compounds where this character is a component
       const result = await db.select({

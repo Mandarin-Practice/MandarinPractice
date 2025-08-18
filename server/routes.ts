@@ -1139,67 +1139,6 @@ app.post("/api/sentence/cache/fill", verifyFirebaseToken, firebaseAuth, async (r
     }
   });
 
-  // Get all learned definitions for a user
-  app.get("/api/users/:userId/learned-definitions", async (req, res) => {
-    try {
-      const userId = parseInt(req.params.userId);
-
-      if (isNaN(userId)) {
-        return res.status(400).json({ message: "Unauthorized" });
-      }
-
-      const learnedDefinitions = await storage.getLearnedDefinitions(userId);
-      res.json(learnedDefinitions);
-    } catch (error) {
-      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to fetch learned definitions" });
-    }
-  });
-
-  // Toggle a definition as learned/unlearned for a user
-  app.post("/api/users/:userId/learned-definitions/:definitionId", async (req, res) => {
-    try {
-      const userId = parseInt(req.params.userId);
-      const definitionId = parseInt(req.params.definitionId);
-
-      if (isNaN(userId) || isNaN(definitionId)) {
-        return res.status(400).json({ message: "Invalid ID format" });
-      }
-
-      const { isLearned = true } = req.body;
-
-      if (typeof isLearned !== 'boolean') {
-        return res.status(400).json({ message: "isLearned must be a boolean" });
-      }
-
-      const result = await storage.toggleLearnedDefinition(userId, definitionId, isLearned);
-      res.json(result);
-    } catch (error) {
-      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to update learned status" });
-    }
-  });
-
-  // Update notes for a learned definition
-  app.patch("/api/learned-definitions/:id/notes", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-
-      if (isNaN(id)) {
-        return res.status(400).json({ message: "Invalid ID format" });
-      }
-
-      const { notes } = req.body;
-
-      if (typeof notes !== 'string') {
-        return res.status(400).json({ message: "Notes must be a string" });
-      }
-
-      const updatedDefinition = await storage.updateLearnedDefinitionNotes(id, notes);
-      res.json(updatedDefinition);
-    } catch (error) {
-      res.status(404).json({ message: error instanceof Error ? error.message : "Learned definition not found" });
-    }
-  });
-
   // Register dictionary admin routes
   app.use('/api', dictionaryAdminRoutes);
   app.use('/api/auth', authRoutes);

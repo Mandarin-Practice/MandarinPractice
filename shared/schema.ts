@@ -166,33 +166,6 @@ export const characterDefinitionSchema = createInsertSchema(characterDefinitions
 export type InsertCharacterDefinition = z.infer<typeof characterDefinitionSchema>;
 export type CharacterDefinition = typeof characterDefinitions.$inferSelect;
 
-// TODO remove this table if possible
-// User's learned character definitions - for tracking which definitions a user has learned
-export const learnedDefinitions = pgTable("learned_definitions", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
-  definitionId: integer("definition_id").notNull().references(() => characterDefinitions.id),
-  isLearned: boolean("is_learned").default(true).notNull(), // Whether user has learned this definition
-  notes: text("notes"), // Optional user notes on this definition
-  lastReviewed: timestamp("last_reviewed").defaultNow(),
-});
-
-export const learnedDefinitionSchema = createInsertSchema(learnedDefinitions).pick({
-  userId: true,
-  definitionId: true,
-  isLearned: true,
-  notes: true,
-});
-
-export type InsertLearnedDefinition = z.infer<typeof learnedDefinitionSchema>;
-export type LearnedDefinition = typeof learnedDefinitions.$inferSelect;
-
-// Set up relations
-export const usersRelations = relations(users, ({ many }) => ({
-  wordProficiencies: many(wordProficiency),
-  learnedDefinitions: many(learnedDefinitions),
-}));
-
 export const wordProficiencyRelations = relations(wordProficiency, ({ one }) => ({
   user: one(users, {
     fields: [wordProficiency.userId],
@@ -202,25 +175,6 @@ export const wordProficiencyRelations = relations(wordProficiency, ({ one }) => 
 
 export const charactersRelations = relations(characters, ({ many }) => ({
   definitions: many(characterDefinitions),
-}));
-
-export const characterDefinitionsRelations = relations(characterDefinitions, ({ one, many }) => ({
-  character: one(characters, {
-    fields: [characterDefinitions.characterId],
-    references: [characters.id]
-  }),
-  learnedBy: many(learnedDefinitions),
-}));
-
-export const learnedDefinitionsRelations = relations(learnedDefinitions, ({ one }) => ({
-  definition: one(characterDefinitions, {
-    fields: [learnedDefinitions.definitionId],
-    references: [characterDefinitions.id]
-  }),
-  user: one(users, {
-    fields: [learnedDefinitions.userId],
-    references: [users.id]
-  }),
 }));
 
 // Character compounds table for relationships between characters and compound words
