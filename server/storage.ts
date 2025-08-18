@@ -909,7 +909,7 @@ export class DatabaseStorage implements IStorage {
   }
   
   // Character compound relationship methods
-  async getCharacterCompounds(character: number): Promise<{ compound: Character, position: number }[]> {
+  async getCharacterCompounds(componentId: number): Promise<{ compound: Character, position: number }[]> {
     try {
       // Get all compounds where this character is a component
       const result = await db.select({
