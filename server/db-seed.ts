@@ -3,7 +3,6 @@ import path from 'path';
 import { exec } from 'child_process';
 import { db } from './db';
 import { log } from './vite';
-import { characters } from '@shared/schema';
 import { eq, sql } from 'drizzle-orm';
 
 // Common Chinese characters with their information
@@ -48,103 +47,6 @@ const componentRelationships = [
   // 不好 (id placeholder) = 不 + 好
   { compound: '不好', components: ['不', '好'] }
 ];
-
-/**
- * Check if database already has seed data
- */
-export async function checkIfDatabaseNeedsSeed(): Promise<boolean> {
-  try {
-    // Check if we have at least 15 characters in the database
-    const result = await db.select().from(characters).limit(15);
-    return result.length < 15;
-  } catch (error) {
-    log(`Error checking if database needs seed: ${error}`, 'db-seed');
-    return true; // Assume seeding is needed if check fails
-  }
-}
-
-/**
- * Seed the database with basic dictionary data
- */
-export async function seedDatabaseWithBasicDictionary(): Promise<boolean> {
-  try {
-    log('Beginning database seed with basic dictionary data...', 'db-seed');
-
-    // First, add all the characters with their basic info
-    for (const char of initialCharacters) {
-      // Check if character already exists
-      const existingChar = await db.select().from(characters).where(eq(characters.character, char.character));
-      
-      if (existingChar.length === 0) {
-        // Add character to database
-        await db.insert(characters).values({
-          character: char.character,
-          pinyin: char.pinyin,
-          strokes: char.strokes,
-          radical: char.radical,
-          hskLevel: char.hskLevel,
-          frequency: char.frequency
-        });
-        
-        log(`Added character: ${char.character}`, 'db-seed');
-      }
-    }
-
-    // Now create the character definitions
-    for (const char of initialCharacters) {
-      // Get the character id
-      const charResult = await db.select().from(characters).where(eq(characters.character, char.character));
-      
-      if (charResult.length > 0) {
-        const characterId = charResult[0].id;
-        
-        // Add definition using SQL query
-        await db.execute(sql`
-          INSERT INTO character_definitions 
-          (character_id, definition, "order")
-          VALUES (${characterId}, ${char.definition}, 1)
-          ON CONFLICT (character_id, definition) DO NOTHING
-        `);
-        
-        log(`Added definition for character: ${char.character}`, 'db-seed');
-      }
-    }
-
-    // Create component relationships
-    for (const rel of componentRelationships) {
-      // Get compound ID
-      const compoundResult = await db.select().from(characters).where(eq(characters.character, rel.compound));
-      
-      if (compoundResult.length > 0) {
-        const compoundId = compoundResult[0].id;
-        
-        // Process each component
-        for (let i = 0; i < rel.components.length; i++) {
-          const componentResult = await db.select().from(characters).where(eq(characters.character, rel.components[i]));
-          
-          if (componentResult.length > 0) {
-            const componentId = componentResult[0].id;
-            
-            // Add relationship
-            await db.execute(sql`
-              INSERT INTO character_compounds (compound_id, component_id, position)
-              VALUES (${compoundId}, ${componentId}, ${i})
-              ON CONFLICT (compound_id, component_id, position) DO NOTHING
-            `);
-            
-            log(`Added relationship: ${rel.compound} includes ${rel.components[i]} at position ${i}`, 'db-seed');
-          }
-        }
-      }
-    }
-
-    log('Database seed completed successfully!', 'db-seed');
-    return true;
-  } catch (error) {
-    log(`Error seeding database: ${error}`, 'db-seed');
-    return false;
-  }
-}
 
 /**
  * Run a script with the given path and return a promise

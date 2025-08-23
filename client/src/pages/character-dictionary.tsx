@@ -30,17 +30,6 @@ const Spinner = ({ className = "", size = "md" }: { className?: string, size?: "
   );
 };
 
-interface Character {
-  id: number;
-  character: string;
-  pinyin: string;
-  strokes?: number;
-  radical?: string;
-  hskLevel?: number;
-  frequency?: number;
-  createdAt: string;
-}
-
 interface CharacterDefinition {
   id: number;
   characterId: number;
@@ -49,16 +38,6 @@ interface CharacterDefinition {
   example?: string;
   order: number;
   createdAt: string;
-}
-
-interface CharacterCompound {
-  compound: Character;
-  position: number;
-}
-
-interface CharacterComponent {
-  component: Character;
-  position: number;
 }
 
 // Type for saved word list
@@ -93,7 +72,7 @@ interface WordProficiency {
 
 export default function CharacterDictionary() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
+  const [selectedCharacter, setSelectedCharacter] = useState<Vocabulary | null>(null);
   const { toast } = useToast();
   const searchInputRef = React.useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
@@ -134,21 +113,21 @@ export default function CharacterDictionary() {
   }, [searchTerm]);
   
   const charactersQuery = useQuery({
-    queryKey: ['/api/characters/search', debouncedSearchTerm],
+    queryKey: ['/api/definitions/search', debouncedSearchTerm],
     queryFn: async () => {
-      const response = await fetch(`/api/characters/search?q=${encodeURIComponent(debouncedSearchTerm)}`);
+      const response = await fetch(`/api/definitions/search?q=${encodeURIComponent(debouncedSearchTerm)}`);
       if (!response.ok) throw new Error('Failed to search characters');
-      return response.json() as Promise<Character[]>;
+      return response.json() as Promise<Vocabulary[]>;
     },
     enabled: true, // Always fetch some characters, even with empty search
   });
 
   // Query for fetching definitions of selected character
   const definitionsQuery = useQuery({
-    queryKey: ['/api/characters', selectedCharacter?.id, 'definitions'],
+    queryKey: ['/api/definitions', selectedCharacter?.chinese, 'definitions'],
     queryFn: async () => {
       if (!selectedCharacter) return [] as CharacterDefinition[];
-      const response = await fetch(`/api/characters/${selectedCharacter.id}/definitions`);
+      const response = await fetch(`/api/definitions/${selectedCharacter.chinese}`);
       if (!response.ok) throw new Error('Failed to fetch definitions');
       return response.json() as Promise<CharacterDefinition[]>;
     },
@@ -157,32 +136,27 @@ export default function CharacterDictionary() {
 
   // Query for fetching compounds where the selected character is a component
   const compoundsQuery = useQuery({
-    queryKey: ['/api/characters', selectedCharacter?.id, 'compounds'],
+    queryKey: ['/api/definitions', selectedCharacter?.chinese, 'compounds'],
     queryFn: async () => {
-      if (!selectedCharacter) return [] as CharacterCompound[];
-      const response = await fetch(`/api/characters/${selectedCharacter.id}/compounds`);
+      if (!selectedCharacter) return [] as Vocabulary[];
+      const response = await fetch(`/api/definitions/compounds/${selectedCharacter.chinese}`);
       if (!response.ok) throw new Error('Failed to fetch compounds');
-      return response.json() as Promise<CharacterCompound[]>;
+      return response.json() as Promise<Vocabulary[]>;
     },
     enabled: !!selectedCharacter,
   });
 
   // Query for fetching components of the selected character (if it's a compound)
   const componentsQuery = useQuery({
-    queryKey: ['/api/characters', selectedCharacter?.id, 'components'],
+    queryKey: ['/api/definitions', selectedCharacter?.id, 'components'],
     queryFn: async () => {
-      if (!selectedCharacter) return [] as CharacterComponent[];
-      const response = await fetch(`/api/characters/${selectedCharacter.id}/components`);
+      if (!selectedCharacter) return [] as Vocabulary[];
+      const response = await fetch(`/api/definitions/compounds/${selectedCharacter.chinese}`);
       if (!response.ok) throw new Error('Failed to fetch components');
-      return response.json() as Promise<CharacterComponent[]>;
+      return response.json() as Promise<Vocabulary[]>;
     },
     enabled: !!selectedCharacter,
   });
-
-  // Handler for character selection
-  const handleSelectCharacter = (character: Character) => {
-    setSelectedCharacter(character);
-  };
 
   // Add word mutation
   const addVocabularyMutation = useMutation({
@@ -237,7 +211,7 @@ export default function CharacterDictionary() {
     
     // Create a new vocabulary word
     const newWord = {
-      chinese: selectedCharacter.character,
+      chinese: selectedCharacter.chinese,
       pinyin: selectedCharacter.pinyin,
       english: definition.definition,
       active: "true"
@@ -404,10 +378,10 @@ export default function CharacterDictionary() {
                         key={char.id}
                         variant={selectedCharacter?.id === char.id ? "default" : "outline"}
                         className={`h-20 text-xl ${selectedCharacter?.id === char.id ? 'ring-2 ring-primary' : ''}`}
-                        onClick={() => handleSelectCharacter(char)}
+                        onClick={() => setSelectedCharacter(char)}
                       >
                         <div className="flex flex-col items-center w-full">
-                          <span className="text-2xl mb-1 truncate max-w-full">{char.character}</span>
+                          <span className="text-2xl mb-1 truncate max-w-full">{char.chinese}</span>
                           <span className="text-xs truncate max-w-full">{char.pinyin}</span>
                         </div>
                       </Button>
@@ -429,25 +403,8 @@ export default function CharacterDictionary() {
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div>
-                    <CardTitle className="text-5xl mb-2">{selectedCharacter.character}</CardTitle>
+                    <CardTitle className="text-5xl mb-2">{selectedCharacter.chinese}</CardTitle>
                     <CardDescription className="text-xl">{selectedCharacter.pinyin}</CardDescription>
-                  </div>
-                  <div className="space-y-1">
-                    {selectedCharacter.hskLevel && (
-                      <Badge variant="outline" className="ml-2">
-                        HSK {selectedCharacter.hskLevel}
-                      </Badge>
-                    )}
-                    {selectedCharacter.strokes && (
-                      <div className="text-sm text-muted-foreground">
-                        Strokes: {selectedCharacter.strokes}
-                      </div>
-                    )}
-                    {selectedCharacter.radical && (
-                      <div className="text-sm text-muted-foreground">
-                        Radical: {selectedCharacter.radical}
-                      </div>
-                    )}
                   </div>
                 </div>
               </CardHeader>
@@ -537,21 +494,20 @@ export default function CharacterDictionary() {
                       ) : componentsQuery.data && componentsQuery.data.length > 0 ? (
                         <div className="space-y-2">
                           <div className="text-sm text-muted-foreground mb-1">
-                            {selectedCharacter?.character} is composed of the following characters:
+                            {selectedCharacter?.chinese} is composed of the following characters:
                           </div>
                           <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                             {componentsQuery.data
-                              .sort((a, b) => a.position - b.position)
-                              .map((item) => (
+                              .map((component, index) => (
                                 <Button
-                                  key={`${item.component.id}-${item.position}`}
+                                  key={index}
                                   variant="outline"
                                   className="h-20 text-xl"
-                                  onClick={() => handleSelectCharacter(item.component)}
+                                  onClick={() => setSelectedCharacter(component)}
                                 >
                                   <div className="flex flex-col items-center w-full">
-                                    <span className="text-2xl mb-1 truncate max-w-full">{item.component.character}</span>
-                                    <span className="text-xs truncate max-w-full">{item.component.pinyin}</span>
+                                    <span className="text-2xl mb-1 truncate max-w-full">{component.chinese}</span>
+                                    <span className="text-xs truncate max-w-full">{component.pinyin}</span>
                                   </div>
                                 </Button>
                               ))}
@@ -559,7 +515,7 @@ export default function CharacterDictionary() {
                         </div>
                       ) : (
                         <div className="text-sm text-muted-foreground p-2 border rounded-md">
-                          {selectedCharacter?.character.length === 1 
+                          {selectedCharacter?.chinese.length === 1 
                             ? "This is a single character with no further components." 
                             : "No component data available for this character."}
                         </div>
@@ -580,19 +536,19 @@ export default function CharacterDictionary() {
                       ) : compoundsQuery.data && compoundsQuery.data.length > 0 ? (
                         <div className="space-y-2">
                           <div className="text-sm text-muted-foreground mb-1">
-                            {selectedCharacter?.character} is used in the following words:
+                            {selectedCharacter?.chinese} is used in the following words:
                           </div>
                           <div className="grid grid-cols-2 gap-2">
-                            {compoundsQuery.data.map((item) => (
+                            {compoundsQuery.data.map((compound, index) => (
                               <Button
-                                key={item.compound.id}
+                                key={index}
                                 variant="outline"
                                 className="h-20 text-xl"
-                                onClick={() => handleSelectCharacter(item.compound)}
+                                onClick={() => setSelectedCharacter(compound)}
                               >
                                 <div className="flex flex-col items-center w-full">
-                                  <span className="text-2xl mb-1 truncate max-w-full">{item.compound.character}</span>
-                                  <span className="text-xs truncate max-w-full">{item.compound.pinyin}</span>
+                                  <span className="text-2xl mb-1 truncate max-w-full">{compound.chinese}</span>
+                                  <span className="text-xs truncate max-w-full">{compound.pinyin}</span>
                                 </div>
                               </Button>
                             ))}
@@ -613,13 +569,6 @@ export default function CharacterDictionary() {
                   </TabsContent>
                 </Tabs>
               </CardContent>
-              <CardFooter>
-                <div className="text-sm text-muted-foreground">
-                  {selectedCharacter.frequency ? 
-                    `Frequency rank: ${selectedCharacter.frequency} (lower is more common)` : 
-                    "Frequency data not available"}
-                </div>
-              </CardFooter>
             </Card>
           ) : (
             <Card className="h-full flex items-center justify-center">

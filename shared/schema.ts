@@ -93,47 +93,25 @@ export type Proficiency = {
   lastPracticed: Date;
 }
 
-// Chinese Characters schema - for the character dictionary
-export const characters = pgTable("characters", {
-  id: serial("id").primaryKey(),
-  character: varchar("character", { length: 10 }).notNull().unique(), // The actual Chinese character
-  pinyin: text("pinyin").notNull(), // Pronunciation in pinyin, could have multiple comma-separated values
-  strokes: integer("strokes"), // Number of strokes
-  radical: varchar("radical", { length: 10 }), // Base radical
-  hskLevel: integer("hsk_level"), // HSK proficiency level (1-6)
-  frequency: integer("frequency"), // How common the character is (lower = more common)
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-export const characterSchema = createInsertSchema(characters).pick({
-  character: true,
-  pinyin: true,
-  strokes: true,
-  radical: true,
-  hskLevel: true,
-  frequency: true,
-});
-
-export type InsertCharacter = z.infer<typeof characterSchema>;
-export type Character = typeof characters.$inferSelect;
-
 // Character Definitions schema - since each character can have multiple meanings
 export const characterDefinitions = pgTable("character_definitions", {
   id: serial("id").primaryKey(),
-  characterId: integer("character_id").notNull().references(() => characters.id),
+  characters: text("characters").notNull(),
+  pinyin: text("pinyin").notNull(),
   definition: text("definition").notNull(), // Single definition/meaning
   partOfSpeech: varchar("part_of_speech", { length: 50 }), // noun, verb, adjective, etc.
   example: text("example"), // Example usage
-  order: integer("order").default(1).notNull(), // Order of definitions (primary, secondary)
-  createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  // Add unique constraint on chinese + pinyin combination
+  chinesePinyinUnique: unique().on(table.characters, table.pinyin),
+}));
 
 export const characterDefinitionSchema = createInsertSchema(characterDefinitions).pick({
-  characterId: true,
+  characters: true,
+  pinyin: true,
   definition: true,
   partOfSpeech: true,
   example: true,
-  order: true,
 });
 
 export type InsertCharacterDefinition = z.infer<typeof characterDefinitionSchema>;
@@ -143,39 +121,5 @@ export const wordProficiencyRelations = relations(wordProficiency, ({ one }) => 
   user: one(users, {
     fields: [wordProficiency.userId],
     references: [users.id]
-  }),
-}));
-
-export const charactersRelations = relations(characters, ({ many }) => ({
-  definitions: many(characterDefinitions),
-}));
-
-// Character compounds table for relationships between characters and compound words
-export const characterCompounds = pgTable("character_compounds", {
-  id: serial("id").primaryKey(),
-  compoundId: integer("compound_id").notNull().references(() => characters.id), // The multi-character word/phrase
-  componentId: integer("component_id").notNull().references(() => characters.id), // The individual character that makes up the compound
-  position: integer("position").notNull(), // Position of the character in the compound (0-based)
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-export const characterCompoundSchema = createInsertSchema(characterCompounds).pick({
-  compoundId: true,
-  componentId: true,
-  position: true,
-});
-
-export type InsertCharacterCompound = z.infer<typeof characterCompoundSchema>;
-export type CharacterCompound = typeof characterCompounds.$inferSelect;
-
-// Add compound relations to the existing character relations
-export const characterCompoundsRelations = relations(characterCompounds, ({ one }) => ({
-  compound: one(characters, {
-    fields: [characterCompounds.compoundId],
-    references: [characters.id]
-  }),
-  component: one(characters, {
-    fields: [characterCompounds.componentId],
-    references: [characters.id]
   }),
 }));
