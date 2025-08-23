@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { characterSchema, characterDefinitionSchema, FullProficiency, Proficiency } from "@shared/schema";
+import { characterDefinitionSchema, FullProficiency, Proficiency } from "@shared/schema";
 import { ZodError } from "zod";
 import { generateSentence, generateSentenceWithWord, checkSynonyms, validateSentenceWithAI, verifyTranslationQuality } from "./openai";
 import dictionaryAdminRoutes from "./routes/dictionary-admin";
@@ -908,8 +908,8 @@ app.post("/api/sentence/cache/fill", verifyFirebaseToken, firebaseAuth, async (r
 
   // ============= CHARACTER DICTIONARY API ENDPOINTS =============
 
-  // Search for characters by query (character or pinyin)
-  app.get("/api/characters/search", async (req, res) => {
+  // Search for definitions by query
+  app.get("/api/definitions/search", async (req, res) => {
     try {
       const { q = "", query = "" } = req.query;
       // Allow both q and query parameters for flexibility
@@ -917,7 +917,7 @@ app.post("/api/sentence/cache/fill", verifyFirebaseToken, firebaseAuth, async (r
         ? query
         : (typeof q === 'string' ? q : '');
 
-      const characters = await storage.searchCharacters(searchTerm);
+      const characters = await storage.searchCharacterDefinitions(searchTerm);
       res.json(characters);
     } catch (error) {
       console.error("Error searching characters:", error);
@@ -926,113 +926,22 @@ app.post("/api/sentence/cache/fill", verifyFirebaseToken, firebaseAuth, async (r
   });
 
   // Get a specific character by ID
-  app.get("/api/characters/:id", async (req, res) => {
+  app.get("/api/definitions/:characters", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const characters = req.params.characters;
 
-      if (isNaN(id)) {
-        return res.status(400).json({ message: "Invalid ID format" });
-      }
-
-      const character = await storage.getCharacter(id);
-
-      if (!character) {
-        return res.status(404).json({ message: "Character not found" });
-      }
-
-      res.json(character);
+      res.json(await storage.getCharacterDefinition(characters));
     } catch (error) {
       res.status(500).json({ message: error instanceof Error ? error.message : "Failed to fetch character" });
-    }
-  });
-
-  // Get a character by its value (the actual Chinese character)
-  app.get("/api/characters/value/:char", async (req, res) => {
-    try {
-      const charValue = req.params.char;
-
-      if (!charValue) {
-        return res.status(400).json({ message: "Character value is required" });
-      }
-
-      const character = await storage.getCharacterByValue(charValue);
-
-      if (!character) {
-        return res.status(404).json({ message: "Character not found" });
-      }
-
-      res.json(character);
-    } catch (error) {
-      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to fetch character" });
-    }
-  });
-
-  // Add a new character
-  app.post("/api/characters", async (req, res) => {
-    try {
-      const character = req.body;
-
-      // Validate character
-      const validatedCharacter = characterSchema.parse(character);
-
-      // If no proper definition/pinyin provided, try to get it from OpenAI
-      if ((!validatedCharacter.pinyin || validatedCharacter.pinyin === "pending" ||
-           validatedCharacter.pinyin === "unknown") &&
-          validatedCharacter.character && validatedCharacter.character.length === 1) {
-        try {
-          // Import the function from openai.ts
-          const { getChineseCharacterDefinition } = await import("./openai");
-          const charDetails = await getChineseCharacterDefinition(validatedCharacter.character);
-
-          // Update with AI-generated definition and pinyin
-          validatedCharacter.pinyin = charDetails.pinyin;
-
-          // We'll add the definition separately after creating the character
-          console.log(`Enhanced character ${validatedCharacter.character} with AI: ${JSON.stringify(charDetails)}`);
-        } catch (aiError) {
-          console.error("Failed to get AI definition:", aiError);
-          // Continue with original values if AI definition fails
-        }
-      }
-
-      const savedCharacter = await storage.addCharacter(validatedCharacter);
-      res.status(201).json(savedCharacter);
-    } catch (error) {
-      if (error instanceof ZodError) {
-        return res.status(400).json({
-          message: `Invalid character format: ${error.errors.map(e => e.message).join(', ')}`
-        });
-      }
-      res.status(400).json({ message: error instanceof Error ? error.message : "Failed to add character" });
-    }
-  });
-
-  // Get all definitions for a character
-  app.get("/api/characters/:id/definitions", async (req, res) => {
-    try {
-      const characterId = parseInt(req.params.id);
-
-      if (isNaN(characterId)) {
-        return res.status(400).json({ message: "Invalid ID format" });
-      }
-
-      const definitions = await storage.getCharacterDefinitions(characterId);
-      res.json(definitions);
-    } catch (error) {
-      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to fetch definitions" });
     }
   });
 
   // Get all compounds that a character is part of
-  app.get("/api/characters/:id/compounds", async (req, res) => {
+  app.get("/api/definitions/compounds/:characters", async (req, res) => {
     try {
-      const characterId = parseInt(req.params.id);
+      const characters = req.params.characters;
 
-      if (isNaN(characterId)) {
-        return res.status(400).json({ message: "Invalid ID format" });
-      }
-
-      const compounds = await storage.getCharacterCompounds(characterId);
+      const compounds = await storage.getCharacterCompounds(characters);
       res.json(compounds);
     } catch (error) {
       res.status(500).json({ message: error instanceof Error ? error.message : "Failed to fetch character compounds" });
@@ -1040,163 +949,14 @@ app.post("/api/sentence/cache/fill", verifyFirebaseToken, firebaseAuth, async (r
   });
 
   // Get all components of a compound character
-  app.get("/api/characters/:id/components", async (req, res) => {
+  app.get("/api/definitions/components/:characters", async (req, res) => {
     try {
-      const compoundId = parseInt(req.params.id);
+      const characters = req.params.characters;
 
-      if (isNaN(compoundId)) {
-        return res.status(400).json({ message: "Invalid ID format" });
-      }
-
-      const components = await storage.getCompoundComponents(compoundId);
+      const components = await storage.getCompoundComponents(characters);
       res.json(components);
     } catch (error) {
       res.status(500).json({ message: error instanceof Error ? error.message : "Failed to fetch compound components" });
-    }
-  });
-
-  // Add a new definition to a character
-  app.post("/api/characters/:id/definitions", async (req, res) => {
-    try {
-      const characterId = parseInt(req.params.id);
-
-      if (isNaN(characterId)) {
-        return res.status(400).json({ message: "Invalid ID format" });
-      }
-
-      // Check if character exists
-      const character = await storage.getCharacter(characterId);
-
-      if (!character) {
-        return res.status(404).json({ message: "Character not found" });
-      }
-
-      let definition = { ...req.body, characterId };
-
-      // If the definition just says "Character X", try to get a better definition from OpenAI
-      if (character && character.character && character.character.length === 1 &&
-          (!definition.definition || definition.definition.startsWith("Character ") ||
-           definition.definition === "Automatically added character")) {
-        try {
-          // Import the function from openai.ts
-          const { getChineseCharacterDefinition } = await import("./openai");
-          const charDetails = await getChineseCharacterDefinition(character.character);
-
-          // Update with AI-generated definition
-          definition.definition = charDetails.definition;
-          console.log(`Enhanced definition for ${character.character} with AI: ${charDetails.definition}`);
-        } catch (aiError) {
-          console.error("Failed to get AI definition:", aiError);
-          // Continue with original definition if AI definition fails
-        }
-      }
-
-      // Validate definition
-      const validatedDefinition = characterDefinitionSchema.parse(definition);
-
-      const savedDefinition = await storage.addCharacterDefinition(validatedDefinition);
-      res.status(201).json(savedDefinition);
-    } catch (error) {
-      if (error instanceof ZodError) {
-        return res.status(400).json({
-          message: `Invalid definition format: ${error.errors.map(e => e.message).join(', ')}`
-        });
-      }
-      res.status(400).json({ message: error instanceof Error ? error.message : "Failed to add definition" });
-    }
-  });
-
-  // Update a character definition
-  app.patch("/api/character-definitions/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-
-      if (isNaN(id)) {
-        return res.status(400).json({ message: "Invalid ID format" });
-      }
-
-      const updates = req.body;
-      const updatedDefinition = await storage.updateCharacterDefinition(id, updates);
-      res.json(updatedDefinition);
-    } catch (error) {
-      res.status(404).json({ message: error instanceof Error ? error.message : "Definition not found" });
-    }
-  });
-
-  // Delete a character definition
-  app.delete("/api/character-definitions/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-
-      if (isNaN(id)) {
-        return res.status(400).json({ message: "Invalid ID format" });
-      }
-
-      await storage.deleteCharacterDefinition(id);
-      res.json({ message: "Definition deleted successfully" });
-    } catch (error) {
-      res.status(404).json({ message: error instanceof Error ? error.message : "Definition not found" });
-    }
-  });
-
-  // Get all learned definitions for a user
-  app.get("/api/users/:userId/learned-definitions", async (req, res) => {
-    try {
-      const userId = parseInt(req.params.userId);
-
-      if (isNaN(userId)) {
-        return res.status(400).json({ message: "Unauthorized" });
-      }
-
-      const learnedDefinitions = await storage.getLearnedDefinitions(userId);
-      res.json(learnedDefinitions);
-    } catch (error) {
-      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to fetch learned definitions" });
-    }
-  });
-
-  // Toggle a definition as learned/unlearned for a user
-  app.post("/api/users/:userId/learned-definitions/:definitionId", async (req, res) => {
-    try {
-      const userId = parseInt(req.params.userId);
-      const definitionId = parseInt(req.params.definitionId);
-
-      if (isNaN(userId) || isNaN(definitionId)) {
-        return res.status(400).json({ message: "Invalid ID format" });
-      }
-
-      const { isLearned = true } = req.body;
-
-      if (typeof isLearned !== 'boolean') {
-        return res.status(400).json({ message: "isLearned must be a boolean" });
-      }
-
-      const result = await storage.toggleLearnedDefinition(userId, definitionId, isLearned);
-      res.json(result);
-    } catch (error) {
-      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to update learned status" });
-    }
-  });
-
-  // Update notes for a learned definition
-  app.patch("/api/learned-definitions/:id/notes", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-
-      if (isNaN(id)) {
-        return res.status(400).json({ message: "Invalid ID format" });
-      }
-
-      const { notes } = req.body;
-
-      if (typeof notes !== 'string') {
-        return res.status(400).json({ message: "Notes must be a string" });
-      }
-
-      const updatedDefinition = await storage.updateLearnedDefinitionNotes(id, notes);
-      res.json(updatedDefinition);
-    } catch (error) {
-      res.status(404).json({ message: error instanceof Error ? error.message : "Learned definition not found" });
     }
   });
 

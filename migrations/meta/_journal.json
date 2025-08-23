@@ -29,6 +29,34 @@
       "when": 1751667630448,
       "tag": "0003_curly_christian_walker",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1755483229752,
+      "tag": "0004_lying_morlocks",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1755536062934,
+      "tag": "0005_faithful_hawkeye",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1755890653209,
+      "tag": "0006_loving_jazinda",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1755891346604,
+      "tag": "0007_outgoing_leech",
+      "breakpoints": true
     }
   ]
 }
