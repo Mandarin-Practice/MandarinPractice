@@ -7,7 +7,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { compareWordByWord } from "@/lib/string-similarity";
-import InteractiveChineseText from "./interactive-chinese-text";
 import CharacterHoverView from "./character-hover-view";
 import {
   DropdownMenu,

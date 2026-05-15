@@ -66,7 +66,7 @@ export function convertNumericPinyinToTonal(numericPinyin: string): string {
   numericPinyin = numericPinyin.replace(/\byv(\d|[ ]|$)/g, 'yü$1'); // yv -> yü (rare)
   
   // Split the pinyin into syllables (space-separated)
-  return numericPinyin.split(' ').map(syllable => {
+  return numericPinyin.split(/(?<=[1-5])/).map(syllable => {
     // Find the tone number (1-5, where 5 is neutral tone)
     const toneMatch = syllable.match(/([a-zA-ZüÜ]+)([1-5])?/);
     if (!toneMatch) return syllable;
@@ -74,7 +74,7 @@ export function convertNumericPinyinToTonal(numericPinyin: string): string {
     const [, baseSyllable, toneNumber] = toneMatch;
     const tone = toneNumber ? parseInt(toneNumber) : 0;
     
-    if (tone < 1 || tone > 5) return baseSyllable; // Invalid tone, return syllable without tone
+    if (tone < 1 || tone >= 5) return baseSyllable; // Invalid tone, return syllable without tone
     
     // Find the vowel that gets the tone mark
     const vowelWithTone = getVowelWithTone(baseSyllable);
@@ -82,7 +82,7 @@ export function convertNumericPinyinToTonal(numericPinyin: string): string {
     
     // Apply the tone mark
     return baseSyllable.replace(vowelWithTone, toneMarks[vowelWithTone][tone]);
-  }).join(' ');
+  }).join('');
 }
 
 /**
